@@ -1,9 +1,10 @@
-import { NavLink, Outlet } from 'react-router';
+import { NavLink, Outlet, useLocation } from 'react-router';
 import { useAuth } from '../auth/useAuth';
 import { theme } from '../theme/theme';
 
 export function Layout() {
   const { user, signOut } = useAuth();
+  const { search } = useLocation();
   const header = {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: theme.space.lg,
     padding: `${theme.space.md} ${theme.space.xl}`, borderBottom: `1px solid ${theme.colors.border}`,
@@ -18,10 +19,10 @@ export function Layout() {
       <header style={header}>
         <strong>Spin Trainer</strong>
         <nav style={{ display: 'flex', gap: theme.space.lg }}>
-          <NavLink to="/explorer" style={link}>Explorer</NavLink>
-          <NavLink to="/quiz" style={link}>Quiz</NavLink>
-          <NavLink to="/builder" style={link}>Builder</NavLink>
-          <NavLink to="/stats" style={link}>Stats</NavLink>
+          <NavLink to={{ pathname: '/explorer', search }} style={link}>Explorer</NavLink>
+          <NavLink to={{ pathname: '/quiz', search }} style={link}>Quiz</NavLink>
+          <NavLink to={{ pathname: '/builder', search }} style={link}>Builder</NavLink>
+          <NavLink to={{ pathname: '/stats', search }} style={link}>Stats</NavLink>
         </nav>
         <div style={{ display: 'flex', gap: theme.space.md, alignItems: 'center' }}>
           <small style={{ color: theme.colors.textMuted }}>{user?.email}</small>

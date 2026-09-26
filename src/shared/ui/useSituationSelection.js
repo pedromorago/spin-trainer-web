@@ -1,17 +1,34 @@
-import { useState } from 'react';
-import { useSituations } from '../api/queries';
+import { useSearchParams } from 'react-router';
 
-/** Estado compartido de (situación, stack) con corrección automática del stack al cambiar de situación. */
-export function useSituationSelection(initialKey = 'btn_open') {
-  const { data: situations = [], isLoading, error } = useSituations();
-  const [situationKey, setSituationKey] = useState(initialKey);
-  const [stack, setStackState] = useState(null);
+const DEFAULT_SITUATION = 'btn_open';
 
-  const situation = situations.find(s => s.key === situationKey) ?? null;
-  const effectiveStack = situation && situation.stacks.includes(stack) ? stack : situation?.stacks[0] ?? null;
+/**
+ * Selección de (situación, stack) guardada en la URL: `?s=<key>&stack=<bb>`.
+ * Valores ausentes o inválidos caen al default; cambiar de situación resetea el stack.
+ * No carga datos: recibe el catálogo ya resuelto (shared/ui no importa shared/api).
+ */
+export function useSituationSelection(situations = []) {
+  const [params, setParams] = useSearchParams();
 
-  const setSituation = key => { setSituationKey(key); setStackState(null); };
-  const setStack = s => setStackState(s);
+  const situation = situations.find(s => s.key === params.get('s'))
+    ?? situations.find(s => s.key === DEFAULT_SITUATION)
+    ?? situations[0]
+    ?? null;
+  const requestedStack = Number(params.get('stack'));
+  const stack = situation?.stacks.includes(requestedStack) ? requestedStack : situation?.stacks[0] ?? null;
 
-  return { situations, situation, situationKey, stack: effectiveStack, setSituation, setStack, isLoading, error };
+  const update = (key, st) => setParams(prev => {
+    const next = new URLSearchParams(prev);
+    next.set('s', key);
+    if (st == null) next.delete('stack'); else next.set('stack', String(st));
+    return next;
+  }, { replace: true });
+
+  return {
+    situation,
+    situationKey: situation?.key ?? null,
+    stack,
+    setSituation: key => update(key, null),
+    setStack: st => update(situation.key, st)
+  };
 }

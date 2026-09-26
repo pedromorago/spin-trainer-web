@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createQuizEngine } from '../../domain/quiz';
 import { ACTION_LABELS } from '../../domain/actions';
-import { useDefaultRange, useRecordAttempt } from '../../shared/api/queries';
+import { useDefaultRange, useRecordAttempt, useSituations } from '../../shared/api/queries';
 import { useSituationSelection } from '../../shared/ui/useSituationSelection';
 import { ActionPalette } from '../../shared/ui/ActionPalette';
 import { SituationSelector, StackSelector } from '../../shared/ui/SituationSelector';
-import { ErrorBox, Loading, layout } from '../../shared/ui/Feedback';
+import { Empty, ErrorBox, Loading, layout } from '../../shared/ui/Feedback';
 import { colorFor } from '../../shared/theme/actionColors';
 import { theme } from '../../shared/theme/theme';
 
 export function QuizPage() {
-  const sel = useSituationSelection();
+  const situations = useSituations();
+  const sel = useSituationSelection(situations.data);
   const def = useDefaultRange(sel.situationKey, sel.stack);
   const record = useRecordAttempt();
   const [hand, setHand] = useState(null);
@@ -39,8 +40,9 @@ export function QuizPage() {
 
   const next = () => { setResult(null); setHand(engine.nextHand()); };
 
-  if (sel.isLoading) return <Loading />;
-  if (!sel.situation) return <ErrorBox error={sel.error} />;
+  if (situations.isLoading) return <Loading />;
+  if (situations.error) return <ErrorBox error={situations.error} />;
+  if (!sel.situation) return <Empty>No hay situaciones disponibles.</Empty>;
 
   const handBox = { fontFamily: theme.font.mono, fontSize: 48, fontWeight: 700, padding: `${theme.space.lg} ${theme.space.xl}`,
     alignSelf: 'flex-start', background: theme.colors.bgElevated, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md };
@@ -50,7 +52,7 @@ export function QuizPage() {
     <div style={layout.page}>
       <h2 style={{ margin: 0 }}>Quiz</h2>
       <div style={layout.row}>
-        <SituationSelector situations={sel.situations} value={sel.situationKey} onChange={sel.setSituation} />
+        <SituationSelector situations={situations.data} value={sel.situationKey} onChange={sel.setSituation} />
         <StackSelector stacks={sel.situation.stacks} value={sel.stack} onChange={sel.setStack} />
       </div>
       <ErrorBox error={def.error ?? record.error} />

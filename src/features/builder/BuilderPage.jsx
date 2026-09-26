@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { evaluateRange, normalizeRange, summarize } from '../../domain/range';
 import { ACTION_LABELS } from '../../domain/actions';
-import { useDefaultRange, useSaveUserRange, useUserRange } from '../../shared/api/queries';
+import { useDefaultRange, useSaveUserRange, useSituations, useUserRange } from '../../shared/api/queries';
 import { useSituationSelection } from '../../shared/ui/useSituationSelection';
 import { HandGrid } from '../../shared/ui/HandGrid';
 import { ActionPalette } from '../../shared/ui/ActionPalette';
 import { SituationSelector, StackSelector } from '../../shared/ui/SituationSelector';
-import { ErrorBox, Loading, layout } from '../../shared/ui/Feedback';
+import { Empty, ErrorBox, Loading, layout } from '../../shared/ui/Feedback';
 import { theme } from '../../shared/theme/theme';
 
 export function BuilderPage() {
-  const sel = useSituationSelection();
+  const situations = useSituations();
+  const sel = useSituationSelection(situations.data);
   const def = useDefaultRange(sel.situationKey, sel.stack);
   const userRange = useUserRange(sel.situationKey, sel.stack);
   const save = useSaveUserRange(sel.situationKey, sel.stack);
@@ -47,8 +48,9 @@ export function BuilderPage() {
 
   const summary = useMemo(() => (sel.situation ? summarize(draft, sel.situation.actions) : {}), [draft, sel.situation]);
 
-  if (sel.isLoading) return <Loading />;
-  if (!sel.situation) return <ErrorBox error={sel.error} />;
+  if (situations.isLoading) return <Loading />;
+  if (situations.error) return <ErrorBox error={situations.error} />;
+  if (!sel.situation) return <Empty>No hay situaciones disponibles.</Empty>;
 
   const canCompare = Object.keys(def.data?.hands ?? {}).length > 0;
 
@@ -56,7 +58,7 @@ export function BuilderPage() {
     <div style={layout.page}>
       <h2 style={{ margin: 0 }}>Builder</h2>
       <div style={layout.row}>
-        <SituationSelector situations={sel.situations} value={sel.situationKey} onChange={sel.setSituation} />
+        <SituationSelector situations={situations.data} value={sel.situationKey} onChange={sel.setSituation} />
         <StackSelector stacks={sel.situation.stacks} value={sel.stack} onChange={sel.setStack} />
       </div>
       <ActionPalette actions={sel.situation.actions} selected={selectedAction} onSelect={setSelectedAction} />

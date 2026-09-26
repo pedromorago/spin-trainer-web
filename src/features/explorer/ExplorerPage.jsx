@@ -1,6 +1,6 @@
 import { summarize } from '../../domain/range';
 import { ACTION_LABELS } from '../../domain/actions';
-import { useDefaultRange, useUserRange } from '../../shared/api/queries';
+import { useDefaultRange, useSituations, useUserRange } from '../../shared/api/queries';
 import { useSituationSelection } from '../../shared/ui/useSituationSelection';
 import { HandGrid } from '../../shared/ui/HandGrid';
 import { ActionPalette } from '../../shared/ui/ActionPalette';
@@ -9,13 +9,14 @@ import { Empty, ErrorBox, Loading, layout } from '../../shared/ui/Feedback';
 import { theme } from '../../shared/theme/theme';
 
 export function ExplorerPage() {
-  const sel = useSituationSelection();
+  const situations = useSituations();
+  const sel = useSituationSelection(situations.data);
   const def = useDefaultRange(sel.situationKey, sel.stack);
   const user = useUserRange(sel.situationKey, sel.stack);
 
-  if (sel.isLoading) return <Loading />;
-  if (sel.error) return <ErrorBox error={sel.error} />;
-  if (!sel.situation) return <Empty>Situación desconocida.</Empty>;
+  if (situations.isLoading) return <Loading />;
+  if (situations.error) return <ErrorBox error={situations.error} />;
+  if (!sel.situation) return <Empty>No hay situaciones disponibles.</Empty>;
 
   const hands = def.data?.hands ?? {};
   const isEmpty = Object.keys(hands).length === 0;
@@ -25,7 +26,7 @@ export function ExplorerPage() {
     <div style={layout.page}>
       <h2 style={{ margin: 0 }}>Explorer</h2>
       <div style={layout.row}>
-        <SituationSelector situations={sel.situations} value={sel.situationKey} onChange={sel.setSituation} />
+        <SituationSelector situations={situations.data} value={sel.situationKey} onChange={sel.setSituation} />
         <StackSelector stacks={sel.situation.stacks} value={sel.stack} onChange={sel.setStack} />
       </div>
       {sel.situation.notes && <small style={{ color: theme.colors.textMuted }}>{sel.situation.notes}</small>}
