@@ -56,20 +56,46 @@ describe('boundaryHands', () => {
 });
 
 describe('evaluateRange', () => {
+  const target = { AA: 'ALLIN', KK: '3BET_C', QQ: 'CALL' };
+  const attempt = { AA: 'ALLIN', KK: 'CALL', JJ: 'CALL' };
+  const r = evaluateRange(target, attempt, ACTIONS);
+
   it('evalúa rangos con varias acciones simultáneas mano a mano', () => {
-    const target = { AA: 'ALLIN', KK: '3BET_C', QQ: 'CALL' };
-    const attempt = { AA: 'ALLIN', KK: 'CALL', JJ: 'CALL' };
-    const r = evaluateRange(target, attempt, ACTIONS);
-    expect(r.verdicts.AA.correct).toBe(true);
-    expect(r.verdicts.KK).toEqual({ expected: '3BET_C', given: 'CALL', correct: false });
-    expect(r.verdicts.QQ).toEqual({ expected: 'CALL', given: 'FOLD', correct: false });
-    expect(r.verdicts.JJ).toEqual({ expected: 'FOLD', given: 'CALL', correct: false });
+    expect(r.verdicts.AA).toEqual({ expected: 'ALLIN', given: 'ALLIN', correct: true, kind: 'correct', played: true });
     expect(r.correct).toBe(166);
     expect(r.byAction['3BET_C']).toEqual({ total: 1, correct: 0 });
   });
 
+  it('clasifica los fallos: acción equivocada, de más (debía ser la implícita) y faltó (debía jugarse)', () => {
+    expect(r.verdicts.KK).toEqual({ expected: '3BET_C', given: 'CALL', correct: false, kind: 'wrong', played: true });
+    expect(r.verdicts.JJ).toEqual({ expected: 'FOLD', given: 'CALL', correct: false, kind: 'extra', played: true });
+    expect(r.verdicts.QQ).toEqual({ expected: 'CALL', given: 'FOLD', correct: false, kind: 'missing', played: true });
+    expect(r.verdicts['72o']).toEqual({ expected: 'FOLD', given: 'FOLD', correct: true, kind: 'correct', played: false });
+  });
+
+  it('puntúa solo las manos jugadas; byKind las desglosa y suma el total', () => {
+    expect(r.byKind).toEqual({ correct: 1, wrong: 1, extra: 1, missing: 1 });
+    expect(r.score).toEqual({ correct: 1, total: 4, accuracy: 0.25 });
+    expect(r.accuracy).toBeCloseTo(166 / 169, 10);
+  });
+
+  it('con implícita CHECK, pintar CHECK no cuenta como jugada', () => {
+    const e = evaluateRange({ AA: 'ALLIN' }, { AA: 'ALLIN', KK: 'CHECK' }, LIMP_ACTIONS);
+    expect(e.verdicts.KK).toMatchObject({ kind: 'correct', played: false });
+    expect(e.score).toEqual({ correct: 1, total: 1, accuracy: 1 });
+  });
+
   it('un intento vacío contra un rango vacío es 100% correcto', () => {
-    expect(evaluateRange({}, {}, ACTIONS).accuracy).toBe(1);
+    const e = evaluateRange({}, {}, ACTIONS);
+    expect(e.accuracy).toBe(1);
+    expect(e.score).toEqual({ correct: 0, total: 0, accuracy: 1 });
+  });
+
+  it('un intento vacío contra un rango cerrado: 0 en la puntuación aunque acierte los folds', () => {
+    const e = evaluateRange({ AA: 'ALLIN', KK: 'ALLIN' }, {}, ACTIONS);
+    expect(e.score.accuracy).toBe(0);
+    expect(e.byKind.missing).toBe(2);
+    expect(e.accuracy).toBeCloseTo(167 / 169, 10);
   });
 });
 

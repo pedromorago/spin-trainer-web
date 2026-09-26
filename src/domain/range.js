@@ -80,27 +80,44 @@ export function summarize(hands, situationActions) {
   return byAction;
 }
 
+/** Tipos de veredicto de una mano jugada: acierto, acción equivocada, de más (debía ser la implícita) y faltó (debía jugarse). */
+export const VERDICT_KINDS = ['correct', 'wrong', 'extra', 'missing'];
+
 /**
  * Evalúa un intento del Builder contra el rango objetivo.
  * Compara la ACCIÓN EFECTIVA mano a mano (incluida la implícita), por lo que un rango
  * con varias acciones simultáneas (call + raise + all-in) se evalúa igual que uno simple.
  *
- * @returns {{ verdicts: {[hand]: {expected, given, correct}}, correct, total, accuracy, byAction }}
+ * Cada veredicto lleva `kind` (VERDICT_KINDS) y `played` (alguno de los dos rangos juega la mano).
+ * `score` puntúa solo las manos jugadas: con un rango cerrado, acertar los folds de las 169 infla `accuracy`.
+ * Invariante: score.total = byKind.correct + byKind.wrong + byKind.extra + byKind.missing.
+ *
+ * @returns {{ verdicts: {[hand]: {expected, given, correct, kind, played}}, correct, total, accuracy,
+ *             byAction: {[expected]: {total, correct}}, byKind: {[kind]: n}, score: {correct, total, accuracy} }}
  */
 export function evaluateRange(target, attempt, situationActions) {
+  const implicit = fallbackAction(situationActions);
   const verdicts = {};
   const byAction = {};
+  const byKind = Object.fromEntries(VERDICT_KINDS.map(k => [k, 0]));
   let correct = 0;
   for (const h of allHands()) {
     const expected = actionFor(target, h, situationActions);
     const given = actionFor(attempt, h, situationActions);
     const ok = expected === given;
-    verdicts[h] = { expected, given, correct: ok };
+    const played = expected !== implicit || given !== implicit;
+    const kind = ok ? 'correct' : expected === implicit ? 'extra' : given === implicit ? 'missing' : 'wrong';
+    verdicts[h] = { expected, given, correct: ok, kind, played };
     byAction[expected] ??= { total: 0, correct: 0 };
     byAction[expected].total += 1;
     if (ok) { byAction[expected].correct += 1; correct += 1; }
+    if (played) byKind[kind] += 1;
   }
-  return { verdicts, correct, total: 169, accuracy: correct / 169, byAction };
+  const scored = VERDICT_KINDS.reduce((n, k) => n + byKind[k], 0);
+  return {
+    verdicts, correct, total: 169, accuracy: correct / 169, byAction, byKind,
+    score: { correct: byKind.correct, total: scored, accuracy: scored ? byKind.correct / scored : 1 }
+  };
 }
 
 /**
