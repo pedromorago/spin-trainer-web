@@ -15,21 +15,32 @@ React 19 · React Router 7 · Vite · TanStack Query · Supabase Auth · CSS-in-
 
 ```
 npm install
-npm test          # Vitest (dominio)
-npm run build
-npm run dev       # VITE_API_MODE de .env.local: mock | http
+npm run dev:mock      # sin backend (vite --mode mock)
+npm run dev           # VITE_API_MODE de .env.local
+npm test              # Vitest
+npm run test:coverage # umbral 90% en domain/ y mock
+npm run lint          # ESLint, incluye reglas de capas
+npm run build         # también build:mock
 ```
+Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 
 ## Capas (dependencias permitidas: features → shared → domain)
 - `src/domain/`: JS puro. **No importa React ni hace I/O** (ni fetch, ni localStorage, ni Supabase). Solo importa de `domain/`.
   **Todo cambio en `domain/` lleva test Vitest** en `src/domain/__tests__/`.
 - `src/shared/api/`: acceso a datos. `index.js` elige adaptador (`httpClient` | `mock/mockApi`) según `VITE_API_MODE`; `queries.js` expone hooks TanStack Query.
   Ambos adaptadores implementan el mismo contrato (el de la spec).
-- `src/shared/ui/`: presentación. No importa `shared/api`.
+- `src/shared/ui/`: presentación. No importa `shared/api` (recibe datos por props/argumentos).
 - `src/features/`: solo composición. Para datos **solo** usa `shared/api/index.js` y `shared/api/queries.js`; nunca `httpClient` ni `mockApi`.
 - La acción efectiva de una mano se calcula solo con `domain/range.js#actionFor`.
-- Colores de acción solo en `shared/theme/actionColors.js`; el dominio no conoce colores.
+- Colores de acción solo en `shared/theme/actionColors.js`; el dominio no conoce colores. Dentro de una situación no se repiten (test).
+- Las reglas de capas las verifica `eslint.config.js`; si cambian, se cambian ahí y en `docs/ARCHITECTURE.md`.
+- El mock (`shared/api/mock`) valida como la API y es dueño de los campos de servidor; mantenerlo alineado con la spec y con sus tests.
 
 ## Convenciones
-- Selectores de test: `data-testid` en kebab-case `<feature>-<elemento>`; atributos `data-hand`, `data-action`, `data-stack`.
+- Router en *data mode* (`createBrowserRouter`, rutas lazy en `src/App.jsx`). Selección de situación/stack en la URL (`?s=&stack=`).
+- Estado que depende de (situación, stack): reiniciar con `key` en un componente hijo, no con `setState` dentro de efectos.
+- Accesibilidad: controles con rol y nombre accesible (Playwright `getByRole`/`getByLabel` primero).
+  Celdas del grid: `"<mano>: <acción>"`. Confirmaciones en línea con `ConfirmBar`, no `window.confirm`.
+- Selectores de test: `data-testid` en kebab-case `<feature>-<elemento>`; atributos `data-hand`, `data-action` (acción efectiva),
+  `data-implicit`, `data-verdict`, `data-stack`.
 - El contrato definitivo vive en `spin-trainer-api/openapi.yaml`; `docs/openapi-draft.yaml` es solo borrador.

@@ -36,7 +36,7 @@ Mejoras a documentar: dividir god-objects · Lombok @Builder · ThreadLocalRando
 
 ## Estado
 - Prototipo vanilla (single file, localStorage): funcional, uso personal.
-- Web v2: estructura nueva, dominio con 14 tests Vitest, mock API, 4 features. Compila y pasa tests. Sin desplegar.
+- Web v2: estructura nueva, 62 tests Vitest (dominio, mock, invariante de colores) con cobertura ≥90%, ESLint con reglas de capas, mock API que valida como la API, 4 features. Compila, pasa lint y tests. Sin desplegar.
 - API y suite QA: no empezadas. Contrato v0 en `docs/openapi-draft.yaml`, pendiente de validación.
 
 ## Roadmap

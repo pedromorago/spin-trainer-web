@@ -4,20 +4,30 @@ Frontend de Spin Trainer: entrenador de rangos preflop para Spin & Go (3-max y h
 
 React 19 · React Router 7 · Vite · TanStack Query · CSS-in-JS inline · Supabase Auth · Vercel. Sin TypeScript en producto.
 
+Requisitos: Node `^22.13` o `>=24`.
+
 ## Arrancar sin backend
 
 ```bash
 npm install
-cp .env.example .env.local      # VITE_API_MODE=mock ya viene puesto
-npm run dev                     # http://localhost:5173
-npm test                        # tests de dominio (Vitest)
+npm run dev:mock                # http://localhost:5173 (modo mock, funciona en Windows)
 ```
 
-Con `VITE_API_MODE=mock` no hace falta login ni API: los datos viven en memoria/localStorage con el mismo contrato que la API real.
+En modo mock no hace falta login ni API: los datos viven en memoria/localStorage con el mismo contrato que la API real.
+
+## Scripts
+
+| Script | Qué hace |
+|---|---|
+| `npm run dev` / `dev:mock` | Servidor de desarrollo (API real / mock) |
+| `npm run build` / `build:mock` | Build de producción (API real / mock, para E2E) |
+| `npm test` | Vitest: dominio, adaptador mock, invariante de colores |
+| `npm run test:coverage` | Cobertura v8 + lcov (umbral 90%) |
+| `npm run lint` | ESLint, incluidas las reglas de capas |
 
 ## Con la API real
 
-`VITE_API_MODE=http`, `VITE_API_BASE_URL` apuntando a spin-trainer-api y las credenciales de Supabase Auth.
+`cp .env.example .env.local` y ajusta `VITE_API_MODE=http`, `VITE_API_BASE_URL` (spin-trainer-api) y las credenciales de Supabase Auth; después `npm run dev`.
 
 ## Estructura
 

@@ -41,11 +41,16 @@ src/
 
 Dependencias permitidas: `features → shared → domain`. `domain` no importa nada. `shared/ui` no importa `shared/api`.
 `features` nunca importa `httpClient` ni `mockApi`; solo `shared/api/index.js` y `queries.js`.
+Estas reglas no son solo documentación: `eslint.config.js` las verifica (`no-restricted-imports`/`no-restricted-globals` por capa), igual que ArchUnit en la API.
 
 La única implementación de "qué acción tiene esta mano" es `domain/range.js#actionFor`. Explorer, Quiz y Builder la comparten;
 el Builder evalúa comparando la acción efectiva mano a mano (`evaluateRange`), lo que elimina la clase de bug `tgtRaise`/`tgtCall` del prototipo.
 
-`VITE_API_MODE=mock` permite desarrollar y correr E2E sin backend con el mismo contrato.
+`VITE_API_MODE=mock` (`npm run dev:mock`, `npm run build:mock`) permite desarrollar y correr E2E sin backend con el mismo contrato.
+El mock valida como la API (400/404/409) y es dueño de los campos de servidor (`id`, `at`, `correct`, `version`); los builds http no lo incluyen.
+
+Routing en *data mode* (`createBrowserRouter`): rutas lazy por feature y `useBlocker` para los cambios sin guardar del Builder.
+La selección de situación y stack vive en la URL (`?s=<key>&stack=<bb>`), así que hay enlaces directos a cualquier situación y stack.
 
 ## API (repo spin-trainer-api)
 
@@ -83,8 +88,8 @@ El mock (`shared/api/mock`) implementa exactamente este contrato; `docs/openapi-
 
 | Nivel | Web | API | QA repo |
 |---|---|---|---|
-| Unit | Vitest sobre `domain/` | JUnit 5 sobre domain/application | — |
-| Arquitectura | (eslint import rules, pendiente) | ArchUnit | — |
+| Unit | Vitest sobre `domain/` y el adaptador mock (cobertura ≥90%) | JUnit 5 sobre domain/application | — |
+| Arquitectura | ESLint: reglas de capas en `eslint.config.js` | ArchUnit | — |
 | Integración | — | Testcontainers Postgres + Flyway | — |
 | Contrato | — | — | Validación de respuestas contra `openapi.yaml` |
 | API funcional | — | — | REST Assured + Cucumber; Newman en regresión |
