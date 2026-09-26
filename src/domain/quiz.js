@@ -13,6 +13,7 @@ const spotKey = ({ situation, stack }) => `${situation}@${stack}`;
  *  - 'range': hands with an explicit action + their boundary (also trains the decision not to play).
  *  - 'all':   the 169 hands.
  */
+// Stryker disable next-line StringLiteral: any scope other than 'all' is 'range'.
 export function quizPool(range, actions, scope = 'range') {
   if (scope === 'all') return allHands();
   const pool = new Set([...explicitHands(range, actions), ...boundaryHands(range, actions)]);
@@ -30,6 +31,8 @@ export function playableSpots(spots) {
  *  - mode 'hard':   hard hand (domain/stats#hardHands) from any of the spots, with probability ∝ weight.
  * @returns {{situation, stack, hand} | null} null if there is nothing to ask
  */
+// Stryker disable next-line StringLiteral,ArrayDeclaration: any mode other than 'hard' is normal, any scope other than
+// 'all' is 'range', and the hard list is only read in hard mode.
 export function nextQuestion({ spots, mode = 'normal', scope = 'range', hard = [], previous = null, rng = Math.random }) {
   const same = q => previous && spotKey(q) === spotKey(previous) && q.hand === previous.hand;
 
@@ -44,6 +47,7 @@ export function nextQuestion({ spots, mode = 'normal', scope = 'range', hard = [
   const spot = pickUniform(playableSpots(spots), rng);
   if (!spot) return null;
   const pool = quizPool(spot.hands, spot.actions, scope);
+  // Stryker disable next-line ConditionalExpression,EqualityOperator: a playable pool has its boundary too, so > 1 hand.
   const fresh = pool.length > 1 ? pool.filter(hand => !same({ ...spot, hand })) : pool;
   return { situation: spot.situation, stack: spot.stack, hand: pickUniform(fresh, rng) };
 }

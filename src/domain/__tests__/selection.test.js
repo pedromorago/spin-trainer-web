@@ -90,3 +90,20 @@ describe('pickCombo', () => {
     expect(pickCombo([], () => 0)).toBeNull();
   });
 });
+
+describe('selección: valores de la URL y por defecto', () => {
+  const UNSORTED = [{ key: 'sb_open', stacks: [10, 25] }, { key: 'btn_open', stacks: [15, 20] }];
+
+  it("'any' en la URL es el modo aleatorio, con los stacks de mayor a menor", () => {
+    expect(resolveSelection(UNSORTED, { situation: 'any', stack: 'any' })).toEqual({ situationKey: 'any', stack: 'any' });
+    expect(stackOptions(UNSORTED, 'any')).toEqual([25, 20, 15, 10]);
+  });
+
+  it('una situación desconocida lleva a btn_open aunque no sea la primera del catálogo', () => {
+    expect(resolveSelection(UNSORTED, { situation: 'nope' }).situationKey).toBe('btn_open');
+  });
+
+  it('sin btn_open en el catálogo, a la primera situación', () => {
+    expect(resolveSelection([{ key: 'sb_open', stacks: [10] }], { situation: 'nope' }).situationKey).toBe('sb_open');
+  });
+});

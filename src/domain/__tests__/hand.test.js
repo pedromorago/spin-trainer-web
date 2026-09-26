@@ -33,3 +33,25 @@ describe('hand', () => {
     expect(['AKo', '72o', 'KQs', '22', 'AKs', 'AA'].sort(compareHands)).toEqual(['AA', '22', 'AKs', 'KQs', 'AKo', '72o']);
   });
 });
+
+describe('isValidHand y getCell: entradas fuera del formato', () => {
+  it('exige la mano completa, sin prefijos ni sufijos', () => {
+    expect(isValidHand('XAKs')).toBe(false);
+    expect(isValidHand('AKsx')).toBe(false);
+  });
+
+  it('lo que no es texto no es una mano, y no lanza', () => {
+    for (const value of [null, undefined, 42, {}, ['AK']]) expect(isValidHand(value)).toBe(false);
+  });
+
+  it('getCell lanza con la mano en el mensaje', () => {
+    expect(() => getCell('ZZ')).toThrow('Invalid hand: ZZ');
+  });
+});
+
+describe('compareHands: dentro de cada grupo manda la fila', () => {
+  it('A2s va antes que KQs, y 32o la última', () => {
+    expect(['KQs', '32o', 'A2s', 'AKo', 'AKs', '22', 'AA'].sort(compareHands))
+      .toEqual(['AA', '22', 'AKs', 'A2s', 'KQs', 'AKo', '32o']);
+  });
+});

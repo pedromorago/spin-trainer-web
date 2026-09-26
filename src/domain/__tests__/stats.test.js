@@ -111,3 +111,28 @@ describe('dailySeries', () => {
     expect(dailySeries([], { days: 3, today: '2026-03-30' }).map(d => d.date)).toEqual(['2026-03-28', '2026-03-29', '2026-03-30']);
   });
 });
+
+describe('estadísticas: orden y ventana', () => {
+  it('aggregateAttempts se queda con la respuesta más reciente aunque lleguen desordenadas', () => {
+    const rows = aggregateAttempts([
+      { situation: 'btn_open', stack: 25, hand: 'AA', correct: true, answeredAt: '2026-09-23T10:00:00Z' },
+      { situation: 'btn_open', stack: 25, hand: 'AA', correct: false, answeredAt: '2026-09-22T10:00:00Z' }
+    ]);
+    expect(rows[0].lastAnsweredAt).toBe('2026-09-23T10:00:00Z');
+  });
+
+  it('mostFailed: más fallos primero; a igualdad, peor precisión; a igualdad total, por situación, stack y mano', () => {
+    const row = (hand, attempts, correct) => ({ situation: 'btn_open', stack: 25, hand, attempts, correct });
+    const failed = mostFailed([row('KK', 2, 1), row('AA', 4, 3), row('QQ', 3, 1), row('JJ', 2, 1), row('TT', 5, 4)]);
+    expect(failed.map(r => [r.hand, r.fails, r.accuracy])).toEqual([
+      ['QQ', 2, 1 / 3], ['JJ', 1, 0.5], ['KK', 1, 0.5], ['AA', 1, 0.75], ['TT', 1, 0.8]
+    ]);
+  });
+
+  it('progressByDay ignora respuestas posteriores a hoy y ordena los días', () => {
+    const now = new Date('2026-09-23T12:00:00Z');
+    const at = answeredAt => ({ answeredAt, correct: true });
+    const days = progressByDay([at('2026-09-23T08:00:00Z'), at('2026-09-21T08:00:00Z'), at('2026-09-24T08:00:00Z')], { now, days: 7 });
+    expect(days.map(d => d.date)).toEqual(['2026-09-21', '2026-09-23']);
+  });
+});

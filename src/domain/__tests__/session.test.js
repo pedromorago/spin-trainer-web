@@ -43,3 +43,19 @@ describe('reviveSession', () => {
     expect(reviveSession(value)).toEqual(emptySession());
   });
 });
+
+describe('reviveSession: valores límite', () => {
+  it('acepta ceros y los máximos coherentes (aciertos = total, mejor racha = aciertos)', () => {
+    expect(reviveSession({ total: 2, correct: 0, streak: 0, bestStreak: 0 })).toEqual({ total: 2, correct: 0, streak: 0, bestStreak: 0 });
+    expect(reviveSession({ total: 2, correct: 2, streak: 2, bestStreak: 2 })).toEqual({ total: 2, correct: 2, streak: 2, bestStreak: 2 });
+  });
+
+  it.each([
+    ['un total no entero', { total: 2.5, correct: 1, streak: 0, bestStreak: 1 }],
+    ['una racha negativa', { total: 3, correct: 2, streak: -1, bestStreak: 1 }],
+    ['una mejor racha mayor que los aciertos', { total: 3, correct: 1, streak: 0, bestStreak: 2 }],
+    ['un texto', 'total']
+  ])('descarta %s', (_, value) => {
+    expect(reviveSession(value)).toEqual(emptySession());
+  });
+});

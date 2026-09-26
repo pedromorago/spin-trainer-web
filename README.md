@@ -23,6 +23,7 @@ Mock mode needs no login and no API: data lives in memory/localStorage with the 
 | `npm run build` / `build:mock` | Production build (real API / mock, for E2E) |
 | `npm test` | Vitest: domain, mock adapter, color invariant |
 | `npm run test:coverage` | v8 coverage + lcov (90% threshold) |
+| `npm run test:mutation` | Stryker on `src/domain` (ADR-0017); HTML report in `reports/mutation` |
 | `npm run lint` | ESLint, including the layer rules |
 | `npm run spec:check` / `spec:sync` | Checks / pulls the contract copy from `../spin-trainer-api/openapi.yaml` |
 | `npm run ranges:check` / `ranges:sync` | Checks / pulls the copy of the reference ranges (`../spin-trainer-api/reference-ranges.json`) used by the mock |

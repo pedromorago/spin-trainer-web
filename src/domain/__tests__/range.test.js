@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { allHands } from '../hand';
 import {
-  boundaryHands, ERASE, evaluateRange, explicitHands, exportRange, mergeEffectiveRanges, normalizeRange, paintHand, rangesEqual, rangeStats, summarize
+  actionFor, boundaryHands, ERASE, evaluateRange, explicitHands, exportRange, mergeEffectiveRanges, normalizeRange, paintHand, rangesEqual, rangeStats, summarize
 } from '../range';
 
 const ACTIONS = ['ALLIN', '3BET_C', 'CALL', 'FOLD'];
@@ -180,5 +180,17 @@ describe('mergeEffectiveRanges', () => {
     expect(merged.get('btn_open@25')).toBe(user);
     expect(merged.get('sb_open@25')).toBe(other);
     expect(mergeEffectiveRanges().size).toBe(0);
+  });
+});
+
+describe('rango sin cargar y aciertos por acción', () => {
+  it('un rango null o undefined es todo acción implícita y se puede pintar', () => {
+    expect(actionFor(null, 'AA', ACTIONS)).toBe('FOLD');
+    expect(paintHand(undefined, 'AA', 'ALLIN', ACTIONS)).toEqual({ AA: 'ALLIN' });
+  });
+
+  it('evaluateRange cuenta total y aciertos por acción esperada', () => {
+    const { byAction } = evaluateRange({ AA: 'ALLIN', KK: 'ALLIN', QQ: 'CALL' }, { AA: 'ALLIN', KK: 'CALL' }, ACTIONS);
+    expect(byAction).toEqual({ ALLIN: { total: 2, correct: 1 }, CALL: { total: 1, correct: 0 }, FOLD: { total: 166, correct: 166 } });
   });
 });

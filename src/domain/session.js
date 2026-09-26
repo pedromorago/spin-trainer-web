@@ -21,7 +21,8 @@ export function sessionAccuracy(session) {
 /** Validates a deserialized session; returns an empty session if it does not have the expected shape. */
 export function reviveSession(value) {
   const keys = Object.keys(emptySession());
-  const ok = value && typeof value === 'object'
+  // Anything that is not an object (a string, a number) has no integer fields, so every() rejects it.
+  const ok = value
     && keys.every(k => Number.isInteger(value[k]) && value[k] >= 0)
     && value.correct <= value.total && value.streak <= value.bestStreak && value.bestStreak <= value.correct;
   return ok ? Object.fromEntries(keys.map(k => [k, value[k]])) : emptySession();

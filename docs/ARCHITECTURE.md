@@ -173,9 +173,10 @@ against the YAML's schemas (Ajv, JSON Schema 2020-12): if mock and spec diverge,
 | Level | Web | API | QA repo |
 |---|---|---|---|
 | Unit | Vitest on `domain/`, mock and http adapters (coverage ≥90%) | JUnit 6 + AssertJ on domain and use cases, without Spring (JaCoCo: ≥90% domain/use cases/kernel) | — |
+| Mutation (ADR-0017) | Stryker on `domain/` (`mutation.yml` workflow) | PIT on domain, use cases and kernel, ≥ 95 % in `check` | — |
 | Architecture | ESLint: layer rules in `eslint.config.js` | ArchUnit | — |
 | Integration | — | Full app with MockMvc, Testcontainers Postgres 17 with the production roles and real JWTs against a local JWKS | — |
 | Contract | Mock validated against the `docs/openapi.yaml` copy (Ajv) | Every integration test response validated against `openapi.yaml` (declared status + schema) | Every REST Assured and Cucumber response validated against a pinned copy of the spec (status, Content-Type, schema and formats) |
 | Functional API | — | — | Black-box against the API's Docker image: REST Assured + JUnit (partitions, boundary values, decision table, states), Cucumber in Spanish and Newman |
-| E2E | — | — | Playwright (TS): the same specs against the mock and against the real API; axe (WCAG 2.2 AA) |
+| E2E | — | — | Playwright (TS): the same specs against the mock and against the real API, under the production headers of `vercel.json`; axe (WCAG 2.2 AA) |
 | Reporting | — | — | Combined Allure (API, Newman, E2E) in GitHub Actions; SonarCloud in all three repos (pending) |

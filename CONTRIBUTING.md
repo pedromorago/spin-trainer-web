@@ -4,7 +4,7 @@ Spin Trainer frontend. Rules shared by the three repos, summarized here so this 
 
 ## Global rules (summary)
 - Portfolio quality > speed. Source of truth: `docs/SPIN_TRAINER_PROJECT_CONTEXT.md`, `docs/ARCHITECTURE.md`, `docs/adr/*`, `docs/openapi.yaml` (copy of the API contract).
-- ADRs are closed (0001..0016); they are reopened only for a concrete, justified flaw.
+- ADRs are closed (0001..0017); they are reopened only for a concrete, justified flaw.
 - Spin & Go only (3-max and HU, 16 situations). From the 6-max MTT prototype we take UI and flows, not code or ranges (ADR-0011).
 - Effective range = the custom one if it exists, otherwise the PDF one (`useEffectiveRange`). Only the Explorer writes ranges; the Builder does not persist (ADR-0012).
 - Supabase only issues the JWT; all data goes through the API. Default ranges in the DB (Flyway). Quiz attempts = immutable events.
@@ -22,6 +22,7 @@ npm run dev:mock      # no backend (vite --mode mock)
 npm run dev           # VITE_API_MODE from .env.local
 npm test              # Vitest
 npm run test:coverage # 90% threshold on domain/ and mock
+npm run test:mutation # Stryker on domain/ (ADR-0017, ~13 min; CI: mutation.yml)
 npm run lint          # ESLint, includes layer rules
 npm run build         # also build:mock
 npm run spec:check    # docs/openapi.yaml == ../spin-trainer-api/openapi.yaml
@@ -31,7 +32,8 @@ Before committing: `npm run lint && npm test && npm run build` green.
 
 ## Layers (allowed dependencies: features → shared → domain)
 - `src/domain/`: pure JS. **Does not import React or do I/O** (no fetch, localStorage or Supabase). Imports only from `domain/`.
-  **Every change in `domain/` comes with a Vitest test** in `src/domain/__tests__/`.
+  **Every change in `domain/` comes with a Vitest test** in `src/domain/__tests__/`. A surviving mutant (Stryker) gets a test;
+  only a truly equivalent one gets `// Stryker disable next-line <mutator>: <reason>`.
 - `src/shared/api/`: data access. `index.js` picks the adapter (`httpClient` | `mock/mockApi`) based on `VITE_API_MODE`; `queries.js` exposes TanStack Query hooks.
   Both adapters implement the same contract (the spec's).
 - `src/shared/ui/`: presentation. Does not import `shared/api` (receives data through props/arguments).

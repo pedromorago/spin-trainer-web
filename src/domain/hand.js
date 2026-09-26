@@ -17,8 +17,8 @@ export function getCell(hand) {
   if (!isValidHand(hand)) throw new Error(`Invalid hand: ${hand}`);
   const a = RANKS.indexOf(hand[0]);
   const b = RANKS.indexOf(hand[1]);
-  if (hand.length === 2) return [a, b];
   const hi = Math.min(a, b), lo = Math.max(a, b);
+  // Suited above the diagonal, offsuit below it; a pair (hi === lo) lands on it either way.
   return hand[2] === 's' ? [hi, lo] : [lo, hi];
 }
 
@@ -27,6 +27,7 @@ export function isValidHand(hand) {
   if (!m) return false;
   const pair = m[1] === m[2];
   if (pair) return m[3] === undefined;
+  // Stryker disable next-line EqualityOperator: pairs returned above, so the two ranks always differ here.
   return m[3] !== undefined && RANKS.indexOf(m[1]) < RANKS.indexOf(m[2]);
 }
 

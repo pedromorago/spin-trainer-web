@@ -3,6 +3,7 @@ import { allHands, combos, compareHands, getCell, getHand, isValidHand, TOTAL_CO
 import { ACTION_LABELS, fallbackAction, isValidAction } from './actions';
 
 /** "Eraser" brush: returns the hand to the implicit action. */
+// Stryker disable next-line StringLiteral: a sentinel; any value that is not an action code works the same.
 export const ERASE = 'ERASE';
 
 /**
@@ -62,6 +63,7 @@ export function boundaryHands(hands, situationActions) {
   const neighbours = hand => {
     const [r, c] = getCell(hand);
     return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
+      // Stryker disable next-line all: an off-grid "hand" is never in the explicit set, so this bound is not observable.
       .filter(([nr, nc]) => nr >= 0 && nr < 13 && nc >= 0 && nc < 13)
       .map(([nr, nc]) => getHand(nr, nc));
   };

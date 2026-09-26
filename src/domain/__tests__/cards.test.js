@@ -37,3 +37,17 @@ describe('dealCards', () => {
     expect(() => dealCards('AAs')).toThrow('Invalid hand');
   });
 });
+
+describe('dealCards: palos', () => {
+  const sequence = values => { let i = 0; return () => values[i++]; };
+
+  it('los palos son s, h, d y c, y el rng elige el primero', () => {
+    expect(SUITS).toEqual(['s', 'h', 'd', 'c']);
+    expect([0, 0.25, 0.5, 0.75].map(r => dealCards('AKs', () => r)[0].suit)).toEqual(['s', 'h', 'd', 'c']);
+  });
+
+  it('en una offsuit el rng elige el segundo palo entre los otros tres', () => {
+    expect(dealCards('AKo', sequence([0, 0.4]))[1].suit).toBe('d');
+    expect(dealCards('AKo', sequence([0, 0.99]))[1].suit).toBe('c');
+  });
+});

@@ -23,7 +23,7 @@ Professional stack: Java + REST Assured + JUnit 5 (backend), Playwright + TypeSc
 - Supabase = Auth (JWT) + Postgres. **Single data path: the API.** Tables in the `app` schema, not exposed to PostgREST.
 
 ## Closed decisions
-Gradle, not Maven · no TS in product code · Supabase for Auth only · default ranges in the DB (seed) · Quiz attempts as events · validation against the spec instead of Pact · Spin & Go only; from the MTT prototype only UI and flows (ADR-0011) · effective range = custom if it exists; only the Explorer writes it (ADR-0012) · Spring Boot 4.1 (ADR-0014) · JdbcClient without JPA, attempts made immutable by DB privileges (ADR-0015) · web on Vercel and API on Fly.io, with the production headers (CSP) tested in E2E (ADR-0016).
+Gradle, not Maven · no TS in product code · Supabase for Auth only · default ranges in the DB (seed) · Quiz attempts as events · validation against the spec instead of Pact · Spin & Go only; from the MTT prototype only UI and flows (ADR-0011) · effective range = custom if it exists; only the Explorer writes it (ADR-0012) · Spring Boot 4.1 (ADR-0014) · JdbcClient without JPA, attempts made immutable by DB privileges (ADR-0015) · web on Vercel and API on Fly.io, with the production headers (CSP) tested in E2E (ADR-0016) · mutation testing of the domain: PIT in the API's `check`, Stryker in the web's CI (ADR-0017).
 **Rejected:** OWASP ZAP, load testing tools, Pact, pgTAP, TypeScript in product code.
 
 ## QA patterns to replicate (from my professional framework)

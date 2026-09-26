@@ -26,3 +26,13 @@ describe('pickWeighted', () => {
     expect(pickWeighted([], i => i.w)).toBeNull();
   });
 });
+
+describe('pickWeighted: pesos acumulados y extremos', () => {
+  it('con tres pesos iguales, 0.5 cae en el del medio', () => {
+    expect(pickWeighted(['a', 'b', 'c'], () => 1, () => 0.5)).toBe('b');
+  });
+
+  it('si el redondeo lleva el sorteo al final, sale el último con peso positivo, nunca uno con peso 0', () => {
+    expect(pickWeighted(['a', 'b'], item => (item === 'a' ? 1 : 0), () => 1)).toBe('a');
+  });
+});

@@ -74,3 +74,17 @@ describe('checkAnswer', () => {
     expect(checkAnswer(A, 'AKo', 'FOLD').correct).toBe(true);
   });
 });
+
+describe('nextQuestion: qué cuenta como repetir', () => {
+  it('la misma mano en otro spot no es una repetición', () => {
+    const other = spot('sb_open', 25, { AA: 'ALLIN' });
+    expect(nextQuestion({ spots: [other], previous: { situation: 'btn_open', stack: 25, hand: 'AA' }, rng: () => 0 }))
+      .toEqual({ situation: 'sb_open', stack: 25, hand: 'AA' });
+  });
+
+  it('en modo difíciles, si la única candidata es la anterior, se repite antes que no preguntar', () => {
+    const hard = [{ situation: 'btn_open', stack: 25, hand: 'AA', weight: 2 }];
+    expect(nextQuestion({ spots: [A], mode: 'hard', hard, previous: hard[0], rng: () => 0 }))
+      .toEqual({ situation: 'btn_open', stack: 25, hand: 'AA' });
+  });
+});
