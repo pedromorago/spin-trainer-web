@@ -5,7 +5,8 @@ import { useSituationSelection } from '../../shared/ui/useSituationSelection';
 import { HandGrid } from '../../shared/ui/HandGrid';
 import { ActionPalette } from '../../shared/ui/ActionPalette';
 import { SituationSelector, StackSelector } from '../../shared/ui/SituationSelector';
-import { Empty, ErrorBox, Loading, layout } from '../../shared/ui/Feedback';
+import { Empty, ErrorBox, Loading } from '../../shared/ui/Feedback';
+import { layout } from '../../shared/ui/styles';
 import { theme } from '../../shared/theme/theme';
 
 export function ExplorerPage() {

@@ -1,6 +1,7 @@
 import { accuracy, bySituationStack, weakestHands } from '../../domain/stats';
 import { useAttempts, useSituations } from '../../shared/api/queries';
-import { Empty, ErrorBox, Loading, layout } from '../../shared/ui/Feedback';
+import { Empty, ErrorBox, Loading } from '../../shared/ui/Feedback';
+import { layout } from '../../shared/ui/styles';
 import { theme } from '../../shared/theme/theme';
 
 export function StatsPage() {

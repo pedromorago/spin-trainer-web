@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '../../shared/auth/useAuth';
 import { theme } from '../../shared/theme/theme';
-import { layout } from '../../shared/ui/Feedback';
+import { layout } from '../../shared/ui/styles';
 
 export function LoginPage() {
   const { user, signIn, signUp } = useAuth();
