@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { evaluateRange, normalizeRange, summarize } from '../range';
 
 const ACTIONS = ['ALLIN', '3BET_C', 'CALL', 'FOLD'];
+const LIMP_ACTIONS = ['ALLIN', 'ISO_C', 'CHECK'];
 
 describe('normalizeRange', () => {
   it('descarta manos inválidas, acciones no permitidas y la acción implícita', () => {
@@ -16,6 +17,15 @@ describe('summarize', () => {
     expect(s.ALLIN).toEqual({ hands: 1, combos: 6 });
     expect(s.CALL).toEqual({ hands: 1, combos: 4 });
     expect(s.FOLD.hands).toBe(167);
+  });
+
+  it('usa la acción efectiva: una implícita listada no crea otra categoría', () => {
+    const s = summarize({ '72o': 'FOLD' }, ACTIONS);
+    expect(s).toEqual({ FOLD: { hands: 169, combos: 1326 } });
+  });
+
+  it('con implícita CHECK cuenta las manos no listadas como CHECK', () => {
+    expect(summarize({ AA: 'ALLIN' }, LIMP_ACTIONS).CHECK.hands).toBe(168);
   });
 });
 

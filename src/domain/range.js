@@ -25,10 +25,9 @@ export function actionFor(hands, hand, situationActions) {
 
 /** Recuento de manos y combos por acción, incluyendo la implícita. */
 export function summarize(hands, situationActions) {
-  const implicit = fallbackAction(situationActions);
   const byAction = {};
   for (const h of allHands()) {
-    const a = hands?.[h] ?? implicit;
+    const a = actionFor(hands, h, situationActions);
     byAction[a] ??= { hands: 0, combos: 0 };
     byAction[a].hands += 1;
     byAction[a].combos += combos(h);
