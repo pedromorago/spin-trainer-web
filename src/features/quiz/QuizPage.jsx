@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useMemo, useState } from 'react';
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router';
 import { checkAnswer, nextQuestion, playableSpots } from '../../domain/quiz';
 import { ACTION_LABELS } from '../../domain/actions';
@@ -11,6 +11,7 @@ import { useSession } from '../../shared/session/useSession';
 import { ActionPalette } from '../../shared/ui/ActionPalette';
 import { HandGrid } from '../../shared/ui/HandGrid';
 import { PokerTable } from '../../shared/ui/PokerTable';
+import { actionIndexForKey, isInteractive, isTextField } from '../../shared/ui/shortcuts';
 import { Empty, ErrorBox, Loading } from '../../shared/ui/Feedback';
 import { layout } from '../../shared/ui/styles';
 import { colorFor } from '../../shared/theme/actionColors';
@@ -22,7 +23,7 @@ const SCOPES = { range: 'Rango + frontera', all: 'Las 169 manos' };
 const EMPTY_ROWS = [];
 
 /**
- * Quiz: table with the situation, answer with buttons or keys 1..n, feedback with the correct range.
+ * Quiz: table with the situation, answer with buttons or keys (1..9, 0), feedback with the correct range.
  * Each question comes from domain/quiz#nextQuestion over the spots of the selection (several with "Any").
  * The server grades again when recording the attempt (contract v0.2).
  */
@@ -35,7 +36,7 @@ export function QuizPage() {
   const hard = useMemo(() => hardHands(handStats.data ?? EMPTY_ROWS), [handStats.data]);
 
   if (effective.isLoading || (mode === 'hard' && handStats.isLoading)) return <Loading />;
-  if (effective.error) return <ErrorBox error={effective.error} />;
+  if (effective.error) return <ErrorBox error={effective.error} onRetry={effective.refetch} />;
 
   // Spots of the selection with an effective range (custom if it exists; ADR-0012).
   const spots = selection.combos.flatMap(c => {
@@ -71,9 +72,12 @@ export function QuizPage() {
           </select>
         </div>
       </div>
-      {/* The key resets the round when the selection, mode or scope changes (no setState in effects). */}
-      <QuizRound key={`${selection.situationKey}@${selection.stack}@${mode}@${scope}`}
-        situations={situations} spots={spots} hard={hardHere} mode={mode} scope={scope} />
+      {/* Without the stats there is no pool of hard hands: an error, not "no hard hands left". */}
+      {mode === 'hard' && handStats.isLoadingError ? <ErrorBox error={handStats.error} onRetry={handStats.refetch} /> : (
+        // The key resets the round when the selection, mode or scope changes (no setState in effects).
+        <QuizRound key={`${selection.situationKey}@${selection.stack}@${mode}@${scope}`}
+          situations={situations} spots={spots} hard={hardHere} mode={mode} scope={scope} />
+      )}
     </div>
   );
 }
@@ -85,6 +89,8 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
   const [question, setQuestion] = useState(() => deal(nextQuestion({ spots, mode, scope, hard })));
   const [result, setResult] = useState(null);
   const [round, setRound] = useState({ correct: 0, total: 0 });
+  const answers = useRef(null);
+  const focusAnswers = useRef(false);
 
   const spot = question && spots.find(s => comboKey(s) === comboKey(question));
   const situation = spot && situations.find(s => s.key === spot.situation);
@@ -102,18 +108,24 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
     if (!result) return;
     setResult(null);
     setQuestion(deal(nextQuestion({ spots, mode, scope, hard, previous: question })));
+    focusAnswers.current = true;
   };
+  // "Siguiente mano" disappears with the feedback: the focus goes back to the answers instead of the page body.
+  useEffect(() => {
+    if (!focusAnswers.current) return;
+    focusAnswers.current = false;
+    answers.current?.querySelector('button:enabled')?.focus();
+  }, [question]);
 
-  // Shortcuts: 1..n answers; Enter or → moves to the next one. Ignored with focus on fields or with modifiers.
+  // Shortcuts: 1..9 and 0 answer; Enter or → moves to the next one. Ignored with focus on fields or with modifiers,
+  // and Enter is left to the focused link or button (the "Siguiente mano" button handles it itself).
   const onKey = useEffectEvent(e => {
-    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
-    const tag = e.target?.tagName;
-    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || e.target?.isContentEditable) return;
-    const index = Number(e.key) - 1;
-    if (!result && spot && Number.isInteger(index) && index >= 0 && index < spot.actions.length) {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || isTextField(e.target)) return;
+    const index = spot ? actionIndexForKey(e.key, spot.actions.length) : -1;
+    if (!result && index >= 0) {
       e.preventDefault();
       answer(spot.actions[index]);
-    } else if (result && (e.key === 'ArrowRight' || (e.key === 'Enter' && tag !== 'BUTTON'))) {
+    } else if (result && (e.key === 'ArrowRight' || (e.key === 'Enter' && !isInteractive(e.target)))) {
       e.preventDefault();
       next();
     }
@@ -137,6 +149,10 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
   const { seats, pot } = tableSeats(situation, spot.stack);
   const pct = round.total ? Math.round((round.correct / round.total) * 100) : 0;
   const poolInfo = mode === 'hard' ? `${hard.length} manos difíciles` : `${playableSpots(spots).length} combinaciones`;
+  const label = action => ACTION_LABELS[action] ?? action;
+  // Short announcement for screen readers; the feedback box (with a 169-cell grid) is not a live region.
+  const announcement = !result ? ''
+    : `${result.correct ? 'Correcto' : 'Incorrecto'}. ${question.hand}: ${label(result.expected)}${result.correct ? '' : `; respondiste ${label(result.given)}`}.`;
 
   return (
     <>
@@ -153,33 +169,35 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
       </div>
       <PokerTable seats={seats} pot={pot} heroCards={question.cards} stack={spot.stack} caption={situation.label} />
       <ErrorBox error={record.error} />
-      <ActionPalette actions={spot.actions} selected={result?.given} onSelect={answer} disabled={!!result} shortcuts />
-      <div role="status" aria-live="polite">
-        {result && (
-          <div data-testid="quiz-feedback" style={{ display: 'flex', gap: theme.space.lg, flexWrap: 'wrap', alignItems: 'flex-start',
-            padding: theme.space.md, borderRadius: theme.radius.md,
-            border: `1px solid ${result.correct ? theme.colors.success : theme.colors.danger}` }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.space.sm, flex: '1 1 220px' }}>
-              <strong style={{ color: result.correct ? theme.colors.success : theme.colors.danger, fontSize: theme.font.sizeLg }}>
-                {result.correct ? 'Correcto' : 'Incorrecto'}
-              </strong>
-              <span>
-                {question.hand}:{' '}
-                <span data-testid="quiz-expected" style={{ padding: '1px 8px', borderRadius: theme.radius.sm, fontWeight: 700,
-                  background: colorFor(result.expected), color: readableText(colorFor(result.expected)) }}>
-                  {ACTION_LABELS[result.expected] ?? result.expected}
-                </span>
-                {!result.correct && <> (respondiste {ACTION_LABELS[result.given] ?? result.given})</>}
-              </span>
-              <button type="button" style={{ ...layout.primary, alignSelf: 'flex-start' }} onClick={next} autoFocus data-testid="quiz-next">
-                Siguiente mano <kbd style={{ fontFamily: theme.font.mono, opacity: 0.7 }}>↵</kbd>
-              </button>
-            </div>
-            <HandGrid assignments={spot.hands} actions={spot.actions} cellSize={16} showLabels={false} highlight={question.hand}
-              label={`Rango correcto de ${situation.label} · ${spot.stack} BB`} />
-          </div>
-        )}
+      <div ref={answers}>
+        <ActionPalette actions={spot.actions} selected={result?.given} onSelect={answer} disabled={!!result} shortcuts />
       </div>
+      <div role="status" style={layout.visuallyHidden} data-testid="quiz-announcement">{announcement}</div>
+      {result && (
+        <div data-testid="quiz-feedback" style={{ display: 'flex', gap: theme.space.lg, flexWrap: 'wrap', alignItems: 'flex-start',
+          padding: theme.space.md, borderRadius: theme.radius.md,
+          border: `1px solid ${result.correct ? theme.colors.success : theme.colors.danger}` }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.space.sm, flex: '1 1 220px' }}>
+            <strong style={{ color: result.correct ? theme.colors.success : theme.colors.danger, fontSize: theme.font.sizeLg }}>
+              {result.correct ? 'Correcto' : 'Incorrecto'}
+            </strong>
+            <span>
+              {question.hand}:{' '}
+              <span data-testid="quiz-expected" style={{ padding: '1px 8px', borderRadius: theme.radius.sm, fontWeight: 700,
+                background: colorFor(result.expected), color: readableText(colorFor(result.expected)) }}>
+                {label(result.expected)}
+              </span>
+              {!result.correct && <> (respondiste {label(result.given)})</>}
+            </span>
+            <button type="button" style={{ ...layout.primary, alignSelf: 'flex-start' }} onClick={next} autoFocus
+              aria-keyshortcuts="Enter ArrowRight" data-testid="quiz-next">
+              Siguiente mano <kbd aria-hidden="true" style={{ fontFamily: theme.font.mono, opacity: 0.7 }}>↵</kbd>
+            </button>
+          </div>
+          <HandGrid assignments={spot.hands} actions={spot.actions} cellSize={16} showLabels={false} highlight={question.hand}
+            label={`Rango correcto de ${situation.label} · ${spot.stack} BB`} />
+        </div>
+      )}
       <small style={layout.mono} data-testid="quiz-stats">
         Ronda: {round.correct} / {round.total} ({pct}%) · {poolInfo}
       </small>

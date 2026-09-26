@@ -1,11 +1,12 @@
 import { ACTION_LABELS } from '../../domain/actions';
 import { ERASE } from '../../domain/range';
 import { colorFor } from '../theme/actionColors';
+import { shortcutKey } from './shortcuts';
 import { theme } from '../theme/theme';
 
 /**
  * Action buttons. They work as a legend (without onSelect), as a brush (with onSelect and `eraser`) or as Quiz answers.
- * Props: actions, selected, onSelect(action), disabled, eraser (adds the eraser: ERASE), shortcuts (shows 1..n)
+ * Props: actions, selected, onSelect(action), disabled, eraser (adds the eraser: ERASE), shortcuts (shows the keys: 1..9, then 0)
  */
 export function ActionPalette({ actions, selected, onSelect, disabled = false, eraser = false, shortcuts = false }) {
   const items = eraser ? [...actions, ERASE] : actions;
@@ -24,14 +25,15 @@ export function ActionPalette({ actions, selected, onSelect, disabled = false, e
           fontSize: theme.font.sizeSm, fontWeight: active ? 700 : 500,
           cursor: disabled ? 'not-allowed' : onSelect ? 'pointer' : 'default', opacity: disabled ? 0.6 : 1
         };
+        const shortcut = shortcuts ? shortcutKey(i) : undefined;
         const swatch = isEraser
           ? { width: 12, height: 12, borderRadius: 3, flexShrink: 0, border: `1px dashed ${color}` }
           : { width: 12, height: 12, borderRadius: 3, flexShrink: 0, background: color };
         return (
           <button key={action} type="button" style={btn} disabled={disabled} onClick={() => onSelect?.(action)} data-action={action}
-            aria-pressed={onSelect ? active : undefined} aria-keyshortcuts={shortcuts ? String(i + 1) : undefined}>
+            aria-pressed={onSelect ? active : undefined} aria-keyshortcuts={shortcut}>
             {/* The shortcut is announced with aria-keyshortcuts; the kbd must not be part of the accessible name. */}
-            {shortcuts && <kbd aria-hidden="true" style={{ fontFamily: theme.font.mono, fontSize: theme.font.sizeXs, color: theme.colors.textMuted }}>{i + 1}</kbd>}
+            {shortcut && <kbd aria-hidden="true" style={{ fontFamily: theme.font.mono, fontSize: theme.font.sizeXs, color: theme.colors.textMuted }}>{shortcut}</kbd>}
             <span aria-hidden="true" style={swatch} />
             <span>{isEraser ? 'Goma' : ACTION_LABELS[action] ?? action}</span>
           </button>
