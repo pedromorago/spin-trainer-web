@@ -1,5 +1,7 @@
 // Hooks de estado de servidor (TanStack Query). Un hook por operación del contrato v0.2 (docs/openapi-draft.yaml).
+import { useMemo } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { mergeEffectiveRanges } from '../../domain/range';
 import { api, ApiError } from './index';
 
 export const keys = {
@@ -64,6 +66,21 @@ export function useEffectiveRange(situation, stack) {
     isLoading: def.isLoading || user.isLoading,
     error: def.error ?? user.error ?? null,
     refetchUserRange: user.refetch
+  };
+}
+
+/**
+ * Rangos efectivos de todas las combinaciones (ADR-0012), para el modo "Any" y las manos difíciles:
+ * `ranges` es un Map `situación@stack` → Range (el personalizado prevalece).
+ */
+export function useEffectiveRanges() {
+  const defaults = useDefaultRanges();
+  const users = useUserRanges();
+  const ranges = useMemo(() => mergeEffectiveRanges(defaults.data, users.data), [defaults.data, users.data]);
+  return {
+    ranges,
+    isLoading: defaults.isLoading || users.isLoading,
+    error: defaults.error ?? users.error ?? null
   };
 }
 

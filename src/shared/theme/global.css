@@ -12,3 +12,5 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 .app-header { position: sticky; top: 0; }
 @media (max-width: 720px) { .app-header { position: static; } }
+.poker-table { aspect-ratio: 16 / 10; }
+@media (max-width: 560px) { .poker-table { aspect-ratio: 5 / 4; } }

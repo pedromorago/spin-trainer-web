@@ -1,108 +1,187 @@
-import { useState } from 'react';
+import { useEffect, useEffectEvent, useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router';
-import { createQuizEngine, quizPool } from '../../domain/quiz';
+import { checkAnswer, nextQuestion, playableSpots } from '../../domain/quiz';
 import { ACTION_LABELS } from '../../domain/actions';
+import { dealCards } from '../../domain/cards';
 import { comboKey } from '../../domain/selection';
-import { useEffectiveRange, useRecordAttempt } from '../../shared/api/queries';
+import { hardHands } from '../../domain/stats';
+import { tableSeats } from '../../domain/table';
+import { useEffectiveRanges, useHandStats, useRecordAttempt } from '../../shared/api/queries';
 import { useSession } from '../../shared/session/useSession';
 import { ActionPalette } from '../../shared/ui/ActionPalette';
-import { ComboPicker } from '../../shared/ui/ComboPicker';
+import { HandGrid } from '../../shared/ui/HandGrid';
+import { PokerTable } from '../../shared/ui/PokerTable';
 import { Empty, ErrorBox, Loading } from '../../shared/ui/Feedback';
 import { layout } from '../../shared/ui/styles';
 import { colorFor } from '../../shared/theme/actionColors';
+import { readableText } from '../../shared/theme/contrast';
 import { theme } from '../../shared/theme/theme';
 
+const MODES = { normal: 'Todas las manos', hard: 'Solo difíciles' };
 const SCOPES = { range: 'Rango + frontera', all: 'Las 169 manos' };
+const EMPTY_ROWS = [];
 
+/**
+ * Quiz: mesa con la situación, respuesta con botones o teclas 1..n, feedback con el rango correcto.
+ * Cada pregunta sale de domain/quiz#nextQuestion sobre los spots de la selección (varios con "Any").
+ * El servidor vuelve a corregir al registrar el intento (contrato v0.2).
+ */
 export function QuizPage() {
   const { situations, selection } = useOutletContext();
+  const effective = useEffectiveRanges();
+  const handStats = useHandStats();
+  const [mode, setMode] = useState('normal');
   const [scope, setScope] = useState('range');
-  const select = {
-    padding: `${theme.space.sm} ${theme.space.md}`, background: theme.colors.bgSunken, color: theme.colors.text,
-    border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.sm, fontSize: theme.font.sizeSm
-  };
+  const hard = useMemo(() => hardHands(handStats.data ?? EMPTY_ROWS), [handStats.data]);
+
+  if (effective.isLoading || (mode === 'hard' && handStats.isLoading)) return <Loading />;
+  if (effective.error) return <ErrorBox error={effective.error} />;
+
+  // Spots de la selección con rango efectivo (personalizado si existe; ADR-0012).
+  const spots = selection.combos.flatMap(c => {
+    const range = effective.ranges.get(comboKey(c));
+    const situation = situations.find(s => s.key === c.situation);
+    return range ? [{ situation: c.situation, stack: c.stack, actions: situation.actions, hands: range.hands, source: range.source }] : [];
+  });
+  const spotKeys = new Set(playableSpots(spots).map(comboKey));
+  const hardHere = hard.filter(h => spotKeys.has(comboKey(h)));
+
+  const control = active => ({
+    ...layout.secondary, padding: `${theme.space.xs} ${theme.space.md}`,
+    background: active ? theme.colors.accentSoft : 'transparent', borderColor: active ? theme.colors.accent : theme.colors.border
+  });
+  const select = { ...control(false), background: theme.colors.bgSunken, color: theme.colors.text };
 
   return (
     <div style={layout.page}>
       <div style={{ ...layout.row, justifyContent: 'space-between' }}>
         <h2 style={layout.title}>Quiz</h2>
-        <select style={select} value={scope} onChange={e => setScope(e.target.value)} aria-label="Manos a preguntar" data-testid="quiz-scope">
-          {Object.entries(SCOPES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
-        </select>
+        <div style={{ ...layout.row, gap: theme.space.sm }}>
+          <div role="group" aria-label="Modo" style={{ display: 'flex', gap: theme.space.xs }}>
+            {Object.entries(MODES).map(([k, label]) => (
+              <button key={k} type="button" style={control(mode === k)} aria-pressed={mode === k} onClick={() => setMode(k)}
+                data-testid={`quiz-mode-${k}`}>
+                {label}{k === 'hard' ? ` (${hardHere.length})` : ''}
+              </button>
+            ))}
+          </div>
+          <select style={select} value={scope} onChange={e => setScope(e.target.value)} disabled={mode === 'hard'}
+            aria-label="Manos a preguntar" data-testid="quiz-scope">
+            {Object.entries(SCOPES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+          </select>
+        </div>
       </div>
-      {/* La key reinicia la elección de combinación al cambiar la selección. */}
-      <ComboPicker key={`${selection.situationKey}@${selection.stack}`}
-        situations={situations} combos={selection.combos} random={selection.isAny}>
-        {(combo, situation) => <QuizCombo key={comboKey(combo)} situation={situation} stack={combo.stack} scope={scope} />}
-      </ComboPicker>
+      {/* La key reinicia la ronda al cambiar selección, modo o alcance (sin setState en efectos). */}
+      <QuizRound key={`${selection.situationKey}@${selection.stack}@${mode}@${scope}`}
+        situations={situations} spots={spots} hard={hardHere} mode={mode} scope={scope} />
     </div>
   );
 }
 
-function QuizCombo({ situation, stack, scope }) {
-  // Rango efectivo (ADR-0012): el custom si existe, si no el del PDF.
-  const effective = useEffectiveRange(situation.key, stack);
-  if (effective.isLoading) return <Loading />;
-  if (!effective.range && effective.error) return <ErrorBox error={effective.error} />;
-  const range = effective.range?.hands ?? {};
-  if (quizPool(range, situation.actions).length === 0) {
-    return <Empty>Rango sin cargar para esta situación / stack: no hay nada que preguntar.</Empty>;
-  }
-  return (
-    <>
-      {effective.userRange && (
-        <small style={{ color: theme.colors.accent }} data-testid="quiz-custom-range">
-          Entrenando tu rango personalizado (guardado en el Explorer).
-        </small>
-      )}
-      {/* La key reinicia la ronda al cambiar el alcance (sin setState en efectos). */}
-      <QuizSession key={scope} situation={situation} stack={stack} range={range} scope={scope} />
-    </>
-  );
-}
-
-function QuizSession({ situation, stack, range, scope }) {
+function QuizRound({ situations, spots, hard, mode, scope }) {
   const record = useRecordAttempt();
   const { record: recordInSession } = useSession();
-  const [engine] = useState(() => createQuizEngine({ range, actions: situation.actions, scope }));
-  const [hand, setHand] = useState(() => engine.nextHand());
+  const deal = q => q && { ...q, cards: dealCards(q.hand) };
+  const [question, setQuestion] = useState(() => deal(nextQuestion({ spots, mode, scope, hard })));
   const [result, setResult] = useState(null);
   const [round, setRound] = useState({ correct: 0, total: 0 });
 
+  const spot = question && spots.find(s => comboKey(s) === comboKey(question));
+  const situation = spot && situations.find(s => s.key === spot.situation);
+
   const answer = given => {
-    if (result) return;
-    const r = engine.check(hand, given);
+    if (result || !spot) return;
+    const r = checkAnswer(spot, question.hand, given);
     setResult(r);
     setRound(s => ({ correct: s.correct + (r.correct ? 1 : 0), total: s.total + 1 }));
     recordInSession(r.correct);
     // El servidor corrige contra el rango efectivo (contrato v0.2); el feedback local es inmediato.
-    record.mutate({ situation: situation.key, stack, hand, given });
+    record.mutate({ situation: spot.situation, stack: spot.stack, hand: question.hand, given });
+  };
+  const next = () => {
+    if (!result) return;
+    setResult(null);
+    setQuestion(deal(nextQuestion({ spots, mode, scope, hard, previous: question })));
   };
 
-  const next = () => { setResult(null); setHand(engine.nextHand()); };
+  // Atajos: 1..n responde; Enter o → pasa a la siguiente. Se ignoran con foco en campos o con modificadores.
+  const onKey = useEffectEvent(e => {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    const tag = e.target?.tagName;
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || e.target?.isContentEditable) return;
+    const index = Number(e.key) - 1;
+    if (!result && spot && Number.isInteger(index) && index >= 0 && index < spot.actions.length) {
+      e.preventDefault();
+      answer(spot.actions[index]);
+    } else if (result && (e.key === 'ArrowRight' || (e.key === 'Enter' && tag !== 'BUTTON'))) {
+      e.preventDefault();
+      next();
+    }
+  });
+  useEffect(() => {
+    const handler = e => onKey(e);
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
-  const handBox = { fontFamily: theme.font.mono, fontSize: 48, fontWeight: 700, padding: `${theme.space.lg} ${theme.space.xl}`,
-    alignSelf: 'flex-start', background: theme.colors.bgElevated, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md };
+  if (!question || !spot) {
+    return (
+      <Empty>
+        {mode === 'hard'
+          ? 'Sin manos difíciles pendientes en esta selección: falla una mano 2 veces para que aparezca aquí; al acertarla sale del pool.'
+          : 'Rango sin cargar para esta selección: no hay nada que preguntar.'}
+      </Empty>
+    );
+  }
+
+  const { seats, pot } = tableSeats(situation, spot.stack);
   const pct = round.total ? Math.round((round.correct / round.total) * 100) : 0;
+  const poolInfo = mode === 'hard' ? `${hard.length} manos difíciles` : `${playableSpots(spots).length} combinaciones`;
 
   return (
     <>
+      <div style={{ ...layout.row, gap: theme.space.md }}>
+        <strong style={{ fontFamily: theme.font.display, fontSize: 22, letterSpacing: 1 }} data-testid="quiz-spot">
+          {situation.label} · {spot.stack} BB
+        </strong>
+        <span style={{ fontFamily: theme.font.mono, color: theme.colors.textMuted }}>
+          Tu mano: <strong style={{ color: theme.colors.text }} data-testid="quiz-hand">{question.hand}</strong>
+        </span>
+        {spot.source === 'user' && (
+          <small style={{ color: theme.colors.accent }} data-testid="quiz-custom-range">Rango personalizado</small>
+        )}
+      </div>
+      <PokerTable seats={seats} pot={pot} heroCards={question.cards} stack={spot.stack} caption={situation.label} />
       <ErrorBox error={record.error} />
-      <div style={handBox} data-testid="quiz-hand" aria-label={`Mano: ${hand}`}>{hand}</div>
-      <ActionPalette actions={situation.actions} selected={result?.given} onSelect={answer} disabled={!!result} />
+      <ActionPalette actions={spot.actions} selected={result?.given} onSelect={answer} disabled={!!result} shortcuts />
       <div role="status" aria-live="polite">
         {result && (
-          <div data-testid="quiz-feedback" style={{ padding: theme.space.md, borderRadius: theme.radius.sm,
-            border: `1px solid ${result.correct ? theme.colors.success : theme.colors.danger}`,
-            color: result.correct ? theme.colors.success : theme.colors.danger }}>
-            {result.correct ? 'Correcto' : 'Incorrecto'}: la acción es{' '}
-            <span style={{ color: colorFor(result.expected) }}>{ACTION_LABELS[result.expected] ?? result.expected}</span>
+          <div data-testid="quiz-feedback" style={{ display: 'flex', gap: theme.space.lg, flexWrap: 'wrap', alignItems: 'flex-start',
+            padding: theme.space.md, borderRadius: theme.radius.md,
+            border: `1px solid ${result.correct ? theme.colors.success : theme.colors.danger}` }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.space.sm, flex: '1 1 220px' }}>
+              <strong style={{ color: result.correct ? theme.colors.success : theme.colors.danger, fontSize: theme.font.sizeLg }}>
+                {result.correct ? 'Correcto' : 'Incorrecto'}
+              </strong>
+              <span>
+                {question.hand}:{' '}
+                <span data-testid="quiz-expected" style={{ padding: '1px 8px', borderRadius: theme.radius.sm, fontWeight: 700,
+                  background: colorFor(result.expected), color: readableText(colorFor(result.expected)) }}>
+                  {ACTION_LABELS[result.expected] ?? result.expected}
+                </span>
+                {!result.correct && <> (respondiste {ACTION_LABELS[result.given] ?? result.given})</>}
+              </span>
+              <button type="button" style={{ ...layout.primary, alignSelf: 'flex-start' }} onClick={next} autoFocus data-testid="quiz-next">
+                Siguiente mano <kbd style={{ fontFamily: theme.font.mono, opacity: 0.7 }}>↵</kbd>
+              </button>
+            </div>
+            <HandGrid assignments={spot.hands} actions={spot.actions} cellSize={16} showLabels={false} highlight={question.hand}
+              label={`Rango correcto de ${situation.label} · ${spot.stack} BB`} />
           </div>
         )}
       </div>
-      {result && <button style={{ ...layout.primary, alignSelf: 'flex-start' }} onClick={next} data-testid="quiz-next">Siguiente mano</button>}
       <small style={layout.mono} data-testid="quiz-stats">
-        Ronda: {round.correct} / {round.total} ({pct}%) · {engine.size} manos en juego
+        Ronda: {round.correct} / {round.total} ({pct}%) · {poolInfo}
       </small>
     </>
   );

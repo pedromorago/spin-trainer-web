@@ -50,6 +50,8 @@ Antes de commitear: `npm run lint && npm test && npm run build` en verde.
   Celdas del grid: `"<mano>: <acción>"`. Confirmaciones en línea con `ConfirmBar`, no `window.confirm`.
 - Grid editable: `HandGrid onPaint` + `domain/range.js#paintHand` (fija, no alterna; `ERASE` = goma). Cambios sin guardar: `useUnsavedChanges` + `UnsavedChangesBar`.
 - Texto sobre colores de acción: `shared/theme/contrast.js#readableText` (test WCAG AA ≥ 4.5:1 para todas las acciones).
+- Quiz: preguntas con `domain/quiz.js#nextQuestion` (spots de la selección, modo normal/difíciles); mesa con `domain/table.js` + `PokerTable`.
+  Atajos de teclado con `useEffectEvent` + listener en `window`; los `<kbd>` visibles van `aria-hidden` y el atajo en `aria-keyshortcuts`.
 - Selectores de test: `data-testid` en kebab-case `<feature>-<elemento>`; atributos `data-hand`, `data-action` (acción efectiva),
   `data-implicit`, `data-verdict`, `data-stack`.
 - El contrato definitivo vive en `spin-trainer-api/openapi.yaml`; `docs/openapi-draft.yaml` es solo borrador.
