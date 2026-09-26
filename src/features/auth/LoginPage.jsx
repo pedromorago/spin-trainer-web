@@ -37,7 +37,7 @@ export function LoginPage() {
 
   return (
     <form style={box} onSubmit={submit} aria-label={title}>
-      <h1 style={{ margin: 0, fontSize: theme.font.sizeLg }}>Spin Trainer</h1>
+      <h1 style={{ margin: 0, fontFamily: theme.font.display, fontWeight: 400, fontSize: 40, letterSpacing: 2, color: theme.colors.accent }}>Spin Trainer</h1>
       <label style={field}>
         Email
         <input style={input} type="email" autoComplete="email" required value={email}

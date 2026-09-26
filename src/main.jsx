@@ -5,6 +5,9 @@ import { RouterProvider } from 'react-router/dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { routes } from './App';
 import { AuthProvider } from './shared/auth/AuthProvider';
+import '@fontsource/bebas-neue/400.css';
+import '@fontsource-variable/dm-sans/index.css';
+import '@fontsource-variable/jetbrains-mono/index.css';
 import './shared/theme/global.css';
 
 const queryClient = new QueryClient({
