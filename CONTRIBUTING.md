@@ -46,7 +46,8 @@ Before committing: `npm run lint && npm test && npm run build` green.
   loaded with a dynamic `import()` so it stays out of the http build. Tests that need a spot without a range pass `defaultRanges`.
 
 ## Conventions
-- Router in *data mode* (`createBrowserRouter`, lazy routes in `src/App.jsx`).
+- Router in *data mode* (`createBrowserRouter`, lazy routes in `src/App.jsx`). Route errors: `features/shell/RouteErrorPage` as
+  `errorElement` (inside the shell for pages; `standalone` outside it).
 - `features/shell/AppShell` gives pages `{ situations, selection }` via `useOutletContext()`; pages have no selector of their own.
   The selection lives in the URL (`?s=<key|any>&stack=<bb|any>`) and is normalized with `domain/selection.js`. With "Any", Quiz and Builder work on the selection's *spots* that have a range
   (`useEffectiveRanges` + `domain/quiz.js#playableSpots`).

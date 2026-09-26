@@ -77,6 +77,9 @@ a table view as the accessible equivalent; when the period changes, the previous
 The mock validates like the API (400/404/409) and owns the server-side fields (`id`, `at`, `correct`, `version`); http builds do not include it.
 
 Routing in *data mode* (`createBrowserRouter`): lazy routes per feature and `useBlocker` for unsaved changes.
+Route errors (a page that throws while rendering, or a chunk that cannot be downloaded after a deploy) show
+`features/shell/RouteErrorPage` as `errorElement`: inside the shell, so the header still works, with *Recargar* and
+*Ir al inicio*; the technical detail goes to the console.
 
 `features/shell/AppShell` is the frame for every tab: it loads the catalog, renders the header with the session scoreboard
 and a single situation/stack selector, and passes `{ situations, selection }` to the pages via `useOutletContext()`.
