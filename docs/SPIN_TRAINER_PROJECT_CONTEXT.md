@@ -37,7 +37,7 @@ Mejoras a documentar: dividir god-objects · Lombok @Builder · ThreadLocalRando
 ## Estado
 - Prototipo vanilla (single file, localStorage): funcional, uso personal.
 - Web v2: shell común (selector único con "Any", marcador de sesión) y las cuatro features del prototipo adaptadas a Spin & Go: Explorer editable (pincel, Guardar/Reset/Copiar, panel), Quiz sobre mesa (atajos, manos difíciles), Builder con veredictos por tipo y Stats con progreso diario. 222 tests Vitest (dominio, mock + conformidad con la spec, adaptador http, invariantes de color, contraste y veredictos), cobertura ≥90%, ESLint con reglas de capas. Sin desplegar.
-- API: las 11 operaciones del contrato v0.2 (ADR-0013) implementadas (situation, range, quiz, stats) con seguridad JWT, Problem Details, roles de BD con mínimos privilegios y ArchUnit. 128 tests unitarios y 80 de integración (Testcontainers, JWT reales, respuestas validadas contra la spec); cobertura de líneas ~98%. Probada de extremo a extremo con la web en modo http. Sin desplegar. El seed trae las 16 situaciones; los rangos del PDF están pendientes (roadmap 2).
+- API: las 11 operaciones del contrato v0.2 (ADR-0013) implementadas (situation, range, quiz, stats) con seguridad JWT, Problem Details, roles de BD con mínimos privilegios y ArchUnit. 131 tests unitarios y 90 de integración (Testcontainers, JWT reales, respuestas validadas contra la spec, formatos incluidos); cobertura de líneas ~97%. Probada de extremo a extremo con la web en modo http. Sin desplegar. El seed trae las 16 situaciones; los rangos del PDF están pendientes (roadmap 2).
 - El contrato vive en `spin-trainer-api/openapi.yaml`; la web guarda una copia (`docs/openapi.yaml`, `npm run spec:check`) que implementa el mock.
 - Suite QA: no empezada.
 
