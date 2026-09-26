@@ -2,22 +2,21 @@
 import { useMemo } from 'react';
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { mergeEffectiveRanges } from '../../domain/range';
-import { api, ApiError } from './index';
+import { comboKey } from '../../domain/selection';
+import { api } from './index';
 
 export const keys = {
   situations: ['situations'],
   defaultRanges: ['range', 'default'],
-  defaultRange: (s, st) => ['range', 'default', s, st],
   userRanges: ['range', 'user'],
-  userRange: (s, st) => ['range', 'user', s, st],
   attempts: ['attempts'],
   stats: ['stats'],
   handStats: filters => ['stats', 'hands', filters],
   progress: params => ['stats', 'progress', params]
 };
 
-/** 404 significa "no existe" (sin rango de referencia o personalizado): null, no error. */
-const nullIfNotFound = e => (e instanceof ApiError && e.isNotFound ? null : Promise.reject(e));
+/** ¿Es el rango de esta combinación? (el stack puede llegar como texto desde la URL). */
+const isSpot = (situation, stack) => range => comboKey(range) === comboKey({ situation, stack: Number(stack) });
 
 export function useSituations() {
   return useQuery({ queryKey: keys.situations, queryFn: api.listSituations, staleTime: Infinity });
@@ -28,44 +27,29 @@ export function useDefaultRanges() {
   return useQuery({ queryKey: keys.defaultRanges, queryFn: api.listDefaultRanges, staleTime: Infinity });
 }
 
-/** Rango de referencia; null si la combinación aún no tiene seed. */
-export function useDefaultRange(situation, stack) {
-  return useQuery({
-    queryKey: keys.defaultRange(situation, stack),
-    queryFn: () => api.getDefaultRange(situation, stack).catch(nullIfNotFound),
-    enabled: !!situation && stack != null,
-    staleTime: Infinity
-  });
-}
-
 /** Todos los rangos personalizados del usuario. */
 export function useUserRanges() {
   return useQuery({ queryKey: keys.userRanges, queryFn: api.listUserRanges });
 }
 
-/** Rango personalizado del usuario; null si no existe. */
-export function useUserRange(situation, stack) {
-  return useQuery({
-    queryKey: keys.userRange(situation, stack),
-    queryFn: () => api.getUserRange(situation, stack).catch(nullIfNotFound),
-    enabled: !!situation && stack != null
-  });
-}
-
 /**
  * Rango con el que se entrena (ADR-0012): el personalizado si existe; si no, el de referencia (PDF).
  * Expone ambos para quien necesite distinguirlos (badges y Reset del Explorer).
+ * Sale de las dos listas, compartidas con el Quiz y el modo "Any": ni una petición por combinación ni un 404
+ * cuando la combinación aún no tiene rango (los GET individuales del contrato siguen en los adaptadores).
  */
 export function useEffectiveRange(situation, stack) {
-  const def = useDefaultRange(situation, stack);
-  const user = useUserRange(situation, stack);
+  const defaults = useDefaultRanges();
+  const users = useUserRanges();
+  const defaultRange = defaults.data?.find(isSpot(situation, stack)) ?? null;
+  const userRange = users.data?.find(isSpot(situation, stack)) ?? null;
   return {
-    range: user.data ?? def.data ?? null,
-    defaultRange: def.data ?? null,
-    userRange: user.data ?? null,
-    isLoading: def.isLoading || user.isLoading,
-    error: def.error ?? user.error ?? null,
-    refetchUserRange: user.refetch
+    range: userRange ?? defaultRange,
+    defaultRange,
+    userRange,
+    isLoading: defaults.isLoading || users.isLoading,
+    error: defaults.error ?? users.error ?? null,
+    refetchUserRange: users.refetch
   };
 }
 
@@ -90,7 +74,8 @@ export function useSaveUserRange(situation, stack) {
   return useMutation({
     mutationFn: payload => api.putUserRange(situation, stack, payload),
     onSuccess: data => {
-      qc.setQueryData(keys.userRange(situation, stack), data);
+      // La respuesta del PUT es el rango guardado: la lista se actualiza ya y luego se revalida.
+      qc.setQueryData(keys.userRanges, list => [...(list ?? []).filter(r => !isSpot(situation, stack)(r)), data]);
       qc.invalidateQueries({ queryKey: keys.userRanges, exact: true });
     }
   });
@@ -101,7 +86,7 @@ export function useDeleteUserRange(situation, stack) {
   return useMutation({
     mutationFn: () => api.deleteUserRange(situation, stack),
     onSuccess: () => {
-      qc.setQueryData(keys.userRange(situation, stack), null);
+      qc.setQueryData(keys.userRanges, list => (list ?? []).filter(r => !isSpot(situation, stack)(r)));
       qc.invalidateQueries({ queryKey: keys.userRanges, exact: true });
     }
   });

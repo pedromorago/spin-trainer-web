@@ -47,7 +47,9 @@ Estas reglas no son solo documentación: `eslint.config.js` las verifica (`no-re
 La única implementación de "qué acción tiene esta mano" es `domain/range.js#actionFor`. Explorer, Quiz y Builder la comparten;
 el Builder evalúa comparando la acción efectiva mano a mano (`evaluateRange`), lo que elimina la clase de bug `tgtRaise`/`tgtCall` del prototipo.
 
-Rango efectivo (ADR-0012): el personalizado si existe, si no el del PDF, resuelto en un único hook (`useEffectiveRange`).
+Rango efectivo (ADR-0012): el personalizado si existe, si no el del PDF, resuelto en un único hook (`useEffectiveRange`),
+derivado de las listas `GET /ranges/default` y `GET /ranges/user` que ya comparten el Quiz y el modo "Any" (ni una
+petición por combinación ni un 404 cuando aún no hay rango).
 El Explorer es el único que escribe rangos: pincel por acción + goma (`paintHand`: fija, no alterna, así que se puede pintar
 arrastrando con ratón o dedo), Guardar (`PUT` con la versión de partida → 409 si otro la cambió), Reset (`DELETE`) y Copiar
 (`exportRange`). El Builder es un ejercicio sin persistencia que se verifica contra el rango efectivo:
