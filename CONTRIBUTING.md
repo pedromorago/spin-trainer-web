@@ -4,7 +4,8 @@ Frontend de Spin Trainer. Reglas comunes a los tres repos, resumidas aquí para 
 
 ## Reglas globales (resumen)
 - Calidad de portfolio > velocidad. Fuente de verdad: `docs/SPIN_TRAINER_PROJECT_CONTEXT.md`, `docs/ARCHITECTURE.md`, `docs/adr/*`, `docs/openapi-draft.yaml`.
-- ADRs cerrados; solo se reabren con fallo concreto y justificado.
+- ADRs cerrados (0001..0011); solo se reabren con fallo concreto y justificado.
+- Solo Spin & Go (3-max y HU, 16 situaciones). Del prototipo MTT 6-max se toman UI y flujos, no código ni rangos (ADR-0011).
 - Supabase solo emite el JWT; todos los datos van por la API. Rangos default en BD (Flyway). Intentos de Quiz = eventos inmutables.
 - Sin TypeScript en este repo. Descartados: OWASP ZAP, carga, Pact, pgTAP.
 - Commits **siempre a nombre de Pedro** (autor y committer: `Pedro Morago López-Vázquez <pedromoragolv@gmail.com>`; verificar `git config user.name/user.email` antes de commitear). Conventional Commits, sin trailer de coautoría ni de atribución.
