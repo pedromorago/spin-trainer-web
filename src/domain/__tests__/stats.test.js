@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aggregateAttempts, bySituation, bySituationStack, groupRows, mostFailed, progressByDay, totals } from '../stats';
+import { aggregateAttempts, bySituation, bySituationStack, groupRows, hardHands, mostFailed, progressByDay, totals } from '../stats';
 
 const at = (hand, correct, answeredAt, situation = 'btn_open', stack = 25) => ({ situation, stack, hand, correct, answeredAt });
 
@@ -76,5 +76,19 @@ describe('progressByDay', () => {
 
   it('zona horaria inválida → RangeError', () => {
     expect(() => progressByDay(ATTEMPTS, { now, tz: 'Nope/Zone' })).toThrow(RangeError);
+  });
+});
+
+describe('hardHands', () => {
+  const row = (hand, attempts, correct) => ({ situation: 'btn_open', stack: 25, hand, attempts, correct });
+
+  it('peso = 2·fallos − 0,5·aciertos; solo manos con ≥ 2 fallos y peso > 0, de más a menos peso', () => {
+    const hard = hardHands([row('AA', 2, 0), row('KK', 5, 1), row('QQ', 1, 0), row('JJ', 10, 8), row('TT', 3, 1)]);
+    expect(hard.map(h => [h.hand, h.weight])).toEqual([['KK', 7.5], ['AA', 4], ['TT', 3.5]]);
+  });
+
+  it('una mano sale del pool cuando se aprende (peso ≤ 0)', () => {
+    expect(hardHands([row('AA', 10, 8)])).toEqual([]); // 2 fallos, 8 aciertos: 4 − 4 = 0
+    expect(hardHands([row('AA', 9, 7)])).toHaveLength(1); // 2 fallos, 7 aciertos: 0,5
   });
 });

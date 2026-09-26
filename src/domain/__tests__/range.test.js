@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { allHands } from '../hand';
 import {
-  boundaryHands, ERASE, evaluateRange, explicitHands, exportRange, normalizeRange, paintHand, rangesEqual, rangeStats, summarize
+  boundaryHands, ERASE, evaluateRange, explicitHands, exportRange, mergeEffectiveRanges, normalizeRange, paintHand, rangesEqual, rangeStats, summarize
 } from '../range';
 
 const ACTIONS = ['ALLIN', '3BET_C', 'CALL', 'FOLD'];
@@ -142,5 +142,17 @@ describe('exportRange', () => {
 
   it('sin título ni manos jugadas solo indica la implícita', () => {
     expect(exportRange({}, LIMP_ACTIONS)).toBe('Resto: Check');
+  });
+});
+
+describe('mergeEffectiveRanges', () => {
+  it('el rango personalizado prevalece sobre el de referencia (ADR-0012)', () => {
+    const def = { situation: 'btn_open', stack: 25, hands: { AA: 'ALLIN' }, source: 'default' };
+    const other = { situation: 'sb_open', stack: 25, hands: { KK: 'ALLIN' }, source: 'default' };
+    const user = { situation: 'btn_open', stack: 25, hands: { AA: 'CALL' }, source: 'user' };
+    const merged = mergeEffectiveRanges([def, other], [user]);
+    expect(merged.get('btn_open@25')).toBe(user);
+    expect(merged.get('sb_open@25')).toBe(other);
+    expect(mergeEffectiveRanges().size).toBe(0);
   });
 });

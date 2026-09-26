@@ -140,3 +140,15 @@ export function exportRange(hands, situationActions, { title } = {}) {
   lines.push(`Resto: ${label(fallbackAction(situationActions))}`);
   return lines.join('\n');
 }
+
+/**
+ * Rangos efectivos de todas las combinaciones (ADR-0012): el personalizado prevalece sobre el de referencia.
+ * @param {Array} defaults rangos de referencia (GET /ranges/default)
+ * @param {Array} users    rangos personalizados (GET /ranges/user)
+ * @returns {Map<string, Range>} clave `situación@stack`
+ */
+export function mergeEffectiveRanges(defaults = [], users = []) {
+  const byCombo = new Map();
+  for (const r of [...defaults, ...users]) byCombo.set(`${r.situation}@${r.stack}`, r);
+  return byCombo;
+}

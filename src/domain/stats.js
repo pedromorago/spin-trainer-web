@@ -64,3 +64,24 @@ export function progressByDay(attempts, { days = 30, tz = 'UTC', now = new Date(
   }
   return [...byDay.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
+
+/** Pesos de estudio: cada fallo suma 2 y cada acierto resta 0,5. */
+export const HARD_FAIL_WEIGHT = 2;
+export const HARD_HIT_WEIGHT = 0.5;
+export const HARD_MIN_FAILS = 2;
+
+/**
+ * Manos difíciles: falladas al menos 2 veces en su (situación, stack) y con peso > 0, donde
+ * peso = 2·fallos − 0,5·aciertos. Al acertarlas el peso baja hasta que salen del pool: la mano "se aprende".
+ * Ordenadas de más a menos peso.
+ */
+export function hardHands(rows) {
+  return rows
+    .map(r => {
+      const fails = r.attempts - r.correct;
+      return { situation: r.situation, stack: r.stack, hand: r.hand, fails, hits: r.correct,
+        weight: HARD_FAIL_WEIGHT * fails - HARD_HIT_WEIGHT * r.correct };
+    })
+    .filter(h => h.fails >= HARD_MIN_FAILS && h.weight > 0)
+    .sort((a, b) => b.weight - a.weight || handKey(a).localeCompare(handKey(b)));
+}

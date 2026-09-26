@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { tableSeats } from '../../../../domain/table';
 import { createMockApi, memoryStorage } from '../mockApi';
 
 let api;
@@ -29,6 +30,17 @@ describe('situations', () => {
       const order = s.priorActions.map(a => seats.indexOf(a.position));
       expect(order.every(i => i >= 0 && i < seats.indexOf(s.hero)), s.key).toBe(true);
       expect(order, s.key).toEqual([...order].sort());
+    }
+  });
+
+  it('cada situación del catálogo genera una mesa válida para todos sus stacks', async () => {
+    for (const s of await api.listSituations()) {
+      for (const stack of s.stacks) {
+        const { seats } = tableSeats(s, stack);
+        expect(seats, s.key).toHaveLength(s.format === 'hu' ? 2 : 3);
+        expect(seats[0]).toMatchObject({ position: s.hero, isHero: true });
+        expect(seats.filter(x => x.isDealer), s.key).toHaveLength(1);
+      }
     }
   });
 });
