@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router';
+import { Outlet, useNavigate } from 'react-router';
 import { useSituations, useSlowRequests } from '../../shared/api/queries';
 import { useAuth } from '../../shared/auth/useAuth';
 import { useSession } from '../../shared/session/useSession';
@@ -13,19 +13,20 @@ import { ServerWakeNotice } from '../../shared/ui/ServerWakeNotice';
  * Pages receive { situations, selection } via useOutletContext(); none has its own selector.
  */
 export function AppShell() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { session, accuracy } = useSession();
   const situations = useSituations();
   const selection = useSituationSelection(situations.data);
   const waking = useSlowRequests();
 
   const content = situations.isLoading ? <Loading />
-    : situations.error ? <ErrorBox error={situations.error} />
+    : situations.error ? <ErrorBox error={situations.error} onRetry={situations.refetch} />
       : situations.data.length === 0 ? <Empty>No hay situaciones disponibles.</Empty>
         : <Outlet context={{ situations: situations.data, selection }} />;
 
   return (
-    <Layout user={user} onSignOut={signOut} score={{ accuracy, streak: session.streak, total: session.total }}
+    <Layout user={user} onSignOut={() => navigate('/logout')} score={{ accuracy, streak: session.streak, total: session.total }}
       toolbar={situations.data?.length ? <SituationBar situations={situations.data} selection={selection} /> : null}>
       <ServerWakeNotice visible={waking} />
       {content}

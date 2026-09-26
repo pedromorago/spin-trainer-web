@@ -37,9 +37,11 @@ export function AuthProvider({ children }) {
     signUp: MOCK
       ? async () => ({ error: null })
       : async (email, password) => (await getSupabase()).auth.signUp({ email, password }),
+    // Local scope: signs out this browser only. Supabase's default (global) would also close the sessions on the user's
+    // other devices.
     signOut: MOCK
-      ? async () => setUser(null)
-      : async () => (await getSupabase()).auth.signOut()
+      ? async () => { setUser(null); return { error: null }; }
+      : async () => (await getSupabase()).auth.signOut({ scope: 'local' })
   }), [user, loading]);
 
   return <AuthContext value={value}>{children}</AuthContext>;
