@@ -62,8 +62,10 @@ range; several with "Any", so the combination changes with every question). In h
 proportional to the weight from `domain/stats.js#hardHands` (≥ 2 misses; weight = 2·misses − 0.5·correct answers; the hand leaves the pool
 when it reaches 0), computed from `GET /stats/hands`. The table (`shared/ui/PokerTable`) is drawn from `domain/table.js`
 (seats per format, hero, dealer, prior bets from `Situation.priorActions`) and the cards from `domain/cards.js`
-(suits consistent with pair/suited/offsuit). Shortcuts 1..n and Enter/→ with `useEffectEvent`. Local grading gives immediate
-feedback; the API grades again when the attempt is recorded.
+(suits consistent with pair/suited/offsuit). Shortcuts 1..9 and 0 (HU SB Open has ten actions; `shared/ui/shortcuts.js`) and
+Enter/→ with `useEffectEvent`; Enter is left to a focused link or button. Local grading gives immediate feedback; the API
+grades again when the attempt is recorded. A screen reader hears a short announcement (a visually hidden status region),
+not the feedback box with its grid, and the focus returns to the answers after each hand.
 
 Stats separates the **session** (local, resettable: accuracy, best streak, hands) from the **history** (API): totals, hard
 hands, accuracy per situation (chips with a meter), top 10 misses by situation/stack/hand and daily progress
@@ -75,6 +77,11 @@ a table view as the accessible equivalent; when the period changes, the previous
 
 `VITE_API_MODE=mock` (`npm run dev:mock`, `npm run build:mock`) makes it possible to develop and run E2E without a backend, with the same contract.
 The mock validates like the API (400/404/409) and owns the server-side fields (`id`, `at`, `correct`, `version`); http builds do not include it.
+
+Everything cached belongs to one user (`src/UserScope.jsx`): the TanStack Query cache and the session scoreboard are
+created again when the user changes, so another account signing in on the same tab sees none of the previous one's data
+(the scoreboard's `sessionStorage` key carries the user id). "Salir" navigates to `/logout`, which goes through the
+unsaved-changes guard and signs out this browser only (Supabase's local scope).
 
 Routing in *data mode* (`createBrowserRouter`): lazy routes per feature and `useBlocker` for unsaved changes.
 Route errors (a page that throws while rendering, or a chunk that cannot be downloaded after a deploy) show

@@ -58,7 +58,8 @@ tokens → Tokens (classic)**) with only the `read:packages` scope.
    `https://spin-trainer-api.onrender.com/actuator/health/readiness` → `{"status":"UP"}`.
 4. **Service → Settings → Deploy Hook**: copy the URL and save it as the `RENDER_DEPLOY_HOOK_URL` secret in the
    spin-trainer-api repo (**Settings → Secrets and variables → Actions**). From then on, every green CI on `main` builds
-   the image, deploys it and waits until it answers.
+   the image, deploys it, waits until `/actuator/info` reports that commit (Render keeps the previous version serving
+   while a new one fails, so a green readiness alone would prove nothing) and checks that the JWT issuer answers.
 
 If the name `spin-trainer-api` is taken, Render adds a suffix to the URL: use that URL in `deploy.yml` (`API_URL`), in
 `vercel.json` (`connect-src`) and in `VITE_API_BASE_URL`.
