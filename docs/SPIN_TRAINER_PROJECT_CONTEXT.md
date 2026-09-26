@@ -17,13 +17,13 @@ Professional stack: Java + REST Assured + JUnit 5 (backend), Playwright + TypeSc
 - Modules: Explorer, Quiz, Builder, Stats. Descoped: equity calculator.
 
 ## Architecture (see docs/ARCHITECTURE.md and docs/adr/)
-- **spin-trainer-web** (this repo): React 19, React Router 7, Vite, TanStack Query, inline CSS-in-JS, no TypeScript. Pure `domain/` + `shared/` + `features/`. `mock` adapter to develop and run E2E without a backend. Vercel.
-- **spin-trainer-api**: Spring Boot 4.1 (ADR-0014), Java 21, Gradle. Hexagonal modular monolith (situation, range, quiz, stats) verified with ArchUnit. OpenAPI-first with openapi-generator (owner of `openapi.yaml`). Explicit JDBC with `JdbcClient` and least-privilege DB roles (ADR-0015). Flyway (schema + range seed). Supabase JWT validated as a resource server. RFC 9457 (Problem Details). Fly.io or Render.
+- **spin-trainer-web** (this repo): React 19, React Router 7, Vite, TanStack Query, inline CSS-in-JS, no TypeScript. Pure `domain/` + `shared/` + `features/`. `mock` adapter to develop and run E2E without a backend. Vercel (ADR-0016).
+- **spin-trainer-api**: Spring Boot 4.1 (ADR-0014), Java 21, Gradle. Hexagonal modular monolith (situation, range, quiz, stats) verified with ArchUnit. OpenAPI-first with openapi-generator (owner of `openapi.yaml`). Explicit JDBC with `JdbcClient` and least-privilege DB roles (ADR-0015). Flyway (schema + range seed). Supabase JWT validated as a resource server. RFC 9457 (Problem Details). Fly.io (ADR-0016).
 - **spin-trainer-qa**: REST Assured + JUnit 5 + Cucumber, Testcontainers, Newman, Playwright + TS, validation against the spec, Allure, SonarCloud, GitHub Actions.
 - Supabase = Auth (JWT) + Postgres. **Single data path: the API.** Tables in the `app` schema, not exposed to PostgREST.
 
 ## Closed decisions
-Gradle, not Maven · no TS in product code · Supabase for Auth only · default ranges in the DB (seed) · Quiz attempts as events · validation against the spec instead of Pact · Spin & Go only; from the MTT prototype only UI and flows (ADR-0011) · effective range = custom if it exists; only the Explorer writes it (ADR-0012) · Spring Boot 4.1 (ADR-0014) · JdbcClient without JPA, attempts made immutable by DB privileges (ADR-0015).
+Gradle, not Maven · no TS in product code · Supabase for Auth only · default ranges in the DB (seed) · Quiz attempts as events · validation against the spec instead of Pact · Spin & Go only; from the MTT prototype only UI and flows (ADR-0011) · effective range = custom if it exists; only the Explorer writes it (ADR-0012) · Spring Boot 4.1 (ADR-0014) · JdbcClient without JPA, attempts made immutable by DB privileges (ADR-0015) · web on Vercel and API on Fly.io, with the production headers (CSP) tested in E2E (ADR-0016).
 **Rejected:** OWASP ZAP, load testing tools, Pact, pgTAP, TypeScript in product code.
 
 ## QA patterns to replicate (from my professional framework)
@@ -47,7 +47,7 @@ Improvements to document: split god-objects · Lombok @Builder · ThreadLocalRan
 2. ~~Range seed from the PDF (Flyway)~~ Done (V5); still to be validated with me situation by situation. To be decided: the PDF's "3H OS call" table (call vs open-shove thresholds in 3-max) is not in the catalog.
 3. Connect the web app to the real API (`VITE_API_MODE=http`), Supabase Auth in production.
 4. ~~spin-trainer-qa: API tests + contract + E2E (against the mock and the real API) + Allure + CI.~~ Done (CI secret still missing).
-5. Deploy (Vercel + Fly.io/Render) and a portfolio README with links to ADRs and reports.
+5. Deploy (Vercel + Fly.io, ADR-0016) and a portfolio README with links to ADRs and reports. Prepared without accounts: `vercel.json`, `fly.toml`, the deploy workflow and `docs/DEPLOY.md`; the accounts, secrets and domains are pending.
 
 ## How to work with me
 Concise, technical, no marketing. Iterative: you propose, I validate, you continue. I number my requests. I review and correct.

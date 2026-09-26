@@ -81,6 +81,10 @@ Route errors (a page that throws while rendering, or a chunk that cannot be down
 `features/shell/RouteErrorPage` as `errorElement`: inside the shell, so the header still works, with *Recargar* and
 *Ir al inicio*; the technical detail goes to the console.
 
+Deployment (ADR-0016, `docs/DEPLOY.md`): the web on Vercel (`vercel.json`: SPA fallback except `/assets/`, immutable
+assets, CSP and security headers) and the API on Fly.io (`fly.toml`, the same image QA tests), with Supabase in the same
+region. The E2E tests serve the build with the headers of `vercel.json`.
+
 `features/shell/AppShell` is the frame for every tab: it loads the catalog, renders the header with the session scoreboard
 and a single situation/stack selector, and passes `{ situations, selection }` to the pages via `useOutletContext()`.
 The selection lives in the URL (`?s=<key|any>&stack=<bb|any>`, normalized by `domain/selection.js`): a single piece of state

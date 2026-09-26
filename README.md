@@ -31,6 +31,12 @@ CI (`.github/workflows/ci.yml`): `spec:check` and `ranges:check`, lint, tests wi
 PR. The copy checks compare against the API only if the `SPIN_TRAINER_REPOS_TOKEN` secret exists (private repos); without it they are
 skipped. The web E2E tests live in spin-trainer-qa (Playwright, against the mock and against the real API).
 
+## Deployment
+
+Vercel (ADR-0016). `vercel.json` sets the build, the SPA fallback (except `/assets/`), immutable caching for hashed
+assets and the security headers, Content-Security-Policy included; the E2E tests in spin-trainer-qa run under those same
+headers. Production builds use the real API and preview deployments the mock. Setup steps: `docs/DEPLOY.md`.
+
 ## With the real API
 
 `cp .env.example .env.local` and set `VITE_API_MODE=http`, `VITE_API_BASE_URL` (spin-trainer-api) and the Supabase Auth credentials; then `npm run dev`.
@@ -41,7 +47,7 @@ skipped. The web E2E tests live in spin-trainer-qa (Playwright, against the mock
 src/domain/    business rules in pure JS, with tests
 src/shared/    api (http | mock), auth, ui, theme
 src/features/  explorer · quiz · builder · stats · auth
-docs/          context, architecture, ADRs, copy of the v0.2 contract (OpenAPI), prompt
+docs/          context, architecture, ADRs, deployment, copy of the v0.2 contract (OpenAPI), prompt
 scripts/       contract sync with spin-trainer-api
 .github/       CI
 ```
