@@ -8,7 +8,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 const noFeatures = { group: ['**/features/**'], message: 'shared/ y domain/ no dependen de features/.' };
 
 export default [
-  { ignores: ['dist', 'coverage'] },
+  { ignores: ['dist', 'coverage', 'reports', '.stryker-tmp'] },
 
   js.configs.recommended,
   reactHooks.configs.flat.recommended,
