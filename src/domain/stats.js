@@ -85,3 +85,24 @@ export function hardHands(rows) {
     .filter(h => h.fails >= HARD_MIN_FAILS && h.weight > 0)
     .sort((a, b) => b.weight - a.weight || handKey(a).localeCompare(handKey(b)));
 }
+
+/** Suma n días a una fecha 'YYYY-MM-DD' (aritmética en UTC: sin saltos por cambio de hora). */
+function addDays(date, n) {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Serie diaria completa para el gráfico de progreso: los `days` días hasta `today` (incluido), en orden,
+ * rellenando con 0 los días sin actividad (GET /stats/progress solo devuelve días con intentos).
+ * accuracy es null en los días sin intentos (no es un 0 %: no hay dato).
+ */
+export function dailySeries(progress, { days, today }) {
+  const byDate = new Map(progress.map(d => [d.date, d]));
+  return Array.from({ length: days }, (_, i) => {
+    const date = addDays(today, i - days + 1);
+    const d = byDate.get(date);
+    return { date, attempts: d?.attempts ?? 0, correct: d?.correct ?? 0, accuracy: d ? d.correct / d.attempts : null };
+  });
+}

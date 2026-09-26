@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aggregateAttempts, bySituation, bySituationStack, groupRows, hardHands, mostFailed, progressByDay, totals } from '../stats';
+import { aggregateAttempts, bySituation, bySituationStack, dailySeries, groupRows, hardHands, mostFailed, progressByDay, totals } from '../stats';
 
 const at = (hand, correct, answeredAt, situation = 'btn_open', stack = 25) => ({ situation, stack, hand, correct, answeredAt });
 
@@ -90,5 +90,24 @@ describe('hardHands', () => {
   it('una mano sale del pool cuando se aprende (peso ≤ 0)', () => {
     expect(hardHands([row('AA', 10, 8)])).toEqual([]); // 2 fallos, 8 aciertos: 4 − 4 = 0
     expect(hardHands([row('AA', 9, 7)])).toHaveLength(1); // 2 fallos, 7 aciertos: 0,5
+  });
+});
+
+describe('dailySeries', () => {
+  const progress = [{ date: '2026-09-24', attempts: 4, correct: 3 }, { date: '2026-09-26', attempts: 2, correct: 0 }];
+
+  it('rellena la ventana de días con ceros y precisión null donde no hay intentos', () => {
+    expect(dailySeries(progress, { days: 4, today: '2026-09-26' })).toEqual([
+      { date: '2026-09-23', attempts: 0, correct: 0, accuracy: null },
+      { date: '2026-09-24', attempts: 4, correct: 3, accuracy: 0.75 },
+      { date: '2026-09-25', attempts: 0, correct: 0, accuracy: null },
+      { date: '2026-09-26', attempts: 2, correct: 0, accuracy: 0 }
+    ]);
+  });
+
+  it('cruza meses y el cambio de hora sin saltarse ni repetir días', () => {
+    const dates = dailySeries([], { days: 5, today: '2026-11-02' }).map(d => d.date);
+    expect(dates).toEqual(['2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02']);
+    expect(dailySeries([], { days: 3, today: '2026-03-30' }).map(d => d.date)).toEqual(['2026-03-28', '2026-03-29', '2026-03-30']);
   });
 });
