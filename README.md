@@ -26,6 +26,10 @@ En modo mock no hace falta login ni API: los datos viven en memoria/localStorage
 | `npm run lint` | ESLint, incluidas las reglas de capas |
 | `npm run spec:check` / `spec:sync` | Comprueba / trae la copia del contrato desde `../spin-trainer-api/openapi.yaml` |
 
+CI (`.github/workflows/ci.yml`): `spec:check`, lint, tests con cobertura y los dos builds en cada push a `main` y en cada
+PR. El `spec:check` compara con la API solo si existe el secreto `SPIN_TRAINER_REPOS_TOKEN` (repos privados); sin él se
+omite. Los E2E de la web viven en spin-trainer-qa (Playwright, contra el mock y contra la API real).
+
 ## Con la API real
 
 `cp .env.example .env.local` y ajusta `VITE_API_MODE=http`, `VITE_API_BASE_URL` (spin-trainer-api) y las credenciales de Supabase Auth; después `npm run dev`.
@@ -38,6 +42,7 @@ src/shared/    api (http | mock), auth, ui, theme
 src/features/  explorer · quiz · builder · stats · auth
 docs/          contexto, arquitectura, ADRs, copia del contrato v0.2 (OpenAPI), prompt
 scripts/       sincronización del contrato con spin-trainer-api
+.github/       CI
 ```
 
 Ver `docs/ARCHITECTURE.md`.

@@ -1,0 +1,86 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Opcional: token de solo lectura sobre spin-trainer-api (el mismo secreto que usa spin-trainer-qa). Con él, spec:check
+  # compara docs/openapi.yaml con el contrato de la API; sin él, se omite y el contract test valida el mock contra la copia.
+  SIBLINGS_TOKEN: ${{ secrets.SPIN_TRAINER_REPOS_TOKEN }}
+
+defaults:
+  run:
+    working-directory: spin-trainer-web
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: spin-trainer-web
+
+      # La misma rama en la API si existe (cambios de contrato coordinados); si no, main.
+      - name: Rama de la API
+        id: api
+        if: ${{ env.SIBLINGS_TOKEN != '' }}
+        working-directory: .
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          if git ls-remote --exit-code --heads "https://x-access-token:${SIBLINGS_TOKEN}@github.com/pedromorago/spin-trainer-api.git" "$BRANCH" > /dev/null; then
+            echo "ref=$BRANCH" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout spin-trainer-api (${{ steps.api.outputs.ref }})
+        if: ${{ env.SIBLINGS_TOKEN != '' }}
+        uses: actions/checkout@v7
+        with:
+          repository: pedromorago/spin-trainer-api
+          ref: ${{ steps.api.outputs.ref }}
+          token: ${{ env.SIBLINGS_TOKEN }}
+          path: spin-trainer-api
+          sparse-checkout: openapi.yaml
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: spin-trainer-web/package-lock.json
+
+      - run: npm ci
+
+      - name: La copia del contrato coincide con el de la API
+        run: npm run spec:check
+
+      - name: Lint (incluye las reglas de capas)
+        run: npm run lint
+
+      # Dominio y mock con umbral de cobertura del 90 %; el mock se valida contra docs/openapi.yaml.
+      - name: Tests
+        run: npm run test:coverage
+
+      - name: Build (http y mock)
+        run: npm run build && npm run build:mock
+
+      - name: Cobertura
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: spin-trainer-web/coverage/
+          retention-days: 14
