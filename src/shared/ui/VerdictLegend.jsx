@@ -2,7 +2,7 @@ import { VERDICT_KINDS } from '../../domain/range';
 import { VERDICT_STYLES } from '../theme/verdictStyles';
 import { theme } from '../theme/theme';
 
-/** Leyenda de veredictos con recuentos. Props: byKind ({ correct, wrong, extra, missing }) de domain/range#evaluateRange */
+/** Verdict legend with counts. Props: byKind ({ correct, wrong, extra, missing }) from domain/range#evaluateRange */
 export function VerdictLegend({ byKind }) {
   return (
     <ul aria-label="Leyenda" data-testid="verdict-legend"

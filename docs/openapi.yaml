@@ -1,4 +1,4 @@
-# Copia de spin-trainer-api/openapi.yaml (fuente de verdad, ADR-0004). No editar aquí: `npm run spec:sync` la actualiza.
+# Copy of spin-trainer-api/openapi.yaml (source of truth, ADR-0004). Do not edit here: `npm run spec:sync` updates it.
 openapi: 3.1.0
 info:
   title: Spin Trainer API

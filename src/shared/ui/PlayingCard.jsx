@@ -6,7 +6,7 @@ const SIZES = {
   sm: { width: 'clamp(18px, 4vw, 28px)', rank: 0, suit: 0 }
 };
 
-/** Carta. Props: card ({ rank, suit }) o null (tapada), size ('lg' | 'sm') */
+/** Card. Props: card ({ rank, suit }) or null (face down), size ('lg' | 'sm') */
 export function PlayingCard({ card = null, size = 'lg' }) {
   const s = SIZES[size];
   const base = {

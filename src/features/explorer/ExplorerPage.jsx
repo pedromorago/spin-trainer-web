@@ -26,7 +26,7 @@ export function ExplorerPage() {
           </span>
         </Empty>
       ) : (
-        // La key reinicia el editor al cambiar de situación/stack (sin setState en efectos).
+        // The key resets the editor when the situation/stack changes (no setState in effects).
         <RangeWorkbench key={`${selection.situationKey}@${selection.stack}`} situation={selection.situation} stack={selection.stack} />
       )}
     </div>
@@ -44,14 +44,14 @@ function RangeWorkbench({ situation, stack }) {
 }
 
 /**
- * Editor del rango efectivo (ADR-0012): custom si existe, si no el del PDF.
- * Guardar crea/reemplaza el custom (PUT con la versión sobre la que se empezó a editar); Reset lo borra.
+ * Editor of the effective range (ADR-0012): custom if it exists, otherwise the PDF one.
+ * Saving creates/replaces the custom one (PUT with the version editing started from); Reset deletes it.
  */
 function RangeEditor({ situation, stack, saved, reference, onReload }) {
   const save = useSaveUserRange(situation.key, stack);
   const remove = useDeleteUserRange(situation.key, stack);
   const [brush, setBrush] = useState(situation.actions[0]);
-  // Borrador solo mientras hay cambios; recuerda la versión de partida para detectar conflictos (409).
+  // Draft only while there are changes; remembers the starting version to detect conflicts (409).
   const [pending, setPending] = useState(null);
   const [confirm, setConfirm] = useState(null); // 'reset' | null
   const [copyStatus, setCopyStatus] = useState(null);
@@ -70,7 +70,7 @@ function RangeEditor({ situation, stack, saved, reference, onReload }) {
     setPending(p => {
       const current = p?.hands ?? base;
       const next = paintHand(current, hand, brush, actions);
-      // version 0 = crear; N = reemplazar la versión N (contrato v0.2).
+      // version 0 = create; N = replace version N (contract v0.2).
       return next === current ? p : { hands: next, baseVersion: p ? p.baseVersion : saved?.version ?? 0 };
     });
   };

@@ -1,4 +1,4 @@
-/** Error de API en formato RFC 7807 (Problem Details). */
+/** API error in RFC 7807 format (Problem Details). */
 export class ApiError extends Error {
   constructor(problem, status) {
     super(problem?.detail ?? problem?.title ?? `HTTP ${status}`);

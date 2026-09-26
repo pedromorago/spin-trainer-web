@@ -10,15 +10,15 @@ import { CELL_GAP, cellFontSize, gridCellSize } from './gridSize';
 import { useElementWidth } from './useElementWidth';
 
 /**
- * Grid 13x13. Solo presenta. Pinta la acción EFECTIVA de cada mano (domain/range#actionFor):
- * las manos sin acción explícita muestran la implícita (FOLD/CHECK) atenuada.
+ * 13x13 grid. Presentation only. Paints the EFFECTIVE action of each hand (domain/range#actionFor):
+ * hands without an explicit action show the implicit one (FOLD/CHECK) dimmed.
  *
  * Props:
- *  - assignments ({[hand]: action}), actions (acciones de la situación)
- *  - onPaint(hand): si se pasa, el grid es editable: click, arrastre (ratón o táctil) y teclado (Enter/Espacio)
- *  - cellSize: número de px o 'auto' (se ajusta al ancho disponible, 20–70 px)
- *  - showLabels, highlight (mano resaltada), label (nombre accesible)
- *  - verdicts ({[hand]: {expected, kind, played}} de domain/range#evaluateRange): contorno y glifo por tipo en las manos jugadas
+ *  - assignments ({[hand]: action}), actions (actions of the situation)
+ *  - onPaint(hand): if passed, the grid is editable: click, drag (mouse or touch) and keyboard (Enter/Space)
+ *  - cellSize: number of px or 'auto' (fits the available width, 20–70 px)
+ *  - showLabels, highlight (highlighted hand), label (accessible name)
+ *  - verdicts ({[hand]: {expected, kind, played}} from domain/range#evaluateRange): outline and glyph by kind on the played hands
  */
 export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto', showLabels = true,
   highlight = null, verdicts = null, label = 'Rango 13×13' }) {
@@ -56,7 +56,7 @@ export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto'
               const isImplicit = action === implicit;
               const color = colorFor(action);
               const verdict = verdicts?.[hand];
-              // Solo se marcan las manos jugadas: acertar los folds de las 169 no aporta información.
+              // Only the played hands are marked: getting the folds of the 169 right adds no information.
               const marked = verdict?.played ? VERDICT_STYLES[verdict.kind] : null;
               const outline = marked
                 ? `${size >= 28 ? 3 : 2}px ${marked.line} ${marked.color}`
@@ -81,7 +81,7 @@ export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto'
                 <div role="cell" key={hand} aria-label={onPaint ? undefined : describe(hand, action, verdict)}>
                   {onPaint ? (
                     <button type="button" style={style} {...data} aria-label={describe(hand, action, verdict)}
-                      onClick={e => { if (e.detail === 0) onPaint(hand); /* teclado; el ratón pinta en pointerdown */ }}>
+                      onClick={e => { if (e.detail === 0) onPaint(hand); /* keyboard; the mouse paints on pointerdown */ }}>
                       {text}{glyph}
                     </button>
                   ) : (
@@ -98,9 +98,9 @@ export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto'
 }
 
 /**
- * Trazo de pintura con Pointer Events: pinta al pulsar y al pasar por otras celdas mientras se mantiene pulsado.
- * En táctil el navegador captura el puntero en la celda inicial, así que la celda bajo el dedo se resuelve
- * con elementFromPoint en cada movimiento.
+ * Paint stroke with Pointer Events: paints on press and when passing over other cells while the pointer is held down.
+ * On touch the browser captures the pointer in the initial cell, so the cell under the finger is resolved
+ * with elementFromPoint on each move.
  */
 function useStroke(onPaint) {
   const painting = useRef(false);

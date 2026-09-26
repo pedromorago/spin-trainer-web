@@ -3,10 +3,10 @@ import { RequireAuth } from './shared/auth/RequireAuth';
 import { LoginPage } from './features/auth/LoginPage';
 import { AppShell } from './features/shell/AppShell';
 
-// Cada feature en su propio chunk: se descarga al entrar en la ruta.
+// Each feature in its own chunk: downloaded when entering the route.
 const page = (load, name) => () => load().then(m => ({ Component: m[name] }));
 
-/** Rutas para createBrowserRouter (data mode: habilita useBlocker en el Builder y rutas lazy). */
+/** Routes for createBrowserRouter (data mode: enables useBlocker in the Builder and lazy routes). */
 export const routes = [
   { path: '/login', element: <LoginPage /> },
   {

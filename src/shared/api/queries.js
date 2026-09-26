@@ -1,4 +1,4 @@
-// Hooks de estado de servidor (TanStack Query). Un hook por operación del contrato v0.2 (docs/openapi.yaml).
+// Server state hooks (TanStack Query). One hook per operation of contract v0.2 (docs/openapi.yaml).
 import { useMemo } from 'react';
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { mergeEffectiveRanges } from '../../domain/range';
@@ -15,28 +15,28 @@ export const keys = {
   progress: params => ['stats', 'progress', params]
 };
 
-/** ¿Es el rango de esta combinación? (el stack puede llegar como texto desde la URL). */
+/** Is it the range of this combination? (the stack may arrive as text from the URL). */
 const isSpot = (situation, stack) => range => comboKey(range) === comboKey({ situation, stack: Number(stack) });
 
 export function useSituations() {
   return useQuery({ queryKey: keys.situations, queryFn: api.listSituations, staleTime: Infinity });
 }
 
-/** Todos los rangos de referencia (cambian solo con una migración de seed). */
+/** All the reference ranges (they only change with a seed migration). */
 export function useDefaultRanges() {
   return useQuery({ queryKey: keys.defaultRanges, queryFn: api.listDefaultRanges, staleTime: Infinity });
 }
 
-/** Todos los rangos personalizados del usuario. */
+/** All the user's custom ranges. */
 export function useUserRanges() {
   return useQuery({ queryKey: keys.userRanges, queryFn: api.listUserRanges });
 }
 
 /**
- * Rango con el que se entrena (ADR-0012): el personalizado si existe; si no, el de referencia (PDF).
- * Expone ambos para quien necesite distinguirlos (badges y Reset del Explorer).
- * Sale de las dos listas, compartidas con el Quiz y el modo "Any": ni una petición por combinación ni un 404
- * cuando la combinación aún no tiene rango (los GET individuales del contrato siguen en los adaptadores).
+ * Range used for training (ADR-0012): the custom one if it exists; otherwise, the reference one (PDF).
+ * Exposes both for whoever needs to tell them apart (badges and the Explorer's Reset).
+ * It comes from the two lists, shared with the Quiz and "Any" mode: neither one request per combination nor a 404
+ * when the combination has no range yet (the individual GETs of the contract remain in the adapters).
  */
 export function useEffectiveRange(situation, stack) {
   const defaults = useDefaultRanges();
@@ -54,8 +54,8 @@ export function useEffectiveRange(situation, stack) {
 }
 
 /**
- * Rangos efectivos de todas las combinaciones (ADR-0012), para el modo "Any" y las manos difíciles:
- * `ranges` es un Map `situación@stack` → Range (el personalizado prevalece).
+ * Effective ranges of all combinations (ADR-0012), for "Any" mode and hard hands:
+ * `ranges` is a Map `situation@stack` → Range (the custom one prevails).
  */
 export function useEffectiveRanges() {
   const defaults = useDefaultRanges();
@@ -68,13 +68,13 @@ export function useEffectiveRanges() {
   };
 }
 
-/** PUT con `version` obligatoria: 0 crea, N reemplaza la versión N (409 si cambió). */
+/** PUT with required `version`: 0 creates, N replaces version N (409 if it changed). */
 export function useSaveUserRange(situation, stack) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: payload => api.putUserRange(situation, stack, payload),
     onSuccess: data => {
-      // La respuesta del PUT es el rango guardado: la lista se actualiza ya y luego se revalida.
+      // The PUT response is the saved range: the list is updated right away and then revalidated.
       qc.setQueryData(keys.userRanges, list => [...(list ?? []).filter(r => !isSpot(situation, stack)(r)), data]);
       qc.invalidateQueries({ queryKey: keys.userRanges, exact: true });
     }
@@ -92,7 +92,7 @@ export function useDeleteUserRange(situation, stack) {
   });
 }
 
-/** Registra una respuesta ({ situation, stack, hand, given }); el servidor corrige y devuelve el intento. */
+/** Records an answer ({ situation, stack, hand, given }); the server grades it and returns the attempt. */
 export function useRecordAttempt() {
   const qc = useQueryClient();
   return useMutation({
@@ -104,7 +104,7 @@ export function useRecordAttempt() {
   });
 }
 
-/** Historial de intentos paginado por cursor (del más reciente al más antiguo). */
+/** Attempt history paginated by cursor (from most recent to oldest). */
 export function useAttempts(filters = {}) {
   return useInfiniteQuery({
     queryKey: [...keys.attempts, filters],
@@ -114,14 +114,14 @@ export function useAttempts(filters = {}) {
   });
 }
 
-/** Filas agregadas por (situación, stack, mano) para la política de estudio de domain/stats.js. */
+/** Rows aggregated by (situation, stack, hand) for the study policy of domain/stats.js. */
 export function useHandStats(filters = {}) {
   return useQuery({ queryKey: keys.handStats(filters), queryFn: () => api.getHandStats(filters) });
 }
 
 /**
- * Intentos y aciertos por día (solo días con actividad). Al cambiar el periodo conserva los datos anteriores
- * (`isPlaceholderData`) para que el gráfico no parpadee mientras recarga.
+ * Attempts and correct answers per day (only days with activity). When the period changes it keeps the previous data
+ * (`isPlaceholderData`) so the chart does not flicker while reloading.
  */
 export function useProgress({ days = 30, tz = 'UTC' } = {}) {
   return useQuery({ queryKey: keys.progress({ days, tz }), queryFn: () => api.getProgress({ days, tz }), placeholderData: keepPreviousData });

@@ -1,7 +1,7 @@
-// Adaptador en memoria (persistido en localStorage) con el mismo contrato que httpApi: docs/openapi.yaml v0.2.
-// Permite desarrollar y ejecutar E2E sin backend. Valida como la API y es dueño de los campos de servidor
-// (id, answeredAt, expected, correct, rangeSource, rangeVersion, version, updatedAt). Un test valida sus respuestas
-// contra los schemas de la spec (mock/__tests__/contract.test.js).
+// In-memory adapter (persisted in localStorage) with the same contract as httpApi: docs/openapi.yaml v0.2.
+// Allows developing and running E2E without a backend. It validates like the API and owns the server fields
+// (id, answeredAt, expected, correct, rangeSource, rangeVersion, version, updatedAt). A test validates its responses
+// against the schemas of the spec (mock/__tests__/contract.test.js).
 import { ApiError } from '../errors';
 import { isValidHand } from '../../../domain/hand';
 import { isValidAction } from '../../../domain/actions';
@@ -10,7 +10,7 @@ import { aggregateAttempts, progressByDay } from '../../../domain/stats';
 import { SITUATIONS } from './situations';
 import { loadDefaultRanges } from './defaultRanges';
 
-// v2: forma de datos del contrato v0.2 (los intentos de v1 no son compatibles).
+// v2: data shape of contract v0.2 (v1 attempts are not compatible).
 const LS_KEY = 'spin-trainer.mock.v2';
 const SEED_VERSION = 1;
 const ATTEMPT_FIELDS = ['situation', 'stack', 'hand', 'given'];
@@ -31,11 +31,11 @@ export function memoryStorage() {
 
 /**
  * @param {object} [opts]
- * @param {{getItem, setItem}} [opts.storage] por defecto localStorage (memoria si no existe)
- * @param {number} [opts.latency] ms de latencia simulada
- * @param {() => Date} [opts.clock] reloj inyectable (tests)
- * @param {Record<string, Record<string, string>>} [opts.defaultRanges] rangos de referencia por `situación@stack`;
- *   por defecto los del seed, cargados al pedirlos por primera vez (tests: para probar spots sin rango)
+ * @param {{getItem, setItem}} [opts.storage] localStorage by default (memory if it does not exist)
+ * @param {number} [opts.latency] ms of simulated latency
+ * @param {() => Date} [opts.clock] injectable clock (tests)
+ * @param {Record<string, Record<string, string>>} [opts.defaultRanges] reference ranges by `situation@stack`;
+ *   the seed ones by default, loaded the first time they are requested (tests: to try spots without a range)
  */
 export function createMockApi({ storage = globalThis.localStorage ?? memoryStorage(), latency = 50, clock = () => new Date(),
   defaultRanges } = {}) {
@@ -92,7 +92,7 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
       return range;
     },
 
-    /** v0.2: version obligatoria. 0 = crear (409 si existe); N = reemplazar la versión N (409 si cambió o se borró). */
+    /** v0.2: version is required. 0 = create (409 if it exists); N = replace version N (409 if it changed or was deleted). */
     async putUserRange(situation, stack, { hands, version } = {}) {
       await delay();
       const s = spot(situation, stack);
@@ -123,7 +123,7 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
       return null;
     },
 
-    /** v0.2: el servidor calcula expected (rango efectivo, ADR-0012) y correct; el cliente solo envía lo que hizo. */
+    /** v0.2: the server computes expected (effective range, ADR-0012) and correct; the client only sends what it did. */
     async recordAttempt(body = {}) {
       await delay();
       const extra = Object.keys(body).filter(f => !ATTEMPT_FIELDS.includes(f));
@@ -147,7 +147,7 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
       return stored;
     },
 
-    /** Del más reciente al más antiguo; cursor opaco (desplazamiento codificado). */
+    /** From most recent to oldest; opaque cursor (encoded offset). */
     async listAttempts({ limit = 50, cursor, situation, stack } = {}) {
       await delay();
       if (!Number.isInteger(limit) || limit < 1 || limit > 200) throw invalid('limit debe estar entre 1 y 200', [{ field: 'limit', message: '1..200' }]);
@@ -183,5 +183,5 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
   };
 }
 
-// PURE: permite al bundler eliminar el mock de los builds en modo http.
+// PURE: lets the bundler drop the mock from http-mode builds.
 export const mockApi = /* @__PURE__ */ createMockApi();

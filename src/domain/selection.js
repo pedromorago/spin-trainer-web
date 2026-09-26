@@ -1,12 +1,12 @@
-// selection.js — selección de (situación, stack) sobre el catálogo, incluida la opción "Any" (aleatoria).
-// Una combinación es { situation: key, stack: number }.
+// selection.js — selection of (situation, stack) over the catalog, including the "Any" (random) option.
+// A combination is { situation: key, stack: number }.
 
 export const ANY = 'any';
 export const DEFAULT_SITUATION = 'btn_open';
 
 export const comboKey = ({ situation, stack }) => `${situation}@${stack}`;
 
-/** Stacks ofrecidos: los de la situación, o la unión de todos (orden descendente) si la situación es ANY. */
+/** Offered stacks: those of the situation, or the union of all of them (descending order) if the situation is ANY. */
 export function stackOptions(catalog, situationKey) {
   if (situationKey === ANY) {
     return [...new Set(catalog.flatMap(s => s.stacks))].sort((a, b) => b - a);
@@ -15,9 +15,9 @@ export function stackOptions(catalog, situationKey) {
 }
 
 /**
- * Normaliza una selección pedida (p. ej. leída de la URL, strings incluidos) contra el catálogo.
- * Situación desconocida → default; stack no ofrecido → ANY si la situación es ANY, si no el primero de la situación.
- * @returns {{ situationKey: string, stack: number|string } | null} null si el catálogo está vacío
+ * Normalizes a requested selection (e.g. read from the URL, strings included) against the catalog.
+ * Unknown situation → default; stack not offered → ANY if the situation is ANY, otherwise the first one of the situation.
+ * @returns {{ situationKey: string, stack: number|string } | null} null if the catalog is empty
  */
 export function resolveSelection(catalog, { situation, stack } = {}) {
   if (catalog.length === 0) return null;
@@ -32,14 +32,14 @@ export function resolveSelection(catalog, { situation, stack } = {}) {
   return { situationKey, stack: resolvedStack };
 }
 
-/** Combinaciones del catálogo compatibles con una selección (ANY en situación y/o stack). */
+/** Catalog combinations compatible with a selection (ANY in situation and/or stack). */
 export function matchingCombos(catalog, { situationKey, stack }) {
   return catalog
     .filter(s => situationKey === ANY || s.key === situationKey)
     .flatMap(s => s.stacks.filter(st => stack === ANY || st === stack).map(st => ({ situation: s.key, stack: st })));
 }
 
-/** Combinación al azar (RNG inyectable); evita repetir `exclude` si hay alternativa. null si no hay combinaciones. */
+/** Random combination (injectable RNG); avoids repeating `exclude` if there is an alternative. null if there are no combinations. */
 export function pickCombo(combos, rng = Math.random, exclude = null) {
   const excluded = exclude ? comboKey(exclude) : null;
   const candidates = combos.length > 1 && excluded ? combos.filter(c => comboKey(c) !== excluded) : combos;

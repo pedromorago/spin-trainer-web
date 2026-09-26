@@ -2,8 +2,8 @@ import { PlayingCard } from './PlayingCard';
 import { cardName } from './cardFaces';
 import { theme } from '../theme/theme';
 
-// Posiciones (x, y en %) por asiento: el héroe abajo y el resto en sentido horario. Para cada asiento, dónde van
-// sus cartas y etiqueta (seat), sus fichas (bet) y el botón de dealer (dealer), sin solaparse con las cartas del héroe.
+// Positions (x, y in %) per seat: the hero at the bottom and the rest clockwise. For each seat, where its
+// cards and label (seat), its chips (bet) and the dealer button (dealer) go, without overlapping the hero's cards.
 const LAYOUT = {
   3: [
     { seat: [50, 84], bet: [50, 63], dealer: [67, 76] },
@@ -21,8 +21,8 @@ const ACTION_LABELS = {
 const bb = n => `${Number.isInteger(n) ? n : n.toFixed(1)} BB`;
 
 /**
- * Mesa de poker en el momento de decidir el héroe. Solo presenta.
- * Props: seats y pot (domain/table#tableSeats, empezando por el héroe), heroCards (domain/cards#dealCards), stack, caption
+ * Poker table at the moment the hero decides. Presentation only.
+ * Props: seats and pot (domain/table#tableSeats, starting with the hero), heroCards (domain/cards#dealCards), stack, caption
  */
 export function PokerTable({ seats, pot, heroCards, stack, caption }) {
   const layout = LAYOUT[seats.length];
@@ -40,7 +40,7 @@ export function PokerTable({ seats, pot, heroCards, stack, caption }) {
   };
 
   return (
-    // Proporción 16:10, o 5:4 en pantallas estrechas (clase .poker-table en global.css) para que quepan las cartas.
+    // 16:10 aspect ratio, or 5:4 on narrow screens (.poker-table class in global.css) so that the cards fit.
     <figure role="img" aria-label={description} data-testid="poker-table" className="poker-table"
       style={{ position: 'relative', width: '100%', maxWidth: 640, margin: '0 auto' }}>
       <div aria-hidden="true" style={{

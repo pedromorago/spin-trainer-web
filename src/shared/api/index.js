@@ -1,4 +1,4 @@
-// Punto único de acceso a datos. Las features nunca importan httpClient ni mockApi directamente.
+// Single data access point. Features never import httpClient or mockApi directly.
 import { httpApi } from './httpClient';
 import { mockApi } from './mock/mockApi';
 

@@ -1,4 +1,4 @@
-// Caras de las cartas: baraja de 4 colores (distingue suited/offsuit de un vistazo) y nombres accesibles.
+// Card faces: 4-color deck (tells suited/offsuit apart at a glance) and accessible names.
 export const SUIT_FACES = {
   s: { symbol: '♠', color: '#1b1d22', name: 'picas' },
   h: { symbol: '♥', color: '#d62839', name: 'corazones' },

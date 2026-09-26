@@ -1,10 +1,10 @@
-// stats.js — estadísticas de estudio sobre filas agregadas por (situación, stack, mano), como las de GET /stats/hands:
+// stats.js — study statistics over rows aggregated by (situation, stack, hand), like those of GET /stats/hands:
 //   { situation, stack, hand, attempts, correct, lastAnsweredAt }
-// La API agrega (GROUP BY); aquí vive la política de estudio (rankings, manos difíciles). ADR-0013.
+// The API aggregates (GROUP BY); the study policy (rankings, hard hands) lives here. ADR-0013.
 
 const handKey = r => `${r.situation}@${r.stack}@${r.hand}`;
 
-/** Agrega intentos individuales en filas por (situación, stack, mano). Lo usa el mock para emular /stats/hands. */
+/** Aggregates individual attempts into rows by (situation, stack, hand). The mock uses it to emulate /stats/hands. */
 export function aggregateAttempts(attempts) {
   const rows = new Map();
   for (const a of attempts) {
@@ -18,14 +18,14 @@ export function aggregateAttempts(attempts) {
   return [...rows.values()];
 }
 
-/** Totales de un conjunto de filas: { attempts, correct, accuracy } (accuracy null sin intentos). */
+/** Totals of a set of rows: { attempts, correct, accuracy } (accuracy null without attempts). */
 export function totals(rows) {
   const attempts = rows.reduce((n, r) => n + r.attempts, 0);
   const correct = rows.reduce((n, r) => n + r.correct, 0);
   return { attempts, correct, accuracy: attempts ? correct / attempts : null };
 }
 
-/** Agrupa filas por una clave y devuelve { [clave]: totales }, conservando el orden de aparición. */
+/** Groups rows by a key and returns { [key]: totals }, keeping the order of appearance. */
 export function groupRows(rows, keyFn) {
   const groups = {};
   for (const r of rows) (groups[keyFn(r)] ??= []).push(r);
@@ -35,7 +35,7 @@ export function groupRows(rows, keyFn) {
 export const bySituation = rows => groupRows(rows, r => r.situation);
 export const bySituationStack = rows => groupRows(rows, r => `${r.situation}@${r.stack}`);
 
-/** Manos más falladas (por situación, stack y mano): más fallos primero; a igualdad, peor precisión. */
+/** Most missed hands (by situation, stack and hand): most misses first; on a tie, worse accuracy. */
 export function mostFailed(rows, limit = 10) {
   return rows
     .map(r => ({ ...r, fails: r.attempts - r.correct, accuracy: r.correct / r.attempts }))
@@ -45,9 +45,9 @@ export function mostFailed(rows, limit = 10) {
 }
 
 /**
- * Intentos y aciertos por día en una zona horaria IANA (emula GET /stats/progress). Solo días con actividad,
- * del más antiguo al más reciente, dentro de los últimos `days` días contando hoy.
- * @throws {RangeError} si la zona horaria no es válida
+ * Attempts and correct answers per day in an IANA time zone (emulates GET /stats/progress). Only days with activity,
+ * from oldest to most recent, within the last `days` days counting today.
+ * @throws {RangeError} if the time zone is not valid
  */
 export function progressByDay(attempts, { days = 30, tz = 'UTC', now = new Date() } = {}) {
   const dayOf = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -65,15 +65,15 @@ export function progressByDay(attempts, { days = 30, tz = 'UTC', now = new Date(
   return [...byDay.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
-/** Pesos de estudio: cada fallo suma 2 y cada acierto resta 0,5. */
+/** Study weights: each miss adds 2 and each correct answer subtracts 0.5. */
 export const HARD_FAIL_WEIGHT = 2;
 export const HARD_HIT_WEIGHT = 0.5;
 export const HARD_MIN_FAILS = 2;
 
 /**
- * Manos difíciles: falladas al menos 2 veces en su (situación, stack) y con peso > 0, donde
- * peso = 2·fallos − 0,5·aciertos. Al acertarlas el peso baja hasta que salen del pool: la mano "se aprende".
- * Ordenadas de más a menos peso.
+ * Hard hands: missed at least 2 times in their (situation, stack) and with weight > 0, where
+ * weight = 2·misses − 0.5·correct. Getting them right lowers the weight until they leave the pool: the hand "is learned".
+ * Sorted from highest to lowest weight.
  */
 export function hardHands(rows) {
   return rows
@@ -86,7 +86,7 @@ export function hardHands(rows) {
     .sort((a, b) => b.weight - a.weight || handKey(a).localeCompare(handKey(b)));
 }
 
-/** Suma n días a una fecha 'YYYY-MM-DD' (aritmética en UTC: sin saltos por cambio de hora). */
+/** Adds n days to a 'YYYY-MM-DD' date (UTC arithmetic: no jumps from daylight saving time changes). */
 function addDays(date, n) {
   const d = new Date(`${date}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);
@@ -94,9 +94,9 @@ function addDays(date, n) {
 }
 
 /**
- * Serie diaria completa para el gráfico de progreso: los `days` días hasta `today` (incluido), en orden,
- * rellenando con 0 los días sin actividad (GET /stats/progress solo devuelve días con intentos).
- * accuracy es null en los días sin intentos (no es un 0 %: no hay dato).
+ * Complete daily series for the progress chart: the `days` days up to `today` (inclusive), in order,
+ * filling the days without activity with 0 (GET /stats/progress only returns days with attempts).
+ * accuracy is null on days without attempts (it is not 0 %: there is no data).
  */
 export function dailySeries(progress, { days, today }) {
   const byDate = new Map(progress.map(d => [d.date, d]));

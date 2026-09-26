@@ -22,9 +22,9 @@ const SCOPES = { range: 'Rango + frontera', all: 'Las 169 manos' };
 const EMPTY_ROWS = [];
 
 /**
- * Quiz: mesa con la situación, respuesta con botones o teclas 1..n, feedback con el rango correcto.
- * Cada pregunta sale de domain/quiz#nextQuestion sobre los spots de la selección (varios con "Any").
- * El servidor vuelve a corregir al registrar el intento (contrato v0.2).
+ * Quiz: table with the situation, answer with buttons or keys 1..n, feedback with the correct range.
+ * Each question comes from domain/quiz#nextQuestion over the spots of the selection (several with "Any").
+ * The server grades again when recording the attempt (contract v0.2).
  */
 export function QuizPage() {
   const { situations, selection } = useOutletContext();
@@ -37,7 +37,7 @@ export function QuizPage() {
   if (effective.isLoading || (mode === 'hard' && handStats.isLoading)) return <Loading />;
   if (effective.error) return <ErrorBox error={effective.error} />;
 
-  // Spots de la selección con rango efectivo (personalizado si existe; ADR-0012).
+  // Spots of the selection with an effective range (custom if it exists; ADR-0012).
   const spots = selection.combos.flatMap(c => {
     const range = effective.ranges.get(comboKey(c));
     const situation = situations.find(s => s.key === c.situation);
@@ -71,7 +71,7 @@ export function QuizPage() {
           </select>
         </div>
       </div>
-      {/* La key reinicia la ronda al cambiar selección, modo o alcance (sin setState en efectos). */}
+      {/* The key resets the round when the selection, mode or scope changes (no setState in effects). */}
       <QuizRound key={`${selection.situationKey}@${selection.stack}@${mode}@${scope}`}
         situations={situations} spots={spots} hard={hardHere} mode={mode} scope={scope} />
     </div>
@@ -95,7 +95,7 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
     setResult(r);
     setRound(s => ({ correct: s.correct + (r.correct ? 1 : 0), total: s.total + 1 }));
     recordInSession(r.correct);
-    // El servidor corrige contra el rango efectivo (contrato v0.2); el feedback local es inmediato.
+    // The server grades against the effective range (contract v0.2); the local feedback is immediate.
     record.mutate({ situation: spot.situation, stack: spot.stack, hand: question.hand, given });
   };
   const next = () => {
@@ -104,7 +104,7 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
     setQuestion(deal(nextQuestion({ spots, mode, scope, hard, previous: question })));
   };
 
-  // Atajos: 1..n responde; Enter o → pasa a la siguiente. Se ignoran con foco en campos o con modificadores.
+  // Shortcuts: 1..n answers; Enter or → moves to the next one. Ignored with focus on fields or with modifiers.
   const onKey = useEffectEvent(e => {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
     const tag = e.target?.tagName;

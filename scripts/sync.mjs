@@ -1,10 +1,10 @@
-// Copias fijadas de lo que publica spin-trainer-api (repo hermano, ../spin-trainer-api):
-//   spec    openapi.yaml          → docs/openapi.yaml (contrato; ADR-0004). La primera línea dice de dónde viene.
-//   ranges  reference-ranges.json → src/shared/api/mock/reference-ranges.json (rangos de referencia del seed V5)
+// Pinned copies of what spin-trainer-api publishes (sibling repo, ../spin-trainer-api):
+//   spec    openapi.yaml          → docs/openapi.yaml (contract; ADR-0004). The first line says where it comes from.
+//   ranges  reference-ranges.json → src/shared/api/mock/reference-ranges.json (reference ranges from seed V5)
 //
-//   node scripts/sync.mjs check <spec|ranges>   → falla si la copia difiere
-//   node scripts/sync.mjs sync  <spec|ranges>   → trae la versión de la API
-// Sin el repo hermano (p. ej. en el CI de la web sin token) el check se omite: los tests validan el mock contra la copia.
+//   node scripts/sync.mjs check <spec|ranges>   → fails if the copy differs
+//   node scripts/sync.mjs sync  <spec|ranges>   → fetches the API's version
+// Without the sibling repo (e.g. in the web CI without a token) the check is skipped: the tests validate the mock against the copy.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
@@ -25,7 +25,7 @@ if (!['check', 'sync'].includes(mode) || !file) {
 const copy = fileURLToPath(new URL(file.copy, import.meta.url));
 const source = fileURLToPath(new URL(file.source, import.meta.url));
 const lf = text => text.replace(/\r\n/g, '\n');
-// Sin la cabecera de la copia (primera línea), si la lleva.
+// Without the copy's header (first line), if it has one.
 const body = text => (file.header ? lf(text).split('\n').slice(1).join('\n') : lf(text));
 
 if (!existsSync(source)) {

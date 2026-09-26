@@ -1,6 +1,6 @@
-// Catálogo de las 16 situaciones (12 3-max + 4 HU) del PDF de referencia; el mismo que sirve la API (seeds V2 y V5).
-// En producción lo sirve la API (GET /situations); aquí vive solo para el adaptador mock.
-// Stacks y acciones salen de las tablas y leyendas del PDF; hero y priorActions (ADR-0013), de sus títulos.
+// Catalog of the 16 situations (12 3-max + 4 HU) from the reference PDF; the same one the API serves (seeds V2 and V5).
+// In production the API serves it (GET /situations); here it lives only for the mock adapter.
+// Stacks and actions come from the PDF's tables and legends; hero and priorActions (ADR-0013), from their titles.
 const OPEN = ['MR_4B_C', 'MR_C_C', 'MR_C_F', 'MR_F_F', 'L_C_C', 'L_C_F', 'ALLIN', 'FOLD'];
 const act = (position, action) => ({ position, action });
 
@@ -29,7 +29,7 @@ export const SITUATIONS = [
   { key: 'bb_vs_btn_mr_sb_3bet', label: 'BB vs BTN MR (SB 3bet)', format: '3max', hero: 'BB',
     priorActions: [act('BTN', 'MIN_RAISE'), act('SB', 'THREE_BET')],
     stacks: [25, 12.5, 10], actions: ['ALLIN', 'CALL', 'FOLD'] },
-  // Sobre un limp, la subida de la SB es técnicamente un iso-raise; el PDF la llama "3bet".
+  // Over a limp, the SB's raise is technically an iso-raise; the PDF calls it "3bet".
   { key: 'bb_vs_btn_limp_sb_3bet', label: 'BB vs BTN Limp (SB 3bet)', format: '3max', hero: 'BB',
     priorActions: [act('BTN', 'LIMP'), act('SB', 'RAISE')],
     stacks: [25, 20, 15, 10], actions: ['ALLIN', '3BET_C', 'CALL', 'FOLD'] },
@@ -45,7 +45,7 @@ export const SITUATIONS = [
     stacks: [25, 20, 15, 10, 8], actions: ['ALLIN', '3BET_C', 'CALL', 'FOLD'] },
   { key: 'hu_bb_vs_limp', label: 'HU BB vs Limp', format: 'hu', hero: 'BB', priorActions: [act('SB', 'LIMP')],
     stacks: [25, 20, 15, 12, 10, 8], actions: ['ALLIN', 'ISO_C', 'ISO_F', 'CHECK'] },
-  // Stacks = límite superior de cada banda del PDF (25-20, 20-15, 15-12, 12-10, 10-8, 8-6)
+  // Stacks = upper bound of each PDF band (25-20, 20-15, 15-12, 12-10, 10-8, 8-6)
   { key: 'hu_bb_vs_os', label: 'HU BB vs Open-Shove', format: 'hu', hero: 'BB', priorActions: [act('SB', 'SHOVE')],
     stacks: [25, 20, 15, 12, 10, 8], actions: ['CALL', 'FOLD'] }
 ];

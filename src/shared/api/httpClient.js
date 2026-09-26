@@ -5,7 +5,7 @@ const BASE = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
 
 async function request(method, path, body) {
   const token = await getAccessToken();
-  // Los errores llegan como Problem Details (RFC 9457): hay que aceptarlos, o un DELETE (sin cuerpo si va bien) da 406.
+  // Errors arrive as Problem Details (RFC 9457): they must be accepted, or a DELETE (no body on success) gets a 406.
   const headers = { Accept: 'application/json, application/problem+json', 'X-Correlation-Id': crypto.randomUUID() };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
@@ -24,7 +24,7 @@ const query = params => {
   return entries.length ? `?${new URLSearchParams(entries)}` : '';
 };
 
-/** Adaptador HTTP del contrato v0.2 (docs/openapi.yaml). Mismo contrato que mock/mockApi.js. */
+/** HTTP adapter for contract v0.2 (docs/openapi.yaml). Same contract as mock/mockApi.js. */
 export const httpApi = {
   listSituations: () => request('GET', '/situations'),
   listDefaultRanges: () => request('GET', '/ranges/default'),

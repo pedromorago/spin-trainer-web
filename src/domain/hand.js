@@ -1,7 +1,7 @@
-// hand.js — matriz 13x13 de manos preflop. Sin dependencias.
+// hand.js — 13x13 matrix of preflop hands. No dependencies.
 //
-//   - Filas y columnas: A, K, Q, J, T, 9, 8, 7, 6, 5, 4, 3, 2
-//   - Diagonal -> pareja (AA), triángulo superior -> suited (AKs), inferior -> offsuit (AKo)
+//   - Rows and columns: A, K, Q, J, T, 9, 8, 7, 6, 5, 4, 3, 2
+//   - Diagonal -> pair (AA), upper triangle -> suited (AKs), lower -> offsuit (AKo)
 
 export const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 export const HAND_RE = /^([AKQJT2-9])([AKQJT2-9])([so])?$/;
@@ -30,14 +30,14 @@ export function isValidHand(hand) {
   return m[3] !== undefined && RANKS.indexOf(m[1]) < RANKS.indexOf(m[2]);
 }
 
-/** Las 169 manos en orden de grid (fila a fila). */
+/** The 169 hands in grid order (row by row). */
 export function allHands() {
   const out = [];
   for (let r = 0; r < 13; r++) for (let c = 0; c < 13; c++) out.push(getHand(r, c));
   return out;
 }
 
-/** Orden de lectura habitual: parejas, luego suited, luego offsuit; dentro de cada grupo, de mayor a menor. */
+/** Usual reading order: pairs, then suited, then offsuit; within each group, from highest to lowest. */
 export function compareHands(a, b) {
   const key = h => {
     const group = h.length === 2 ? 0 : h[2] === 's' ? 1 : 2;
@@ -46,7 +46,7 @@ export function compareHands(a, b) {
   return key(a) - key(b);
 }
 
-/** Nº de combos: 6 pareja, 4 suited, 12 offsuit. */
+/** Number of combos: 6 for a pair, 4 suited, 12 offsuit. */
 export function combos(hand) {
   if (hand.length === 2) return 6;
   return hand[2] === 's' ? 4 : 12;

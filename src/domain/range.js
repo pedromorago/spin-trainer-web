@@ -1,13 +1,13 @@
-// range.js — un rango es { [hand]: action }. Funciones puras compartidas por Explorer, Quiz y Builder.
+// range.js — a range is { [hand]: action }. Pure functions shared by Explorer, Quiz and Builder.
 import { allHands, combos, compareHands, getCell, getHand, isValidHand, TOTAL_COMBOS } from './hand';
 import { ACTION_LABELS, fallbackAction, isValidAction } from './actions';
 
-/** Pincel "goma": devuelve la mano a la acción implícita. */
+/** "Eraser" brush: returns the hand to the implicit action. */
 export const ERASE = 'ERASE';
 
 /**
- * Normaliza un rango: elimina manos inválidas o con acción no permitida en la situación,
- * y descarta la acción implícita (no se almacena).
+ * Normalizes a range: removes invalid hands or hands with an action not allowed in the situation,
+ * and drops the implicit action (it is not stored).
  */
 export function normalizeRange(hands, situationActions) {
   const implicit = fallbackAction(situationActions);
@@ -21,15 +21,15 @@ export function normalizeRange(hands, situationActions) {
   return out;
 }
 
-/** Acción efectiva de una mano (explícita o implícita). */
+/** Effective action of a hand (explicit or implicit). */
 export function actionFor(hands, hand, situationActions) {
   return hands?.[hand] ?? fallbackAction(situationActions);
 }
 
 /**
- * Pinta una mano con el pincel (una acción de la situación) o la borra (ERASE o la acción implícita).
- * Fija, no alterna: repetir el trazo es idempotente, lo que permite pintar arrastrando.
- * Devuelve el mismo objeto si nada cambia (mano o pincel inválidos incluidos).
+ * Paints a hand with the brush (an action of the situation) or erases it (ERASE or the implicit action).
+ * Sets, does not toggle: repeating the stroke is idempotent, which allows painting by dragging.
+ * Returns the same object if nothing changes (invalid hand or brush included).
  */
 export function paintHand(hands, hand, brush, situationActions) {
   if (!isValidHand(hand)) return hands;
@@ -42,20 +42,20 @@ export function paintHand(hands, hand, brush, situationActions) {
   return next;
 }
 
-/** Dos rangos son iguales si todas las manos tienen la misma acción efectiva. */
+/** Two ranges are equal if every hand has the same effective action. */
 export function rangesEqual(a, b, situationActions) {
   return allHands().every(h => actionFor(a, h, situationActions) === actionFor(b, h, situationActions));
 }
 
-/** Manos cuya acción efectiva no es la implícita, en orden de grid. */
+/** Hands whose effective action is not the implicit one, in grid order. */
 export function explicitHands(hands, situationActions) {
   const implicit = fallbackAction(situationActions);
   return allHands().filter(h => actionFor(hands, h, situationActions) !== implicit);
 }
 
 /**
- * Frontera del rango: manos con acción implícita adyacentes (arriba, abajo, izquierda, derecha en el grid)
- * a alguna mano con acción explícita. Son las decisiones "juego / no juego" más fáciles de fallar.
+ * Range boundary: implicit-action hands adjacent (above, below, left, right in the grid)
+ * to some hand with an explicit action. They are the easiest "play / don't play" decisions to get wrong.
  */
 export function boundaryHands(hands, situationActions) {
   const explicit = new Set(explicitHands(hands, situationActions));
@@ -68,7 +68,7 @@ export function boundaryHands(hands, situationActions) {
   return allHands().filter(h => !explicit.has(h) && neighbours(h).some(n => explicit.has(n)));
 }
 
-/** Recuento de manos y combos por acción, incluyendo la implícita. */
+/** Count of hands and combos per action, including the implicit one. */
 export function summarize(hands, situationActions) {
   const byAction = {};
   for (const h of allHands()) {
@@ -80,17 +80,17 @@ export function summarize(hands, situationActions) {
   return byAction;
 }
 
-/** Tipos de veredicto de una mano jugada: acierto, acción equivocada, de más (debía ser la implícita) y faltó (debía jugarse). */
+/** Verdict kinds of a played hand: correct, wrong action, extra (should be the implicit one) and missing (should be played). */
 export const VERDICT_KINDS = ['correct', 'wrong', 'extra', 'missing'];
 
 /**
- * Evalúa un intento del Builder contra el rango objetivo.
- * Compara la ACCIÓN EFECTIVA mano a mano (incluida la implícita), por lo que un rango
- * con varias acciones simultáneas (call + raise + all-in) se evalúa igual que uno simple.
+ * Evaluates a Builder attempt against the target range.
+ * Compares the EFFECTIVE ACTION hand by hand (implicit included), so a range
+ * with several simultaneous actions (call + raise + all-in) is evaluated the same as a simple one.
  *
- * Cada veredicto lleva `kind` (VERDICT_KINDS) y `played` (alguno de los dos rangos juega la mano).
- * `score` puntúa solo las manos jugadas: con un rango cerrado, acertar los folds de las 169 infla `accuracy`.
- * Invariante: score.total = byKind.correct + byKind.wrong + byKind.extra + byKind.missing.
+ * Each verdict carries `kind` (VERDICT_KINDS) and `played` (either of the two ranges plays the hand).
+ * `score` only scores the played hands: with a tight range, getting the folds of the 169 right inflates `accuracy`.
+ * Invariant: score.total = byKind.correct + byKind.wrong + byKind.extra + byKind.missing.
  *
  * @returns {{ verdicts: {[hand]: {expected, given, correct, kind, played}}, correct, total, accuracy,
  *             byAction: {[expected]: {total, correct}}, byKind: {[kind]: n}, score: {correct, total, accuracy} }}
@@ -121,9 +121,9 @@ export function evaluateRange(target, attempt, situationActions) {
 }
 
 /**
- * Estadísticas para el panel del Explorer. Porcentajes sobre los 1326 combos.
- * hands/combos/pct cuentan las manos jugadas (acción distinta de la implícita);
- * byAction sigue el orden de acciones de la situación e incluye la implícita (implicit: true).
+ * Stats for the Explorer panel. Percentages over the 1326 combos.
+ * hands/combos/pct count the played hands (action other than the implicit one);
+ * byAction follows the action order of the situation and includes the implicit one (implicit: true).
  */
 export function rangeStats(hands, situationActions) {
   const implicit = fallbackAction(situationActions);
@@ -143,8 +143,8 @@ export function rangeStats(hands, situationActions) {
 }
 
 /**
- * Texto del rango para copiar: una línea por acción jugada con sus combos y manos
- * (parejas, suited, offsuit) y una línea final con la acción implícita.
+ * Range text to copy: one line per played action with its combos and hands
+ * (pairs, suited, offsuit) and a final line with the implicit action.
  */
 export function exportRange(hands, situationActions, { title } = {}) {
   const label = a => ACTION_LABELS[a] ?? a;
@@ -159,10 +159,10 @@ export function exportRange(hands, situationActions, { title } = {}) {
 }
 
 /**
- * Rangos efectivos de todas las combinaciones (ADR-0012): el personalizado prevalece sobre el de referencia.
- * @param {Array} defaults rangos de referencia (GET /ranges/default)
- * @param {Array} users    rangos personalizados (GET /ranges/user)
- * @returns {Map<string, Range>} clave `situación@stack`
+ * Effective ranges of all combinations (ADR-0012): the custom range prevails over the reference one.
+ * @param {Array} defaults reference ranges (GET /ranges/default)
+ * @param {Array} users    custom ranges (GET /ranges/user)
+ * @returns {Map<string, Range>} key `situation@stack`
  */
 export function mergeEffectiveRanges(defaults = [], users = []) {
   const byCombo = new Map();

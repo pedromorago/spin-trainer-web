@@ -1,6 +1,6 @@
 import { theme } from './theme';
 
-// Contraste WCAG 2.x: elige el color de texto legible sobre un fondo (celdas del grid, chips de acción).
+// WCAG 2.x contrast: picks the readable text color over a background (grid cells, action chips).
 
 function luminance(hex) {
   const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
@@ -16,7 +16,7 @@ export function contrastRatio(a, b) {
 const LIGHT = theme.colors.text;
 const DARK = theme.colors.bg;
 
-/** Texto claro u oscuro, el que más contraste tenga con el fondo dado (#rrggbb). */
+/** Light or dark text, whichever has more contrast with the given background (#rrggbb). */
 export function readableText(background) {
   return contrastRatio(LIGHT, background) >= contrastRatio(DARK, background) ? LIGHT : DARK;
 }

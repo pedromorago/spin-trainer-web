@@ -1,11 +1,11 @@
-// random.js — elecciones aleatorias con RNG inyectable (rng: () => número en [0,1)) para tests deterministas.
+// random.js — random choices with an injectable RNG (rng: () => number in [0,1)) for deterministic tests.
 
-/** Elemento uniforme de la lista, o null si está vacía. */
+/** Uniform element of the list, or null if it is empty. */
 export function pickUniform(items, rng = Math.random) {
   return items.length ? items[Math.floor(rng() * items.length)] : null;
 }
 
-/** Elemento con probabilidad proporcional a su peso; los pesos ≤ 0 nunca salen. null si no hay candidatos. */
+/** Element with probability proportional to its weight; weights ≤ 0 never come out. null if there are no candidates. */
 export function pickWeighted(items, weightOf, rng = Math.random) {
   const weighted = items.map(item => [item, Math.max(0, weightOf(item))]).filter(([, w]) => w > 0);
   const total = weighted.reduce((n, [, w]) => n + w, 0);

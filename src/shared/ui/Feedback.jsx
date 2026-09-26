@@ -15,7 +15,7 @@ export function ErrorBox({ error }) {
   );
 }
 
-/** Confirmación en línea (sin window.confirm): accesible y fácil de automatizar. */
+/** Inline confirmation (no window.confirm): accessible and easy to automate. */
 export function ConfirmBar({ message, confirmLabel, cancelLabel = 'Cancelar', onConfirm, onCancel, testId = 'confirm' }) {
   const btn = {
     padding: `${theme.space.xs} ${theme.space.md}`, borderRadius: theme.radius.sm, cursor: 'pointer',

@@ -1,4 +1,4 @@
-// actions.js — catálogo de acciones compuestas. Una mano tiene UNA acción por (situación, stack).
+// actions.js — catalog of compound actions. A hand has ONE action per (situation, stack).
 
 export const ACTION_LABELS = {
   MR_4B_C: 'MR / 4bet vs 3b / Call AI',
@@ -23,7 +23,7 @@ export const ACTION_LABELS = {
 
 export const ACTIONS = Object.keys(ACTION_LABELS);
 
-/** Acción implícita para manos no listadas en un rango: FOLD, o CHECK si FOLD no aplica. */
+/** Implicit action for hands not listed in a range: FOLD, or CHECK if FOLD does not apply. */
 export function fallbackAction(situationActions) {
   return situationActions.includes('FOLD') ? 'FOLD' : 'CHECK';
 }

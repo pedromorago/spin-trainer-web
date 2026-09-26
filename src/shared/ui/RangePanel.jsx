@@ -5,8 +5,8 @@ import { theme } from '../theme/theme';
 const pct = x => `${(x * 100).toFixed(1)}%`;
 
 /**
- * Panel lateral del rango: totales, barra apilada por acción, tarjeta por acción y la nota de la situación.
- * Props: stats (domain/range#rangeStats), notes (texto de la situación, opcional)
+ * Side panel of the range: totals, stacked bar per action, card per action and the note of the situation.
+ * Props: stats (domain/range#rangeStats), notes (text of the situation, optional)
  */
 export function RangePanel({ stats, notes }) {
   const card = {

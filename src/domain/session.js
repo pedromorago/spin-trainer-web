@@ -1,5 +1,5 @@
-// session.js — sesión de estudio local: respuestas del Quiz desde que se abrió o reinició la sesión.
-// Los intentos persistidos (API) son el histórico; la sesión es solo el marcador en curso.
+// session.js — local study session: Quiz answers since the session was opened or reset.
+// Persisted attempts (API) are the history; the session is only the running scoreboard.
 
 export const emptySession = () => ({ total: 0, correct: 0, streak: 0, bestStreak: 0 });
 
@@ -13,12 +13,12 @@ export function recordAnswer(session, correct) {
   };
 }
 
-/** Precisión en [0,1], o null si aún no hay respuestas. */
+/** Accuracy in [0,1], or null if there are no answers yet. */
 export function sessionAccuracy(session) {
   return session.total ? session.correct / session.total : null;
 }
 
-/** Valida una sesión deserializada; devuelve una sesión vacía si no tiene la forma esperada. */
+/** Validates a deserialized session; returns an empty session if it does not have the expected shape. */
 export function reviveSession(value) {
   const keys = Object.keys(emptySession());
   const ok = value && typeof value === 'object'

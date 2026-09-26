@@ -1,7 +1,7 @@
-// quiz.js — motor del Quiz: qué mano preguntar y cómo corregirla. Funciones puras con RNG inyectable.
+// quiz.js — Quiz engine: which hand to ask and how to grade it. Pure functions with an injectable RNG.
 //
-// Un "spot" es una combinación con rango efectivo cargado: { situation, stack, actions, hands, source }.
-// Una pregunta es { situation, stack, hand }.
+// A "spot" is a combination with a loaded effective range: { situation, stack, actions, hands, source }.
+// A question is { situation, stack, hand }.
 import { allHands } from './hand';
 import { actionFor, boundaryHands, explicitHands } from './range';
 import { pickUniform, pickWeighted } from './random';
@@ -9,9 +9,9 @@ import { pickUniform, pickWeighted } from './random';
 const spotKey = ({ situation, stack }) => `${situation}@${stack}`;
 
 /**
- * Manos que puede preguntar el Quiz en un spot.
- *  - 'range': manos con acción explícita + su frontera (entrena también la decisión de no jugar).
- *  - 'all':   las 169 manos.
+ * Hands the Quiz can ask in a spot.
+ *  - 'range': hands with an explicit action + their boundary (also trains the decision not to play).
+ *  - 'all':   the 169 hands.
  */
 export function quizPool(range, actions, scope = 'range') {
   if (scope === 'all') return allHands();
@@ -19,16 +19,16 @@ export function quizPool(range, actions, scope = 'range') {
   return allHands().filter(h => pool.has(h));
 }
 
-/** Spots con algo que preguntar (rango con manos jugadas). */
+/** Spots with something to ask (range with played hands). */
 export function playableSpots(spots) {
   return spots.filter(s => explicitHands(s.hands, s.actions).length > 0);
 }
 
 /**
- * Siguiente pregunta. Nunca repite la anterior si hay alternativa.
- *  - mode 'normal': spot uniforme entre los jugables y mano uniforme de su pool (`scope`).
- *  - mode 'hard':   mano difícil (domain/stats#hardHands) de alguno de los spots, con probabilidad ∝ peso.
- * @returns {{situation, stack, hand} | null} null si no hay nada que preguntar
+ * Next question. Never repeats the previous one if there is an alternative.
+ *  - mode 'normal': uniform spot among the playable ones and uniform hand from its pool (`scope`).
+ *  - mode 'hard':   hard hand (domain/stats#hardHands) from any of the spots, with probability ∝ weight.
+ * @returns {{situation, stack, hand} | null} null if there is nothing to ask
  */
 export function nextQuestion({ spots, mode = 'normal', scope = 'range', hard = [], previous = null, rng = Math.random }) {
   const same = q => previous && spotKey(q) === spotKey(previous) && q.hand === previous.hand;
@@ -48,7 +48,7 @@ export function nextQuestion({ spots, mode = 'normal', scope = 'range', hard = [
   return { situation: spot.situation, stack: spot.stack, hand: pickUniform(fresh, rng) };
 }
 
-/** Corrige una respuesta contra el rango efectivo del spot (la API vuelve a corregir al registrar el intento). */
+/** Grades an answer against the effective range of the spot (the API grades it again when recording the attempt). */
 export function checkAnswer(spot, hand, given) {
   const expected = actionFor(spot.hands, hand, spot.actions);
   return { hand, given, expected, correct: given === expected };

@@ -9,6 +9,7 @@ Frontend de Spin Trainer. Reglas comunes a los tres repos, resumidas aquí para 
 - Rango efectivo = personalizado si existe, si no el del PDF (`useEffectiveRange`). Solo el Explorer escribe rangos; el Builder no persiste (ADR-0012).
 - Supabase solo emite el JWT; todos los datos van por la API. Rangos default en BD (Flyway). Intentos de Quiz = eventos inmutables.
 - Sin TypeScript en este repo. Descartados: OWASP ZAP, carga, Pact, pgTAP.
+- Comentarios de código en inglés (Java, JS/TS, SQL, YAML, Gradle, scripts). En español: documentación (README, ADRs, CONTRIBUTING.md), textos de la app, mensajes de error de la API, títulos de tests y features de Gherkin.
 - Commits **siempre a nombre de Pedro** (autor y committer: `Pedro Morago López-Vázquez <pedromoragolv@gmail.com>`; verificar `git config user.name/user.email` antes de commitear). Conventional Commits, sin trailer de coautoría ni de atribución.
 - Conciso, proponer antes de generar mucho código, iterar por bloques con confirmación.
 

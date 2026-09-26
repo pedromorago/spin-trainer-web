@@ -48,7 +48,7 @@ describe('situations', () => {
   });
 });
 
-// Sin el rango de referencia de btn_open@20: el seed los trae todos, así que el caso "sin rango" se prepara aparte.
+// Without the btn_open@20 reference range: the seed brings them all, so the "no range" case is set up separately.
 const withoutBtnOpen20 = () => createMockApi({
   storage: memoryStorage(), latency: 0, defaultRanges: { 'btn_open@25': { AA: 'MR_4B_C' } }
 });
@@ -59,7 +59,7 @@ describe('default ranges', () => {
     expect((await api.listDefaultRanges()).map(r => `${r.situation}@${r.stack}`)).toEqual(catalog);
   });
 
-  // La copia de reference-ranges.json cumple el catálogo del mock: si la API cambia uno sin el otro, falla aquí.
+  // The copy of reference-ranges.json matches the mock's catalog: if the API changes one without the other, it fails here.
   it('los rangos de referencia solo tienen manos canónicas, acciones de su situación y ninguna implícita', async () => {
     for (const range of await api.listDefaultRanges()) {
       const { actions } = SITUATIONS.find(s => s.key === range.situation);

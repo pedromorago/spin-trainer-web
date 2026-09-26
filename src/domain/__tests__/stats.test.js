@@ -88,8 +88,8 @@ describe('hardHands', () => {
   });
 
   it('una mano sale del pool cuando se aprende (peso ≤ 0)', () => {
-    expect(hardHands([row('AA', 10, 8)])).toEqual([]); // 2 fallos, 8 aciertos: 4 − 4 = 0
-    expect(hardHands([row('AA', 9, 7)])).toHaveLength(1); // 2 fallos, 7 aciertos: 0,5
+    expect(hardHands([row('AA', 10, 8)])).toEqual([]); // 2 misses, 8 correct: 4 − 4 = 0
+    expect(hardHands([row('AA', 9, 7)])).toHaveLength(1); // 2 misses, 7 correct: 0.5
   });
 });
 

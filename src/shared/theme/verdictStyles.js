@@ -1,6 +1,6 @@
 import { theme } from './theme';
 
-// Presentación de los veredictos del Builder (domain/range#VERDICT_KINDS). Contorno + glifo: no depende solo del color.
+// Presentation of the Builder verdicts (domain/range#VERDICT_KINDS). Outline + glyph: does not rely on color alone.
 export const VERDICT_STYLES = {
   correct: { label: 'Correcta', color: theme.colors.success, line: 'solid', glyph: null },
   wrong: { label: 'Acción equivocada', color: theme.colors.danger, line: 'solid', glyph: '✕' },

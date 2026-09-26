@@ -1,12 +1,12 @@
-// Utilidades puras de gráfico (presentación): escalas lineales y ticks "redondos".
+// Pure chart utilities (presentation): linear scales and "round" ticks.
 
-/** Escala lineal del dominio [d0, d1] al rango [r0, r1]. Dominio degenerado → centro del rango. */
+/** Linear scale from the domain [d0, d1] to the range [r0, r1]. Degenerate domain → center of the range. */
 export function linearScale([d0, d1], [r0, r1]) {
   const span = d1 - d0;
   return v => (span === 0 ? (r0 + r1) / 2 : r0 + ((v - d0) / span) * (r1 - r0));
 }
 
-/** Máximo "redondo" (1, 2, 5 × 10^k) ≥ n, para el eje de valores. n ≤ 0 → 1. */
+/** "Round" maximum (1, 2, 5 × 10^k) ≥ n, for the value axis. n ≤ 0 → 1. */
 export function niceMax(n) {
   if (!(n > 0)) return 1;
   const pow = 10 ** Math.floor(Math.log10(n));
@@ -15,8 +15,8 @@ export function niceMax(n) {
 }
 
 /**
- * Índices de etiquetas del eje X con paso entero uniforme (nunca dos etiquetas contiguas por redondeo),
- * como mucho `max`; la última siempre se etiqueta y sustituye a la anterior si quedaría a medio paso o menos.
+ * Indices of the X-axis labels with a uniform integer step (never two adjacent labels due to rounding),
+ * at most `max`; the last one is always labeled and replaces the previous one if it would be half a step away or less.
  */
 export function labelIndices(count, max) {
   if (count <= 0) return [];

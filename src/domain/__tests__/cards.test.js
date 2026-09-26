@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { dealCards, SUITS } from '../cards';
 import { allHands } from '../hand';
 
-// RNG reproducible (mulberry32) para comprobar propiedades con muchas tiradas.
+// Reproducible RNG (mulberry32) to check properties over many draws.
 function seeded(seed) {
   return () => {
     seed |= 0; seed = (seed + 0x6d2b79f5) | 0;

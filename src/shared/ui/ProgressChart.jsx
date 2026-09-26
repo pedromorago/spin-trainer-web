@@ -3,8 +3,8 @@ import { labelIndices, linearScale, niceMax } from './chart/scale';
 import { useElementWidth } from './useElementWidth';
 import { theme } from '../theme/theme';
 
-// Geometría (px). Dos gráficos alineados sobre el mismo eje de días: nunca un gráfico de doble eje.
-// Margen derecho reservado para la etiqueta directa del último punto (sin chocar con la línea).
+// Geometry (px). Two charts aligned on the same day axis: never a dual-axis chart.
+// Right margin reserved for the direct label of the last point (without clashing with the line).
 const M = { left: 44, right: 44, top: 22 };
 const H_ACC = 150;
 const GAP = 34;
@@ -14,16 +14,16 @@ const C = theme.colors;
 const pct = x => `${Math.round(x * 100)} %`;
 const dayLabel = date => `${date.slice(8, 10)}/${date.slice(5, 7)}`;
 
-/** Columna con 4 px de redondeo arriba y base recta. */
+/** Column with 4 px rounding at the top and a flat base. */
 function columnPath(x0, x1, yTop, yBase) {
   const r = Math.min(4, (x1 - x0) / 2, yBase - yTop);
   return `M${x0},${yBase} V${yTop + r} Q${x0},${yTop} ${x0 + r},${yTop} H${x1 - r} Q${x1},${yTop} ${x1},${yTop + r} V${yBase} Z`;
 }
 
 /**
- * Progreso diario: precisión (línea: la historia) y manos jugadas (columnas en gris: el contexto), alineados por día.
- * Crosshair + tooltip con ratón y con teclado (flechas, Inicio/Fin); vista de tabla como equivalente accesible.
- * Props: series (domain/stats#dailySeries), stale (se muestran los datos anteriores mientras recarga)
+ * Daily progress: accuracy (line: the story) and hands played (gray columns: the context), aligned by day.
+ * Crosshair + tooltip with mouse and with keyboard (arrows, Home/End); table view as the accessible equivalent.
+ * Props: series (domain/stats#dailySeries), stale (the previous data is shown while reloading)
  */
 export function ProgressChart({ series, stale = false }) {
   const [width, ref] = useElementWidth();
@@ -41,9 +41,9 @@ export function ProgressChart({ series, stale = false }) {
   const volMax = niceMax(Math.max(...series.map(d => d.attempts)));
   const yVol = linearScale([0, volMax], [volTop + H_VOL, volTop]);
   const height = volTop + H_VOL + X_BAND;
-  const barW = Math.max(1, Math.min(24, band - 2)); // ≤ 24 px y 2 px de aire entre columnas
+  const barW = Math.max(1, Math.min(24, band - 2)); // ≤ 24 px and 2 px of gap between columns
 
-  // Segmentos de días consecutivos con datos: no se inventa continuidad sobre días sin intentos.
+  // Segments of consecutive days with data: no continuity is invented over days without attempts.
   const segments = [];
   series.forEach((d, i) => {
     if (d.accuracy === null) return;
@@ -140,7 +140,7 @@ export function ProgressChart({ series, stale = false }) {
               <circle key={series[i].date} cx={x(i)} cy={yAcc(series[i].accuracy)} r={active === i ? 6 : 4}
                 fill={C.chartAccent} stroke={C.bgElevated} strokeWidth={2} data-point={series[i].date} />
             ))}
-            {/* Etiqueta directa solo en el último día con datos (nunca un número en cada punto). */}
+            {/* Direct label only on the last day with data (never a number on every point). */}
             <text x={x(lastIndex) + 8} y={yAcc(series[lastIndex].accuracy) + 4} textAnchor="start"
               style={{ fontFamily: theme.font.mono, fontSize: 12, fontWeight: 700, fill: C.text }} data-testid="progress-last-label">
               {pct(series[lastIndex].accuracy)}

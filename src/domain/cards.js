@@ -1,11 +1,11 @@
-// cards.js — reparte las dos cartas concretas de una mano del grid con palos coherentes.
+// cards.js — deals the two concrete cards of a grid hand with consistent suits.
 import { isValidHand } from './hand';
 
 export const SUITS = ['s', 'h', 'd', 'c'];
 
 /**
- * @param {string} hand  mano canónica ('AA', 'AKs', 'T9o')
- * @returns {[{rank, suit}, {rank, suit}]} carta alta primero. Pareja y offsuit: palos distintos; suited: el mismo palo.
+ * @param {string} hand  canonical hand ('AA', 'AKs', 'T9o')
+ * @returns {[{rank, suit}, {rank, suit}]} high card first. Pair and offsuit: different suits; suited: the same suit.
  */
 export function dealCards(hand, rng = Math.random) {
   if (!isValidHand(hand)) throw new Error(`Mano inválida: ${hand}`);

@@ -53,7 +53,7 @@ describe('nextQuestion (manos difíciles)', () => {
   const hard = [
     { situation: 'btn_open', stack: 25, hand: 'AKo', weight: 1 },
     { situation: 'btn_open', stack: 25, hand: 'AKs', weight: 3 },
-    { situation: 'hu_sb_open', stack: 10, hand: 'K9s', weight: 9 } // spot fuera de la selección
+    { situation: 'hu_sb_open', stack: 10, hand: 'K9s', weight: 9 } // spot outside the selection
   ];
 
   it('elige con probabilidad ∝ peso, solo en los spots de la selección', () => {

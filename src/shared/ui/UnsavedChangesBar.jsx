@@ -1,6 +1,6 @@
 import { ConfirmBar } from './Feedback';
 
-/** Confirmación en línea cuando useUnsavedChanges bloquea una navegación. Props: blocker, testId */
+/** Inline confirmation when useUnsavedChanges blocks a navigation. Props: blocker, testId */
 export function UnsavedChangesBar({ blocker, testId = 'unsaved' }) {
   if (blocker.state !== 'blocked') return null;
   return (

@@ -3,9 +3,9 @@ import { theme } from '../theme/theme';
 const pct = x => `${Math.round(x * 100)} %`;
 
 /**
- * Precisión por situación: un chip por situación del catálogo con su medidor (la pista es un paso del mismo tono).
- * Las situaciones sin intentos se muestran atenuadas: también dicen qué falta por practicar.
- * Props: situations (catálogo), stats ({ [key]: { attempts, correct, accuracy } }), selectedKey
+ * Accuracy per situation: one chip per catalog situation with its meter (the track is one step of the same hue).
+ * Situations without attempts are shown dimmed: they also tell what is left to practice.
+ * Props: situations (catalog), stats ({ [key]: { attempts, correct, accuracy } }), selectedKey
  */
 export function SituationChips({ situations, stats, selectedKey }) {
   return (

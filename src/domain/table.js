@@ -1,16 +1,16 @@
-// table.js — estado de la mesa en el momento de decidir el héroe, a partir de Situation.hero/priorActions (contrato v0.2).
+// table.js — table state at the moment the hero decides, from Situation.hero/priorActions (contract v0.2).
 
-/** Asientos en orden de acción preflop. En HU el botón es la SB. */
+/** Seats in preflop action order. In HU the button is the SB. */
 export const SEAT_ORDER = { '3max': ['BTN', 'SB', 'BB'], hu: ['SB', 'BB'] };
 const DEALER = { '3max': 'BTN', hu: 'SB' };
 const BLINDS = { SB: 0.5, BB: 1 };
 
 /**
  * @param {{ format, hero, priorActions }} situation
- * @param {number} stack stack efectivo en BB
+ * @param {number} stack effective stack in BB
  * @returns {{ seats: Array<{position, isHero, isDealer, action, folded, bet}>, pot: number|null }}
- *   seats empieza por el héroe y sigue en sentido horario (orden de acción). `bet` en BB; null si el tamaño
- *   no se conoce (raise o 3-bet: el catálogo no da el tamaño). `pot` es null si alguna apuesta es desconocida.
+ *   seats starts with the hero and continues clockwise (action order). `bet` in BB; null if the size
+ *   is unknown (raise or 3-bet: the catalog does not give the size). `pot` is null if any bet is unknown.
  */
 export function tableSeats(situation, stack) {
   const order = SEAT_ORDER[situation.format];
@@ -26,12 +26,12 @@ export function tableSeats(situation, stack) {
     const seat = seats.find(s => s.position === position);
     if (!seat || seat.isHero) throw new Error(`Acción previa inválida: ${position} ${action}`);
     seat.action = action;
-    if (action === 'FOLD') seat.folded = true; // la ciega que ya puso queda en el bote
+    if (action === 'FOLD') seat.folded = true; // the blind already posted stays in the pot
     else if (action === 'LIMP') seat.bet = BLINDS.BB;
     else if (action === 'CALL') seat.bet = toCall;
     else if (action === 'MIN_RAISE') toCall = seat.bet = 2 * BLINDS.BB;
     else if (action === 'SHOVE') toCall = seat.bet = stack;
-    else toCall = seat.bet = null; // RAISE / THREE_BET: tamaño desconocido
+    else toCall = seat.bet = null; // RAISE / THREE_BET: unknown size
   }
 
   const heroIndex = seats.findIndex(s => s.isHero);

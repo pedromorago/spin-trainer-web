@@ -1,4 +1,4 @@
 import { createContext } from 'react';
 
-/** Sesión de estudio: { session, accuracy, record(correct), reset() }. La provee SessionProvider. */
+/** Study session: { session, accuracy, record(correct), reset() }. Provided by SessionProvider. */
 export const SessionContext = createContext(null);

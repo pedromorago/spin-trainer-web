@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Opcional: token de solo lectura sobre spin-trainer-api (el mismo secreto que usa spin-trainer-qa). Con él, spec:check
-  # y ranges:check comparan las copias con las de la API; sin él, se omiten y los tests validan el mock contra las copias.
+  # Optional: read-only token for spin-trainer-api (the same secret spin-trainer-qa uses). With it, spec:check
+  # and ranges:check compare the copies with the API's; without it, they are skipped and the tests validate the mock against the copies.
   SIBLINGS_TOKEN: ${{ secrets.SPIN_TRAINER_REPOS_TOKEN }}
 
 defaults:
@@ -31,7 +31,7 @@ jobs:
         with:
           path: spin-trainer-web
 
-      # La misma rama en la API si existe (cambios de contrato coordinados); si no, main.
+      # The same branch in the API if it exists (coordinated contract changes); otherwise, main.
       - name: Rama de la API
         id: api
         if: ${{ env.SIBLINGS_TOKEN != '' }}
@@ -72,7 +72,7 @@ jobs:
       - name: Lint (incluye las reglas de capas)
         run: npm run lint
 
-      # Dominio y mock con umbral de cobertura del 90 %; el mock se valida contra docs/openapi.yaml.
+      # Domain and mock with a 90 % coverage threshold; the mock is validated against docs/openapi.yaml.
       - name: Tests
         run: npm run test:coverage
 

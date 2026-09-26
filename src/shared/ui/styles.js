@@ -1,6 +1,6 @@
 import { theme } from '../theme/theme';
 
-/** Estilos de composición compartidos por las features. */
+/** Composition styles shared by the features. */
 export const layout = {
   page: { display: 'flex', flexDirection: 'column', gap: theme.space.lg },
   row: { display: 'flex', gap: theme.space.lg, alignItems: 'center', flexWrap: 'wrap' },

@@ -3,7 +3,7 @@ import { theme } from '../theme/theme';
 
 const FORMATS = { '3max': '3-max', hu: 'HU' };
 
-/** Selector único de situación y stack (con "Any"), compartido por todas las pestañas. Props: situations, selection */
+/** Single situation and stack selector (with "Any"), shared by all the tabs. Props: situations, selection */
 export function SituationBar({ situations, selection }) {
   return (
     <div style={{ display: 'flex', gap: theme.space.lg, alignItems: 'center', flexWrap: 'wrap' }} data-testid="situation-bar">

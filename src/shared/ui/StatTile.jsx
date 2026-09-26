@@ -1,6 +1,6 @@
 import { theme } from '../theme/theme';
 
-/** Stat tile: etiqueta (sin dos puntos), valor destacado y una nota opcional. Props: label, value, hint, testId */
+/** Stat tile: label (without a colon), highlighted value and an optional note. Props: label, value, hint, testId */
 export function StatTile({ label, value, hint, testId }) {
   return (
     <div style={{ flex: '1 1 150px', minWidth: 140, padding: theme.space.md, background: theme.colors.bgElevated,

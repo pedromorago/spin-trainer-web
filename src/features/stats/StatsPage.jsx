@@ -12,13 +12,13 @@ import { theme } from '../../shared/theme/theme';
 
 const pct = x => (x === null ? '—' : `${Math.round(x * 100)} %`);
 const RANGES = [7, 30, 90];
-// Zona horaria del navegador: los días del progreso se cortan donde vive el usuario.
+// Browser time zone: progress days are cut where the user lives.
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 const todayIn = tz => new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
 /**
- * Stats: la sesión en curso (local, se puede reiniciar) y el progreso histórico (intentos persistidos en la API,
- * agregados por /stats/hands y /stats/progress; la política de estudio vive en domain/stats.js).
+ * Stats: the current session (local, can be reset) and the historical progress (attempts persisted in the API,
+ * aggregated by /stats/hands and /stats/progress; the study policy lives in domain/stats.js).
  */
 export function StatsPage() {
   const { situations, selection } = useOutletContext();
@@ -71,7 +71,7 @@ export function StatsPage() {
             </div>
 
             <div style={{ ...section, gap: theme.space.sm }}>
-              {/* Filtro de periodo: una fila encima de lo que acota (solo el gráfico de progreso). */}
+              {/* Period filter: a row above what it narrows down (only the progress chart). */}
               <div style={{ ...layout.row, gap: theme.space.sm }}>
                 <strong>Progreso</strong>
                 <div role="group" aria-label="Periodo" style={{ display: 'flex', gap: theme.space.xs }}>

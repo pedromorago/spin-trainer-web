@@ -8,8 +8,8 @@ import { SituationBar } from '../../shared/ui/SituationBar';
 import { Empty, ErrorBox, Loading } from '../../shared/ui/Feedback';
 
 /**
- * Marco común de las pestañas: cabecera con el marcador de sesión y un único selector de situación/stack.
- * Las páginas reciben { situations, selection } vía useOutletContext(); ninguna tiene selector propio.
+ * Common frame of the tabs: header with the session scoreboard and a single situation/stack selector.
+ * Pages receive { situations, selection } via useOutletContext(); none has its own selector.
  */
 export function AppShell() {
   const { user, signOut } = useAuth();

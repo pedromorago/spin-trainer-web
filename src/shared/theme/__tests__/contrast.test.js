@@ -17,7 +17,7 @@ describe('readableText', () => {
     expect(readableText(theme.colors.actionGray)).toBe(theme.colors.text);
   });
 
-  // WCAG AA para texto normal: 4.5:1. Las etiquetas de las celdas son texto pequeño.
+  // WCAG AA for normal text: 4.5:1. The cell labels are small text.
   it.each(ACTIONS)('el texto sobre %s cumple WCAG AA (≥ 4.5:1)', action => {
     const bg = ACTION_COLORS[action];
     expect(contrastRatio(readableText(bg), bg)).toBeGreaterThanOrEqual(4.5);

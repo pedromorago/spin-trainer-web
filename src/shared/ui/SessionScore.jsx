@@ -1,6 +1,6 @@
 import { theme } from '../theme/theme';
 
-/** Marcador de la sesión: precisión, racha y manos. Props: accuracy (0..1 | null), streak, total */
+/** Session scoreboard: accuracy, streak and hands. Props: accuracy (0..1 | null), streak, total */
 export function SessionScore({ accuracy = null, streak = 0, total = 0 }) {
   const items = [
     ['Precisión', accuracy === null ? '—' : `${Math.round(accuracy * 100)}%`, 'session-accuracy'],

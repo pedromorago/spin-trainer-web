@@ -1,5 +1,5 @@
-// El mock cumple el contrato: sus respuestas y errores validan contra los schemas de docs/openapi.yaml.
-// Es la versión en el frontend de la "validación contra la spec" de ADR-0008: si la spec o el mock divergen, falla.
+// The mock honors the contract: its responses and errors validate against the schemas of docs/openapi.yaml.
+// It is the frontend version of the "validation against the spec" of ADR-0008: if the spec and the mock diverge, it fails.
 import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import Ajv2020 from 'ajv/dist/2020.js';
@@ -8,7 +8,7 @@ import { parse } from 'yaml';
 import { createMockApi, memoryStorage } from '../mockApi';
 
 const spec = parse(readFileSync(new URL('../../../../../docs/openapi.yaml', import.meta.url), 'utf8'));
-// strict: false porque el documento OpenAPI tiene claves que no son JSON Schema (paths, example, x-enum-varnames…).
+// strict: false because the OpenAPI document has keys that are not JSON Schema (paths, example, x-enum-varnames…).
 const ajv = addFormats(new Ajv2020({ strict: false, allErrors: true }));
 ajv.addSchema(spec, 'spec');
 
@@ -46,7 +46,7 @@ describe('errores del mock conformes a Problem (RFC 9457)', () => {
     ['400', () => api.putUserRange('btn_open', 25, { hands: { AAs: 'ALLIN' }, version: 1 })],
     ['404', () => api.getDefaultRange('nope', 25)],
     ['409', () => api.putUserRange('btn_open', 25, { hands: {}, version: 0 })],
-    // El seed trae todas las combinaciones: el 422 necesita un mock sin el rango de btn_open@20.
+    // The seed brings every combination: the 422 needs a mock without the btn_open@20 range.
     ['422', () => createMockApi({ storage: memoryStorage(), latency: 0, defaultRanges: {} })
       .recordAttempt({ situation: 'btn_open', stack: 20, hand: 'AA', given: 'ALLIN' })]
   ])('%s → Problem', async (_status, call) => expectValid(schema('Problem'), await problemOf(call())));

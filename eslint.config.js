@@ -1,5 +1,5 @@
-// ESLint flat config. Además de las reglas de calidad, hace cumplir las dependencias entre capas
-// de docs/ARCHITECTURE.md (features → shared → domain), igual que ArchUnit en la API.
+// ESLint flat config. Besides the quality rules, it enforces the dependencies between layers
+// from docs/ARCHITECTURE.md (features → shared → domain), like ArchUnit in the API.
 import js from '@eslint/js';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -33,7 +33,7 @@ export default [
     languageOptions: { globals: globals.node }
   },
 
-  // domain/: JS puro. Sin React, sin librerías de I/O, sin APIs del navegador, sin capas superiores.
+  // domain/: pure JS. No React, no I/O libraries, no browser APIs, no upper layers.
   {
     files: ['src/domain/**/*.js'],
     languageOptions: { globals: {} },
@@ -52,13 +52,13 @@ export default [
     }
   },
 
-  // shared/: nunca depende de features/.
+  // shared/: never depends on features/.
   {
     files: ['src/shared/**/*.{js,jsx}'],
     rules: { 'no-restricted-imports': ['error', { patterns: [noFeatures] }] }
   },
 
-  // shared/ui: presentación. No accede a datos.
+  // shared/ui: presentation. Does not access data.
   {
     files: ['src/shared/ui/**/*.{js,jsx}'],
     rules: {
@@ -71,7 +71,7 @@ export default [
     }
   },
 
-  // shared/session: estado local de la sesión de estudio. No accede a datos remotos.
+  // shared/session: local state of the study session. Does not access remote data.
   {
     files: ['src/shared/session/**/*.{js,jsx}'],
     rules: {
@@ -84,7 +84,7 @@ export default [
     }
   },
 
-  // features/: solo composición. Datos únicamente vía shared/api/index.js y shared/api/queries.js.
+  // features/: composition only. Data only via shared/api/index.js and shared/api/queries.js.
   {
     files: ['src/features/**/*.{js,jsx}'],
     rules: {

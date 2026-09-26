@@ -6,8 +6,8 @@ const MOCK = import.meta.env.VITE_API_MODE === 'mock';
 const MOCK_USER = { id: 'mock-user', email: 'mock@local' };
 
 /**
- * Una única fuente de verdad de la sesión para toda la app (una sola suscripción a Supabase).
- * En modo mock no hay Supabase: se arranca con sesión iniciada y el login acepta cualquier credencial.
+ * A single source of truth for the session across the whole app (a single Supabase subscription).
+ * In mock mode there is no Supabase: it starts signed in and the login accepts any credentials.
  */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(MOCK ? MOCK_USER : null);

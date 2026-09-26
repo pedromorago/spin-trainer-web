@@ -1,6 +1,6 @@
 let clientPromise = null;
 
-/** Cliente Supabase cargado bajo demanda: fuera del bundle inicial y nunca descargado en modo mock. */
+/** Supabase client loaded on demand: outside the initial bundle and never downloaded in mock mode. */
 export function getSupabase() {
   clientPromise ??= import('@supabase/supabase-js').then(({ createClient }) => {
     const url = import.meta.env.VITE_SUPABASE_URL;
@@ -11,7 +11,7 @@ export function getSupabase() {
   return clientPromise;
 }
 
-/** Token JWT actual (lo consume el cliente HTTP de la API). */
+/** Current JWT token (consumed by the API's HTTP client). */
 export async function getAccessToken() {
   const supabase = await getSupabase();
   const { data } = await supabase.auth.getSession();

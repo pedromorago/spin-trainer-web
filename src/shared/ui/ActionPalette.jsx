@@ -4,8 +4,8 @@ import { colorFor } from '../theme/actionColors';
 import { theme } from '../theme/theme';
 
 /**
- * Botones de acción. Sirven de leyenda (sin onSelect), de pincel (con onSelect y `eraser`) o de respuesta en el Quiz.
- * Props: actions, selected, onSelect(action), disabled, eraser (añade la goma: ERASE), shortcuts (muestra 1..n)
+ * Action buttons. They work as a legend (without onSelect), as a brush (with onSelect and `eraser`) or as Quiz answers.
+ * Props: actions, selected, onSelect(action), disabled, eraser (adds the eraser: ERASE), shortcuts (shows 1..n)
  */
 export function ActionPalette({ actions, selected, onSelect, disabled = false, eraser = false, shortcuts = false }) {
   const items = eraser ? [...actions, ERASE] : actions;
@@ -30,7 +30,7 @@ export function ActionPalette({ actions, selected, onSelect, disabled = false, e
         return (
           <button key={action} type="button" style={btn} disabled={disabled} onClick={() => onSelect?.(action)} data-action={action}
             aria-pressed={onSelect ? active : undefined} aria-keyshortcuts={shortcuts ? String(i + 1) : undefined}>
-            {/* El atajo se anuncia con aria-keyshortcuts; el kbd no debe entrar en el nombre accesible. */}
+            {/* The shortcut is announced with aria-keyshortcuts; the kbd must not be part of the accessible name. */}
             {shortcuts && <kbd aria-hidden="true" style={{ fontFamily: theme.font.mono, fontSize: theme.font.sizeXs, color: theme.colors.textMuted }}>{i + 1}</kbd>}
             <span aria-hidden="true" style={swatch} />
             <span>{isEraser ? 'Goma' : ACTION_LABELS[action] ?? action}</span>

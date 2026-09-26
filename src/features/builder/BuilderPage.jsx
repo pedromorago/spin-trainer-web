@@ -16,9 +16,9 @@ import { theme } from '../../shared/theme/theme';
 const pct = x => `${Math.round(x * 100)}%`;
 
 /**
- * Builder: ejercicio de autoevaluación. Construyes de memoria el rango de una situación y stack y lo verificas contra
- * el rango efectivo (personalizado si existe, si no el del PDF; ADR-0012). No persiste nada.
- * La pregunta es la selección actual o una combinación al azar ("Nueva pregunta").
+ * Builder: self-assessment exercise. You build the range of a situation and stack from memory and check it against
+ * the effective range (custom if it exists, otherwise the PDF one; ADR-0012). Nothing is persisted.
+ * The question is the current selection or a random combination ("Nueva pregunta").
  */
 export function BuilderPage() {
   const { situations, selection } = useOutletContext();
@@ -39,7 +39,7 @@ export function BuilderPage() {
   return (
     <div style={layout.page}>
       <h2 style={layout.title}>Builder</h2>
-      {/* La key reinicia la pregunta al cambiar la selección (sin setState en efectos). */}
+      {/* The key resets the question when the selection changes (no setState in effects). */}
       <BuilderQuestion key={`${selection.situationKey}@${selection.stack}`} situations={situations} selection={selection}
         allSpots={allSpots} selectionSpots={selectionSpots} toSpot={toSpot} pickedBrush={pickedBrush} onPickBrush={setPickedBrush} />
     </div>
@@ -47,7 +47,7 @@ export function BuilderPage() {
 }
 
 function BuilderQuestion({ situations, selection, allSpots, selectionSpots, toSpot, pickedBrush, onPickBrush }) {
-  // Pregunta elegida con "Nueva pregunta"; null = la selección concreta. Con "Any" se empieza con una al azar.
+  // Question picked with "Nueva pregunta"; null = the concrete selection. With "Any" it starts with a random one.
   const [question, setQuestion] = useState(() => (selection.isAny ? pickCombo(selectionSpots) : null));
   const combo = question ?? (selection.isAny ? null : selection.combos[0]);
   const spot = combo && toSpot(combo);
@@ -56,7 +56,7 @@ function BuilderQuestion({ situations, selection, allSpots, selectionSpots, toSp
   const newQuestion = () => setQuestion(pickCombo(pool, Math.random, combo));
 
   const situation = combo && situations.find(s => s.key === combo.situation);
-  // Pincel derivado: se conserva entre preguntas si sigue siendo válido (la goma siempre lo es).
+  // Derived brush: kept across questions while it is still valid (the eraser always is).
   const brush = spot && (pickedBrush === ERASE || spot.actions.includes(pickedBrush) ? pickedBrush : spot.actions[0]);
 
   return (
@@ -85,7 +85,7 @@ function BuilderQuestion({ situations, selection, allSpots, selectionSpots, toSp
       ) : (
         <>
           <ActionPalette actions={spot.actions} selected={brush} onSelect={onPickBrush} eraser />
-          {/* La key reinicia el borrador al cambiar de pregunta. */}
+          {/* The key resets the draft when the question changes. */}
           <BuilderExercise key={comboKey(spot)} spot={spot} brush={brush} onNewQuestion={canPickAnother ? newQuestion : null} />
         </>
       )}
@@ -134,7 +134,7 @@ function BuilderExercise({ spot, brush, onNewQuestion }) {
   );
 }
 
-/** Puntuación sobre las manos jugadas, leyenda de veredictos y desglose por acción esperada. */
+/** Score over the played hands, verdict legend and breakdown by expected action. */
 function EvaluationPanel({ evaluation, actions }) {
   const { score, byKind, byAction } = evaluation;
   const implicit = fallbackAction(actions);

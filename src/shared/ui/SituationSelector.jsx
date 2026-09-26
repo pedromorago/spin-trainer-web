@@ -3,7 +3,7 @@ import { theme } from '../theme/theme';
 
 const FORMATS = { '3max': '3-max', hu: 'Heads-up' };
 
-/** Props: situations (catálogo), value (key | 'any'), onChange(key) */
+/** Props: situations (catalog), value (key | 'any'), onChange(key) */
 export function SituationSelector({ situations, value, onChange }) {
   const select = {
     padding: `${theme.space.sm} ${theme.space.md}`, background: theme.colors.bgSunken, color: theme.colors.text,
@@ -26,7 +26,7 @@ export function SituationSelector({ situations, value, onChange }) {
   );
 }
 
-/** Props: stacks (opciones), value (número | 'any'), onChange(stack). Incluye siempre "Any". */
+/** Props: stacks (options), value (number | 'any'), onChange(stack). Always includes "Any". */
 export function StackSelector({ stacks, value, onChange }) {
   const btn = active => ({
     padding: `${theme.space.xs} ${theme.space.md}`,

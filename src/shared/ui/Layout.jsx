@@ -3,13 +3,13 @@ import { SessionScore } from './SessionScore';
 import { theme } from '../theme/theme';
 
 const TABS = [['/explorer', 'Explorer'], ['/quiz', 'Quiz'], ['/builder', 'Builder'], ['/stats', 'Stats']];
-// Mismo ancho y márgenes para la barra de selección y el contenido.
+// Same width and margins for the selection bar and the content.
 const gutter = `clamp(${theme.space.md}, 4vw, ${theme.space.xl})`;
 const container = { maxWidth: 1200, margin: '0 auto', padding: `0 ${gutter}` };
 
 /**
- * Marco de la app. Solo presenta: recibe usuario, marcador de sesión y barra de selección por props.
- * Props: user, onSignOut, score ({ accuracy, streak, total }), toolbar (nodo), children
+ * App frame. Presentation only: receives the user, session scoreboard and selection bar via props.
+ * Props: user, onSignOut, score ({ accuracy, streak, total }), toolbar (node), children
  */
 export function Layout({ user, onSignOut, score, toolbar, children }) {
   const { search } = useLocation();
@@ -25,10 +25,10 @@ export function Layout({ user, onSignOut, score, toolbar, children }) {
   });
   return (
     <>
-      {/* Fija arriba solo en pantallas anchas (global.css): en móvil ocuparía media pantalla. */}
+      {/* Sticky at the top only on wide screens (global.css): on mobile it would take up half the screen. */}
       <header className="app-header" style={header}>
         <span style={{ fontFamily: theme.font.display, fontSize: 28, letterSpacing: 2, color: theme.colors.accent }}>Spin Trainer</span>
-        {/* La navegación conserva la selección (?s=&stack=) al cambiar de pestaña. */}
+        {/* Navigation keeps the selection (?s=&stack=) when switching tabs. */}
         <nav style={{ display: 'flex', gap: theme.space.lg }} aria-label="Secciones">
           {TABS.map(([path, label]) => <NavLink key={path} to={{ pathname: path, search }} style={link}>{label}</NavLink>)}
         </nav>

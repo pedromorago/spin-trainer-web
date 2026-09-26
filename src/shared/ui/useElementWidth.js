@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Ancho de un elemento (ResizeObserver). Devuelve [ancho | null, callbackRef].
- * Con callback ref se observa también un elemento que se monta más tarde o se vuelve a montar
- * (un ref de objeto con useEffect solo vería el del primer render).
+ * Width of an element (ResizeObserver). Returns [width | null, callbackRef].
+ * With a callback ref, an element that mounts later or is remounted is also observed
+ * (an object ref with useEffect would only see the one from the first render).
  */
 export function useElementWidth(enabled = true) {
   const [node, setNode] = useState(null);
