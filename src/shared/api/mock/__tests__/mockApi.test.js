@@ -120,6 +120,15 @@ describe('user ranges', () => {
     expect(await problemOf(api.putUserRange('btn_open', 25, { hands: {}, version: 1 }))).toEqual(P(409, 'conflict'));
   });
 
+  it('un rango creado de nuevo tras borrarlo sigue contando versiones: una pestaña con la vieja no lo pisa', async () => {
+    await api.putUserRange('btn_open', 25, { hands: { AA: 'ALLIN' }, version: 0 });
+    await api.putUserRange('btn_open', 25, { hands: { AA: 'MR_F_F' }, version: 1 });
+    await api.deleteUserRange('btn_open', 25);
+    expect((await api.putUserRange('btn_open', 25, { hands: { KK: 'ALLIN' }, version: 0 })).version).toBe(3);
+    expect(await problemOf(api.putUserRange('btn_open', 25, { hands: {}, version: 1 }))).toEqual(P(409, 'conflict'));
+    expect((await api.getUserRange('btn_open', 25)).hands).toEqual({ KK: 'ALLIN' });
+  });
+
   it('reemplazar un rango que otra sesión borró da 409', async () => {
     await api.putUserRange('btn_open', 25, { hands: {}, version: 0 });
     await api.deleteUserRange('btn_open', 25);

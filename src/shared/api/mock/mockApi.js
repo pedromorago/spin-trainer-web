@@ -20,7 +20,8 @@ const MAX_HANDS = 169;
 const SITUATION_KEY = /^[a-z0-9_]{1,64}$/;
 const HAND_FORMAT = /^(?:([AKQJT2-9])\1|([AKQJT2-9])(?!\2)[AKQJT2-9][so])$/;
 const key = (s, st) => `${s}@${Number(st)}`;
-const empty = () => ({ userRanges: {}, attempts: [] });
+// lastVersions: the highest version each custom range had, which a delete keeps (as the API's V6).
+const empty = () => ({ userRanges: {}, lastVersions: {}, attempts: [] });
 const position = situation => SITUATIONS.findIndex(s => s.key === situation);
 // The API's order: catalog position, stack from highest to lowest (and then hand).
 const bySpot = (a, b) => position(a.situation) - position(b.situation) || b.stack - a.stack;
@@ -117,7 +118,7 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
   };
   const delay = () => (latency ? new Promise(r => setTimeout(r, latency)) : Promise.resolve());
   const load = () => {
-    try { return JSON.parse(storage.getItem(LS_KEY)) ?? empty(); }
+    try { return { ...empty(), ...JSON.parse(storage.getItem(LS_KEY)) }; }
     catch { return empty(); }
   };
   const save = state => storage.setItem(LS_KEY, JSON.stringify(state));
@@ -166,7 +167,10 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
       return range;
     },
 
-    /** v0.2: version is required. 0 = create (409 if it exists); N = replace version N (409 if it changed or was deleted). */
+    /**
+     * v0.2: version is required. 0 = create (409 if it exists); N = replace version N (409 if it changed or was deleted).
+     * A range created again continues after the last version it had: a stale version never matches a different range.
+     */
     async putUserRange(situation, stack, body = {}) {
       await delay();
       const s = spot(situation, stack);
@@ -192,9 +196,10 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
       }
       const next = {
         situation, stack: Number(stack), hands: normalizeRange(hands, s.actions), source: 'user',
-        version: version + 1, updatedAt: clock().toISOString()
+        version: version === 0 ? (state.lastVersions[k] ?? 0) + 1 : version + 1, updatedAt: clock().toISOString()
       };
       state.userRanges[k] = next;
+      state.lastVersions[k] = next.version;
       save(state);
       return next;
     },
@@ -203,7 +208,10 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
       await delay();
       spot(situation, stack);
       const state = load();
-      delete state.userRanges[key(situation, stack)];
+      const k = key(situation, stack);
+      const current = state.userRanges[k];
+      if (current) state.lastVersions[k] = Math.max(state.lastVersions[k] ?? 0, current.version);
+      delete state.userRanges[k];
       save(state);
       return null;
     },
