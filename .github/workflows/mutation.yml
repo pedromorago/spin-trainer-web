@@ -1,0 +1,43 @@
+name: mutation
+
+# Mutation testing of the pure domain with Stryker (ADR-0017). Slower than the unit tests (one Vitest run per mutant),
+# so it runs when the domain changes on main, weekly, or by hand; the threshold is in stryker.config.mjs.
+on:
+  push:
+    branches: [main]
+    paths: [src/domain/**, stryker.config.mjs]
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  stryker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Stryker (src/domain)
+        run: npm run test:mutation
+
+      - name: Report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          retention-days: 14
