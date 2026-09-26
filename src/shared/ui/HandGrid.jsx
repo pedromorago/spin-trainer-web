@@ -14,7 +14,8 @@ import { theme } from '../theme/theme';
 export function HandGrid({ assignments = {}, actions, onCellClick, cellSize = 42, showLabels = true, highlight = null, verdicts = null }) {
   const implicit = fallbackAction(actions);
   const container = {
-    display: 'inline-flex', flexDirection: 'column', gap: 2, padding: theme.space.sm, background: theme.colors.bgElevated,
+    display: 'inline-flex', flexDirection: 'column', alignSelf: 'flex-start', gap: 2, padding: theme.space.sm,
+    background: theme.colors.bgElevated,
     border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md
   };
   const base = {

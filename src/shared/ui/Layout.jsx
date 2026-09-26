@@ -1,38 +1,50 @@
-import { NavLink, Outlet, useLocation } from 'react-router';
-import { useAuth } from '../auth/useAuth';
+import { NavLink, useLocation } from 'react-router';
+import { SessionScore } from './SessionScore';
 import { theme } from '../theme/theme';
 
-export function Layout() {
-  const { user, signOut } = useAuth();
+const TABS = [['/explorer', 'Explorer'], ['/quiz', 'Quiz'], ['/builder', 'Builder'], ['/stats', 'Stats']];
+// Mismo ancho y márgenes para la barra de selección y el contenido.
+const container = { maxWidth: 1200, margin: '0 auto', padding: `0 ${theme.space.xl}` };
+
+/**
+ * Marco de la app. Solo presenta: recibe usuario, marcador de sesión y barra de selección por props.
+ * Props: user, onSignOut, score ({ accuracy, streak, total }), toolbar (nodo), children
+ */
+export function Layout({ user, onSignOut, score, toolbar, children }) {
   const { search } = useLocation();
   const header = {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: theme.space.lg,
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: theme.space.lg, flexWrap: 'wrap',
     padding: `${theme.space.md} ${theme.space.xl}`, borderBottom: `1px solid ${theme.colors.border}`,
-    background: theme.colors.bgElevated, flexWrap: 'wrap'
+    background: 'rgba(11, 14, 19, 0.72)', backdropFilter: 'blur(8px)', position: 'sticky', top: 0, zIndex: 10
   };
   const link = ({ isActive }) => ({
-    color: isActive ? theme.colors.text : theme.colors.textMuted, textDecoration: 'none',
-    fontWeight: isActive ? 700 : 500, borderBottom: `2px solid ${isActive ? theme.colors.accent : 'transparent'}`, paddingBottom: 2
+    color: isActive ? theme.colors.accentStrong : theme.colors.textMuted, textDecoration: 'none',
+    fontFamily: theme.font.display, fontSize: 20, letterSpacing: 1,
+    borderBottom: `2px solid ${isActive ? theme.colors.accent : 'transparent'}`, paddingBottom: 2
   });
   return (
     <>
       <header style={header}>
-        <strong>Spin Trainer</strong>
-        <nav style={{ display: 'flex', gap: theme.space.lg }}>
-          <NavLink to={{ pathname: '/explorer', search }} style={link}>Explorer</NavLink>
-          <NavLink to={{ pathname: '/quiz', search }} style={link}>Quiz</NavLink>
-          <NavLink to={{ pathname: '/builder', search }} style={link}>Builder</NavLink>
-          <NavLink to={{ pathname: '/stats', search }} style={link}>Stats</NavLink>
+        <span style={{ fontFamily: theme.font.display, fontSize: 28, letterSpacing: 2, color: theme.colors.accent }}>Spin Trainer</span>
+        {/* La navegación conserva la selección (?s=&stack=) al cambiar de pestaña. */}
+        <nav style={{ display: 'flex', gap: theme.space.lg }} aria-label="Secciones">
+          {TABS.map(([path, label]) => <NavLink key={path} to={{ pathname: path, search }} style={link}>{label}</NavLink>)}
         </nav>
+        <SessionScore {...score} />
         <div style={{ display: 'flex', gap: theme.space.md, alignItems: 'center' }}>
           <small style={{ color: theme.colors.textMuted }}>{user?.email}</small>
-          <button onClick={signOut} style={{ background: 'transparent', color: theme.colors.textMuted,
+          <button type="button" onClick={onSignOut} style={{ background: 'transparent', color: theme.colors.textMuted,
             border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.sm,
             padding: `${theme.space.xs} ${theme.space.md}`, cursor: 'pointer' }}>Salir</button>
         </div>
       </header>
-      <main style={{ padding: theme.space.xl, maxWidth: 1200, margin: '0 auto' }}>
-        <Outlet />
+      {toolbar && (
+        <div style={{ padding: `${theme.space.md} 0`, borderBottom: `1px solid ${theme.colors.borderSubtle}` }}>
+          <div style={container}>{toolbar}</div>
+        </div>
+      )}
+      <main style={{ ...container, paddingTop: theme.space.xl, paddingBottom: theme.space.xl }}>
+        {children}
       </main>
     </>
   );

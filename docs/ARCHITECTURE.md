@@ -30,13 +30,14 @@ Reglas:
 
 ```
 src/
-  domain/      JS puro: hand, actions, range, quiz, stats. Sin React, sin I/O. Tests Vitest.
+  domain/      JS puro: hand, actions, range, quiz, stats, selection, session. Sin React, sin I/O. Tests Vitest.
   shared/
     api/       contrato de acceso a datos: httpClient (real) | mock (memoria+localStorage); queries (TanStack Query)
-    auth/      Supabase Auth + RequireAuth
-    ui/        componentes de presentación (HandGrid, ActionPalette, selectores, Layout)
-    theme/     tokens y mapa acción→color
-  features/    una carpeta por módulo: explorer, quiz, builder, stats, auth. Solo composición.
+    auth/      Supabase Auth (cargado bajo demanda) + AuthProvider + RequireAuth
+    session/   marcador de la sesión de estudio (sessionStorage). No accede a la API.
+    ui/        componentes de presentación (HandGrid, ActionPalette, Layout, SituationBar, ComboPicker…)
+    theme/     tokens (fondo con degradado, dorado, Bebas Neue / DM Sans / JetBrains Mono) y mapa acción→color
+  features/    una carpeta por módulo: shell, explorer, quiz, builder, stats, auth. Solo composición.
 ```
 
 Dependencias permitidas: `features → shared → domain`. `domain` no importa nada. `shared/ui` no importa `shared/api`.
@@ -49,8 +50,17 @@ el Builder evalúa comparando la acción efectiva mano a mano (`evaluateRange`),
 `VITE_API_MODE=mock` (`npm run dev:mock`, `npm run build:mock`) permite desarrollar y correr E2E sin backend con el mismo contrato.
 El mock valida como la API (400/404/409) y es dueño de los campos de servidor (`id`, `at`, `correct`, `version`); los builds http no lo incluyen.
 
-Routing en *data mode* (`createBrowserRouter`): rutas lazy por feature y `useBlocker` para los cambios sin guardar del Builder.
-La selección de situación y stack vive en la URL (`?s=<key>&stack=<bb>`), así que hay enlaces directos a cualquier situación y stack.
+Routing en *data mode* (`createBrowserRouter`): rutas lazy por feature y `useBlocker` para los cambios sin guardar.
+
+`features/shell/AppShell` es el marco de todas las pestañas: carga el catálogo, pinta la cabecera con el marcador de sesión
+y un único selector de situación/stack, y pasa `{ situations, selection }` a las páginas con `useOutletContext()`.
+La selección vive en la URL (`?s=<key|any>&stack=<bb|any>`, normalizada por `domain/selection.js`): un solo estado
+compartido entre pestañas y enlaces directos a cualquier situación. Con "Any", Quiz y Builder eligen una combinación al azar
+(`ComboPicker`) y el Explorer muestra el modo aleatorio.
+
+Sesión de estudio vs. progreso: la sesión (`shared/session`, reglas en `domain/session.js`) es el marcador en curso
+de las respuestas del Quiz (precisión, racha, manos), vive en `sessionStorage` y se puede reiniciar.
+El progreso a largo plazo son los intentos persistidos en la API (ADR-0007).
 
 ## API (repo spin-trainer-api)
 

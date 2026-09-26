@@ -1,25 +1,26 @@
 import { accuracy, bySituationStack, weakestHands } from '../../domain/stats';
-import { useAttempts, useSituations } from '../../shared/api/queries';
+import { useOutletContext } from 'react-router';
+import { useAttempts } from '../../shared/api/queries';
 import { Empty, ErrorBox, Loading } from '../../shared/ui/Feedback';
 import { layout } from '../../shared/ui/styles';
 import { theme } from '../../shared/theme/theme';
 
 export function StatsPage() {
+  const { situations } = useOutletContext();
   const attempts = useAttempts();
-  const situations = useSituations();
 
-  if (attempts.isLoading || situations.isLoading) return <Loading />;
+  if (attempts.isLoading) return <Loading />;
   if (attempts.error) return <ErrorBox error={attempts.error} />;
   const data = attempts.data ?? [];
   if (data.length === 0) return <Empty>Todavía no hay intentos. Juega unas manos en el Quiz.</Empty>;
 
-  const label = key => situations.data?.find(s => s.key === key)?.label ?? key;
+  const label = key => situations.find(s => s.key === key)?.label ?? key;
   const table = { borderCollapse: 'collapse', fontSize: theme.font.sizeSm };
   const td = { padding: `${theme.space.xs} ${theme.space.md}`, borderBottom: `1px solid ${theme.colors.borderSubtle}`, textAlign: 'left' };
 
   return (
     <div style={layout.page}>
-      <h2 style={{ margin: 0 }}>Stats</h2>
+      <h2 style={layout.title}>Stats</h2>
       <div data-testid="stats-global">
         <strong>{Math.round(accuracy(data) * 100)}%</strong> de acierto en {data.length} intentos
       </div>

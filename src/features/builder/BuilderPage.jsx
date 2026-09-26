@@ -1,49 +1,52 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useBeforeUnload, useBlocker } from 'react-router';
+import { useBeforeUnload, useBlocker, useOutletContext } from 'react-router';
 import { evaluateRange, explicitHands, normalizeRange, summarize } from '../../domain/range';
 import { ACTION_LABELS } from '../../domain/actions';
-import { useDefaultRange, useDeleteUserRange, useSaveUserRange, useSituations, useUserRange } from '../../shared/api/queries';
-import { useSituationSelection } from '../../shared/ui/useSituationSelection';
+import { comboKey } from '../../domain/selection';
+import { useDefaultRange, useDeleteUserRange, useSaveUserRange, useUserRange } from '../../shared/api/queries';
 import { HandGrid } from '../../shared/ui/HandGrid';
 import { ActionPalette } from '../../shared/ui/ActionPalette';
-import { SituationSelector, StackSelector } from '../../shared/ui/SituationSelector';
-import { ConfirmBar, Empty, ErrorBox, Loading } from '../../shared/ui/Feedback';
+import { ComboPicker } from '../../shared/ui/ComboPicker';
+import { ConfirmBar, ErrorBox, Loading } from '../../shared/ui/Feedback';
 import { layout } from '../../shared/ui/styles';
 import { theme } from '../../shared/theme/theme';
 
 const NO_HANDS = Object.freeze({});
 
 export function BuilderPage() {
-  const situations = useSituations();
-  const sel = useSituationSelection(situations.data);
-  const def = useDefaultRange(sel.situationKey, sel.stack);
-  const userRange = useUserRange(sel.situationKey, sel.stack);
+  const { situations, selection } = useOutletContext();
   const [pickedAction, setPickedAction] = useState(null);
-
-  if (situations.isLoading) return <Loading />;
-  if (situations.error) return <ErrorBox error={situations.error} />;
-  if (!sel.situation) return <Empty>No hay situaciones disponibles.</Empty>;
-
-  // Acción de pincel derivada: se conserva entre situaciones si sigue siendo válida.
-  const actions = sel.situation.actions;
-  const paintAction = actions.includes(pickedAction) ? pickedAction : actions[0];
 
   return (
     <div style={layout.page}>
-      <h2 style={{ margin: 0 }}>Builder</h2>
-      <div style={layout.row}>
-        <SituationSelector situations={situations.data} value={sel.situationKey} onChange={sel.setSituation} />
-        <StackSelector stacks={sel.situation.stacks} value={sel.stack} onChange={sel.setStack} />
-      </div>
-      <ActionPalette actions={actions} selected={paintAction} onSelect={setPickedAction} />
+      <h2 style={layout.title}>Builder</h2>
+      {/* La key reinicia la elección de combinación al cambiar la selección. */}
+      <ComboPicker key={`${selection.situationKey}@${selection.stack}`}
+        situations={situations} combos={selection.combos} random={selection.isAny}>
+        {(combo, situation) => (
+          <BuilderCombo key={comboKey(combo)} situation={situation} stack={combo.stack}
+            pickedAction={pickedAction} onPickAction={setPickedAction} />
+        )}
+      </ComboPicker>
+    </div>
+  );
+}
+
+function BuilderCombo({ situation, stack, pickedAction, onPickAction }) {
+  const def = useDefaultRange(situation.key, stack);
+  const userRange = useUserRange(situation.key, stack);
+  // Acción de pincel derivada: se conserva entre situaciones si sigue siendo válida.
+  const paintAction = situation.actions.includes(pickedAction) ? pickedAction : situation.actions[0];
+
+  return (
+    <>
+      <ActionPalette actions={situation.actions} selected={paintAction} onSelect={onPickAction} />
       <ErrorBox error={userRange.error} />
       {userRange.isLoading ? <Loading /> : (
-        // La key reinicia el editor al cambiar de situación/stack (sin setState en efectos).
-        <RangeEditor key={`${sel.situationKey}@${sel.stack}`}
-          situation={sel.situation} stack={sel.stack} saved={userRange.data} target={def.data?.hands ?? {}}
+        <RangeEditor situation={situation} stack={stack} saved={userRange.data} target={def.data?.hands ?? {}}
           paintAction={paintAction} onReload={() => userRange.refetch()} />
       )}
-    </div>
+    </>
   );
 }
 

@@ -71,6 +71,19 @@ export default [
     }
   },
 
+  // shared/session: estado local de la sesión de estudio. No accede a datos remotos.
+  {
+    files: ['src/shared/session/**/*.{js,jsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          { group: ['**/api', '**/api/**', '@tanstack/*'], message: 'shared/session no accede a la API: el histórico son los intentos.' },
+          noFeatures
+        ]
+      }]
+    }
+  },
+
   // features/: solo composición. Datos únicamente vía shared/api/index.js y shared/api/queries.js.
   {
     files: ['src/features/**/*.{js,jsx}'],

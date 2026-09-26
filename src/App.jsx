@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router';
 import { RequireAuth } from './shared/auth/RequireAuth';
-import { Layout } from './shared/ui/Layout';
 import { LoginPage } from './features/auth/LoginPage';
+import { AppShell } from './features/shell/AppShell';
 
 // Cada feature en su propio chunk: se descarga al entrar en la ruta.
 const page = (load, name) => () => load().then(m => ({ Component: m[name] }));
@@ -10,7 +10,7 @@ const page = (load, name) => () => load().then(m => ({ Component: m[name] }));
 export const routes = [
   { path: '/login', element: <LoginPage /> },
   {
-    element: <RequireAuth><Layout /></RequireAuth>,
+    element: <RequireAuth><AppShell /></RequireAuth>,
     children: [
       { index: true, element: <Navigate to="/explorer" replace /> },
       { path: 'explorer', lazy: page(() => import('./features/explorer/ExplorerPage'), 'ExplorerPage') },

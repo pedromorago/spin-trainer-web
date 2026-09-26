@@ -1,0 +1,24 @@
+import { SituationSelector, StackSelector } from './SituationSelector';
+import { theme } from '../theme/theme';
+
+const FORMATS = { '3max': '3-max', hu: 'HU' };
+
+/** Selector único de situación y stack (con "Any"), compartido por todas las pestañas. Props: situations, selection */
+export function SituationBar({ situations, selection }) {
+  return (
+    <div style={{ display: 'flex', gap: theme.space.lg, alignItems: 'center', flexWrap: 'wrap' }} data-testid="situation-bar">
+      <SituationSelector situations={situations} value={selection.situationKey} onChange={selection.setSituation} />
+      <StackSelector stacks={selection.stacks} value={selection.stack} onChange={selection.setStack} />
+      {selection.situation && (
+        <span style={{ fontFamily: theme.font.display, letterSpacing: 1, color: theme.colors.textMuted }}>
+          {FORMATS[selection.situation.format] ?? selection.situation.format}
+        </span>
+      )}
+      {selection.isAny && (
+        <span style={{ fontSize: theme.font.sizeSm, color: theme.colors.accent }} data-testid="random-mode">
+          Modo aleatorio · {selection.combos.length} combinaciones
+        </span>
+      )}
+    </div>
+  );
+}

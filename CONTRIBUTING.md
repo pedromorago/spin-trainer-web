@@ -38,7 +38,10 @@ Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 - El mock (`shared/api/mock`) valida como la API y es dueño de los campos de servidor; mantenerlo alineado con la spec y con sus tests.
 
 ## Convenciones
-- Router en *data mode* (`createBrowserRouter`, rutas lazy en `src/App.jsx`). Selección de situación/stack en la URL (`?s=&stack=`).
+- Router en *data mode* (`createBrowserRouter`, rutas lazy en `src/App.jsx`).
+- `features/shell/AppShell` da a las páginas `{ situations, selection }` vía `useOutletContext()`; las páginas no tienen selector propio.
+  La selección vive en la URL (`?s=<key|any>&stack=<bb|any>`) y se normaliza con `domain/selection.js`. Con "Any", usar `ComboPicker`.
+- Sesión de estudio (`shared/session`): marcador local de respuestas del Quiz. El progreso histórico son los intentos de la API.
 - Estado que depende de (situación, stack): reiniciar con `key` en un componente hijo, no con `setState` dentro de efectos.
 - Accesibilidad: controles con rol y nombre accesible (Playwright `getByRole`/`getByLabel` primero).
   Celdas del grid: `"<mano>: <acción>"`. Confirmaciones en línea con `ConfirmBar`, no `window.confirm`.
