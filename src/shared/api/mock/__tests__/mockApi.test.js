@@ -16,6 +16,7 @@ const problemOf = promise => promise.then(
   () => { throw new Error('se esperaba un ApiError'); },
   e => ({ status: e.status, type: e.type })
 );
+const errorsOf = promise => promise.then(() => { throw new Error('se esperaba un ApiError'); }, e => e.problem.errors);
 const P = (status, kind) => ({ status, type: `urn:spin-trainer:${kind}` });
 
 describe('situations', () => {
@@ -82,6 +83,13 @@ describe('default ranges', () => {
     expect(await problemOf(api.getDefaultRange(s, st))).toEqual(P(404, 'not-found'));
   });
 
+  // The API validates the format before looking the spot up: what does not fit the spec is a 400, not a 404.
+  it.each([['BTN_OPEN', 25, 'situation'], ['btn-open', 25, 'situation'], ['btn_open', 12.3, 'stack'], ['btn_open', 0.5, 'stack'],
+    ['btn_open', 'abc', 'stack'], ['btn_open', 101, 'stack']])('400 para %s@%s mal formado', async (s, st, field) => {
+    expect(await problemOf(api.getDefaultRange(s, st))).toEqual(P(400, 'validation'));
+    expect((await errorsOf(api.getUserRange(s, st))).map(e => e.field)).toEqual([field]);
+  });
+
   it('404 para una combinación del catálogo sin seed', async () => {
     expect(await problemOf(withoutBtnOpen20().getDefaultRange('btn_open', 20))).toEqual(P(404, 'not-found'));
   });
@@ -128,9 +136,29 @@ describe('user ranges', () => {
     expect(await problemOf(api.putUserRange('btn_open', 25, body))).toEqual(P(400, 'validation'));
   });
 
-  it('el 400 detalla cada campo inválido', async () => {
-    const err = await api.putUserRange('btn_open', 25, { hands: { AAs: 'ALLIN', KK: 'CHECK' }, version: 0 }).catch(e => e);
-    expect(err.problem.errors.map(e => e.field)).toEqual(['hands.AAs', 'hands.KK']);
+  it('el 400 detalla cada mano inválida, un error por mano y con los mensajes de la API', async () => {
+    const err = await api.putUserRange('btn_open', 25, { hands: { AAs: 'CHECK', KK: 'CHECK' }, version: 0 }).catch(e => e);
+    expect(err.problem.detail).toBe('2 entradas no válidas en hands');
+    expect(err.problem.errors).toEqual([
+      { field: 'hands.AAs', message: 'mano no válida' },
+      { field: 'hands.KK', message: 'acción CHECK no permitida en btn_open' }
+    ]);
+  });
+
+  it.each([
+    ['un campo que no es del contrato', { hands: {}, version: 0, source: 'user' }, [{ field: 'source', message: 'campo no permitido' }]],
+    ['una acción que no existe', { hands: { AA: 'SHOVE' }, version: 0 }, [{ field: 'hands.AA', message: 'valor no válido' }]],
+    ['version como texto', { hands: {}, version: '0' }, [{ field: 'version', message: 'valor no válido' }]],
+    ['sin hands ni version', {}, [{ field: 'hands', message: 'obligatorio' }, { field: 'version', message: 'obligatorio' }]]
+  ])('PUT con %s da 400 como la API', async (_case, body, errors) => {
+    expect(await errorsOf(api.putUserRange('btn_open', 25, body))).toEqual(errors);
+  });
+
+  it('la lista sigue el orden de la API: posición en el catálogo y stack de mayor a menor', async () => {
+    for (const [s, st] of [['sb_open', 20], ['btn_open', 20], ['btn_open', 25]]) {
+      await api.putUserRange(s, st, { hands: {}, version: 0 });
+    }
+    expect((await api.listUserRanges()).map(r => `${r.situation}@${r.stack}`)).toEqual(['btn_open@25', 'btn_open@20', 'sb_open@20']);
   });
 
   it('PUT o DELETE sobre una combinación desconocida da 404', async () => {
@@ -173,6 +201,19 @@ describe('quiz attempts', () => {
     expect(await problemOf(api.recordAttempt({ ...answer, ...patch }))).toEqual(expected);
   });
 
+  it.each([
+    ['stack como texto', { stack: '25' }, [{ field: 'stack', message: 'valor no válido' }]],
+    ['situación como número', { situation: 5 }, [{ field: 'situation', message: 'valor no válido' }]],
+    ['acción que no existe', { given: 'SHOVE' }, [{ field: 'given', message: 'valor no válido' }]],
+    ['situación mal formada', { situation: 'BTN_OPEN' }, [{ field: 'situation', message: 'formato no válido' }]],
+    ['mano fuera del formato', { hand: 'AK' }, [{ field: 'hand', message: 'formato no válido' }]],
+    ['mano no canónica', { hand: 'KAs' }, [{ field: 'hand', message: 'mano no válida' }]],
+    ['acción de otra situación', { given: 'CHECK' }, [{ field: 'given', message: 'acción CHECK no permitida en btn_open' }]],
+    ['sin mano', { hand: undefined }, [{ field: 'hand', message: 'obligatorio' }]]
+  ])('POST con %s da 400 como la API', async (_case, patch, errors) => {
+    expect(await errorsOf(api.recordAttempt({ ...answer, ...patch }))).toEqual(errors);
+  });
+
   it('POST con combinación sin rango (ni de referencia ni del usuario)', async () => {
     expect(await problemOf(withoutBtnOpen20().recordAttempt({ ...answer, stack: 20 }))).toEqual(P(422, 'no-range'));
   });
@@ -189,7 +230,30 @@ describe('quiz attempts', () => {
     expect((await api.listAttempts({ situation: 'hu_sb_open' })).items).toEqual([]);
   });
 
-  it.each([[{ limit: 0 }], [{ limit: 201 }], [{ cursor: btoa('-1') }]])('listAttempts(%o) da 400', async params => {
+  it('la paginación es por posición: un intento nuevo entre páginas no repite ninguno', async () => {
+    for (const hand of ['AA', 'KK', 'QQ']) {
+      await api.recordAttempt({ ...answer, hand });
+      now = new Date(now.getTime() + 1000);
+    }
+    const first = await api.listAttempts({ limit: 2 });
+    await api.recordAttempt({ ...answer, hand: 'JJ' });
+    expect((await api.listAttempts({ limit: 2, cursor: first.nextCursor })).items.map(a => a.hand)).toEqual(['AA']);
+  });
+
+  it('a igual fecha, ordena por id descendente como la API', async () => {
+    const ids = [];
+    for (const hand of ['AA', 'KK', 'QQ']) ids.push((await api.recordAttempt({ ...answer, hand })).id);
+    const listed = [];
+    let cursor;
+    do {
+      const page = await api.listAttempts({ limit: 1, cursor });
+      listed.push(...page.items.map(a => a.id));
+      cursor = page.nextCursor;
+    } while (cursor);
+    expect(listed).toEqual([...ids].sort().reverse());
+  });
+
+  it.each([[{ limit: 0 }], [{ limit: 201 }], [{ cursor: btoa('-1') }], [{ cursor: '%%%' }], [{ situation: 'BTN' }], [{ stack: 0 }]])('listAttempts(%o) da 400', async params => {
     expect(await problemOf(api.listAttempts(params))).toEqual(P(400, 'validation'));
   });
 });
@@ -205,6 +269,22 @@ describe('stats', () => {
       { situation: 'btn_open', stack: 25, hand: 'AA', attempts: 2, correct: 1, lastAnsweredAt: now.toISOString() }
     ]);
     expect(await api.getHandStats({ situation: 'hu_sb_open' })).toEqual([]);
+  });
+
+  it('getHandStats sigue el orden de la API y valida los filtros', async () => {
+    await api.recordAttempt({ situation: 'btn_open', stack: 20, hand: 'KK', given: 'ALLIN' });
+    await api.recordAttempt({ situation: 'btn_open', stack: 25, hand: 'A2s', given: 'ALLIN' });
+    expect((await api.getHandStats()).map(r => `${r.stack} ${r.hand}`)).toEqual(['25 A2s', '25 AA', '20 KK']);
+    expect(await problemOf(api.getHandStats({ stack: 0 }))).toEqual(P(400, 'validation'));
+    expect(await problemOf(api.getHandStats({ situation: 'BTN' }))).toEqual(P(400, 'validation'));
+  });
+
+  it.each(['+01:00', 'europe/madrid', 'utc', 'EST', 'GMT+1', 'Nope/Zone', ''])('getProgress con tz=%s da 400, como la API', async tz => {
+    expect(await errorsOf(api.getProgress({ tz }))).toEqual([{ field: 'tz', message: 'zona IANA desconocida' }]);
+  });
+
+  it.each(['UTC', 'Europe/Madrid', 'America/Argentina/Buenos_Aires', 'Etc/GMT+1'])('getProgress acepta tz=%s', async tz => {
+    await expect(api.getProgress({ tz })).resolves.toEqual(expect.any(Array));
   });
 
   it('getProgress cuenta por día y valida parámetros', async () => {
