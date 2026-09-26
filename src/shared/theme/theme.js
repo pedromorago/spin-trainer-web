@@ -8,7 +8,10 @@ export const theme = {
     danger: '#e5484d', success: '#30a46c',
     actionOrange: '#f76b15', actionRed: '#e5484d', actionYellow: '#f5d90a', actionPink: '#d6409f',
     actionGreen: '#30a46c', actionBlue: '#3a55c9', actionPurple: '#7b44b5', actionCyan: '#00a2c7',
-    actionBrown: '#ad7f58', actionGray: '#3a3f47'
+    actionBrown: '#ad7f58', actionGray: '#3a3f47',
+    // Gráficos (validados con el validador de dataviz sobre bgElevated): marca principal en el dorado de la marca
+    // un paso más oscuro (L 0.48–0.67, ≥ 3:1), contexto en gris de de-énfasis, rejilla y ejes en hairline recesivo.
+    chartAccent: '#ad8838', chartContext: '#6b7280', chartGrid: '#262d38', chartAxis: '#3a4250'
   },
   gradients: {
     page: 'radial-gradient(ellipse 120% 80% at 50% -10%, #1f2837 0%, #10151d 45%, #080a0e 100%)'

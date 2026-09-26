@@ -63,6 +63,14 @@ al llegar a 0), calculado sobre `GET /stats/hands`. La mesa (`shared/ui/PokerTab
 (palos coherentes con pareja/suited/offsuit). Atajos 1..n y Enter/→ con `useEffectEvent`. La corrección local da feedback
 inmediato; la API vuelve a corregir al registrar el intento.
 
+Stats separa la **sesión** (local, reiniciable: precisión, mejor racha, manos) del **histórico** (API): totales, manos
+difíciles, precisión por situación (chips con medidor), top 10 de fallos por situación/stack/mano y el progreso diario
+(`GET /stats/progress` en la zona horaria del navegador, completado día a día con `domain/stats.js#dailySeries`).
+El gráfico de progreso sigue el método de visualización del proyecto: dos gráficos alineados por día (precisión como
+línea = la historia, manos jugadas como columnas en gris = el contexto) en lugar de un doble eje; colores validados con
+el validador de paleta sobre la superficie real (`theme.colors.chart*`); crosshair y tooltip con ratón y teclado;
+vista de tabla como equivalente accesible; al cambiar de periodo se mantiene el render anterior atenuado.
+
 `VITE_API_MODE=mock` (`npm run dev:mock`, `npm run build:mock`) permite desarrollar y correr E2E sin backend con el mismo contrato.
 El mock valida como la API (400/404/409) y es dueño de los campos de servidor (`id`, `at`, `correct`, `version`); los builds http no lo incluyen.
 

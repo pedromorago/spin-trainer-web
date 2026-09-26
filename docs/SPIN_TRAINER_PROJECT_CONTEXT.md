@@ -36,7 +36,7 @@ Mejoras a documentar: dividir god-objects · Lombok @Builder · ThreadLocalRando
 
 ## Estado
 - Prototipo vanilla (single file, localStorage): funcional, uso personal.
-- Web v2: shell común (selector único con "Any", marcador de sesión), Explorer editable; Quiz, Builder y Stats en ampliación por fases. 182 tests Vitest (dominio, mock + conformidad con la spec, adaptador http, invariantes de color y contraste) con cobertura ≥90%, ESLint con reglas de capas. Sin desplegar.
+- Web v2: shell común (selector único con "Any", marcador de sesión) y las cuatro features del prototipo adaptadas a Spin & Go: Explorer editable (pincel, Guardar/Reset/Copiar, panel), Quiz sobre mesa (atajos, manos difíciles), Builder con veredictos por tipo y Stats con progreso diario. 222 tests Vitest (dominio, mock + conformidad con la spec, adaptador http, invariantes de color, contraste y veredictos), cobertura ≥90%, ESLint con reglas de capas. Sin desplegar.
 - API y suite QA: no empezadas. Contrato v0.2 en `docs/openapi-draft.yaml` (ADR-0013), implementado por el mock.
 
 ## Roadmap

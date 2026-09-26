@@ -1,6 +1,6 @@
 // Hooks de estado de servidor (TanStack Query). Un hook por operación del contrato v0.2 (docs/openapi-draft.yaml).
 import { useMemo } from 'react';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { mergeEffectiveRanges } from '../../domain/range';
 import { api, ApiError } from './index';
 
@@ -134,7 +134,10 @@ export function useHandStats(filters = {}) {
   return useQuery({ queryKey: keys.handStats(filters), queryFn: () => api.getHandStats(filters) });
 }
 
-/** Intentos y aciertos por día (solo días con actividad). */
+/**
+ * Intentos y aciertos por día (solo días con actividad). Al cambiar el periodo conserva los datos anteriores
+ * (`isPlaceholderData`) para que el gráfico no parpadee mientras recarga.
+ */
 export function useProgress({ days = 30, tz = 'UTC' } = {}) {
-  return useQuery({ queryKey: keys.progress({ days, tz }), queryFn: () => api.getProgress({ days, tz }) });
+  return useQuery({ queryKey: keys.progress({ days, tz }), queryFn: () => api.getProgress({ days, tz }), placeholderData: keepPreviousData });
 }

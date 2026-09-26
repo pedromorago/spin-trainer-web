@@ -56,4 +56,7 @@ Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 - Selectores de test: `data-testid` en kebab-case `<feature>-<elemento>`; atributos `data-hand`, `data-action` (acción efectiva),
   `data-implicit`, `data-verdict` (`correct|wrong|extra|missing`), `data-played`, `data-stack`.
 - Veredictos del Builder: `domain/range.js#evaluateRange` (tipos y puntuación) + `shared/theme/verdictStyles.js` (contorno y glifo, no solo color).
+- Gráficos: nunca doble eje (dos medidas → dos gráficos alineados); una serie → sin leyenda, el título la nombra; etiqueta directa selectiva;
+  crosshair/tooltip también por teclado y vista de tabla. Colores `theme.colors.chart*`, validados con el validador de paleta de dataviz
+  contra la superficie oscura (L 0.48–0.67, ≥ 3:1); el texto nunca lleva el color de la serie.
 - El contrato definitivo vive en `spin-trainer-api/openapi.yaml`; `docs/openapi-draft.yaml` es solo borrador.
