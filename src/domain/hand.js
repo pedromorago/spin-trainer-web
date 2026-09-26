@@ -10,6 +10,7 @@ export function getHand(rowIdx, colIdx) {
   if (rowIdx === colIdx) return RANKS[rowIdx] + RANKS[colIdx];
   const high = RANKS[Math.min(rowIdx, colIdx)];
   const low = RANKS[Math.max(rowIdx, colIdx)];
+  // Stryker disable next-line EqualityOperator: the diagonal (a pair) returned above, so the indices always differ here.
   return high + low + (colIdx > rowIdx ? 's' : 'o');
 }
 

@@ -9,6 +9,7 @@ export default {
   mutate: ['src/domain/**/*.js', '!src/domain/__tests__/**'],
   reporters: ['clear-text', 'html'],
   htmlReporter: { fileName: 'reports/mutation/index.html' },
-  thresholds: { high: 90, low: 80, break: null },
+  // Below 95 % the run fails: a surviving mutant gets a test, and only a truly equivalent one a disable comment.
+  thresholds: { high: 95, low: 90, break: 95 },
   tempDirName: '.stryker-tmp'
 };

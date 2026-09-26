@@ -4,6 +4,8 @@
 export const SEAT_ORDER = { '3max': ['BTN', 'SB', 'BB'], hu: ['SB', 'BB'] };
 const DEALER = { '3max': 'BTN', hu: 'SB' };
 const BLINDS = { SB: 0.5, BB: 1 };
+// Stryker disable next-line ArithmeticOperator: with the big blind as the unit (1), 2 * BB and 2 / BB are equal.
+const MIN_RAISE_BET = 2 * BLINDS.BB;
 
 /**
  * @param {{ format, hero, priorActions }} situation
@@ -29,8 +31,7 @@ export function tableSeats(situation, stack) {
     if (action === 'FOLD') seat.folded = true; // the blind already posted stays in the pot
     else if (action === 'LIMP') seat.bet = BLINDS.BB;
     else if (action === 'CALL') seat.bet = toCall;
-    // Stryker disable next-line ArithmeticOperator: with the big blind as the unit (1), 2 * BB and 2 / BB are equal.
-    else if (action === 'MIN_RAISE') toCall = seat.bet = 2 * BLINDS.BB;
+    else if (action === 'MIN_RAISE') toCall = seat.bet = MIN_RAISE_BET;
     else if (action === 'SHOVE') toCall = seat.bet = stack;
     else toCall = seat.bet = null; // RAISE / THREE_BET: unknown size
   }

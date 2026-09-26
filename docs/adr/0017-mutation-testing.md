@@ -28,7 +28,8 @@ JavaScript; neither is among the discarded tools (ADR-0010).
   named "exactly full last page" that never filled a page; PIT went from 88 % to 100 %. In the web: the hand regex
   without anchors being untested (`AKsx`), the hard-hands ranking and the daily series order, the URL values (`any`,
   `btn_open`) and the validation of the stored session; two defensive branches that could never change the result
-  were removed.
+  were removed. Stryker went from 90.6 % to 100 %, with the equivalent mutants marked and explained in the code; its
+  threshold is also 95 %.
 - `check` in the API takes about 30 more seconds. The web job is separate so as not to slow down each push.
 - When Stryker's Vitest runner supports Vitest 5, switching back to it brings per-test coverage and a much faster run;
   the command runner stays valid meanwhile.

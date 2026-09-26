@@ -62,10 +62,10 @@ export function boundaryHands(hands, situationActions) {
   const explicit = new Set(explicitHands(hands, situationActions));
   const neighbours = hand => {
     const [r, c] = getCell(hand);
-    return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
-      // Stryker disable next-line all: an off-grid "hand" is never in the explicit set, so this bound is not observable.
-      .filter(([nr, nc]) => nr >= 0 && nr < 13 && nc >= 0 && nc < 13)
-      .map(([nr, nc]) => getHand(nr, nc));
+    const cells = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
+    // Stryker disable next-line all: an off-grid "hand" is never in the explicit set, so this bound is not observable.
+    const onGrid = cells.filter(([nr, nc]) => nr >= 0 && nr < 13 && nc >= 0 && nc < 13);
+    return onGrid.map(([nr, nc]) => getHand(nr, nc));
   };
   return allHands().filter(h => !explicit.has(h) && neighbours(h).some(n => explicit.has(n)));
 }

@@ -12,6 +12,7 @@ export function aggregateAttempts(attempts) {
     const row = rows.get(k) ?? { situation: a.situation, stack: a.stack, hand: a.hand, attempts: 0, correct: 0, lastAnsweredAt: a.answeredAt };
     row.attempts += 1;
     if (a.correct) row.correct += 1;
+    // Stryker disable next-line EqualityOperator: on equal times, keeping or replacing leaves the same value.
     if (a.answeredAt > row.lastAnsweredAt) row.lastAnsweredAt = a.answeredAt;
     rows.set(k, row);
   }
