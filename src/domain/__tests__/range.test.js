@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { allHands } from '../hand';
-import { boundaryHands, evaluateRange, explicitHands, normalizeRange, summarize } from '../range';
+import {
+  boundaryHands, ERASE, evaluateRange, explicitHands, exportRange, normalizeRange, paintHand, rangesEqual, rangeStats, summarize
+} from '../range';
 
 const ACTIONS = ['ALLIN', '3BET_C', 'CALL', 'FOLD'];
 const LIMP_ACTIONS = ['ALLIN', 'ISO_C', 'CHECK'];
@@ -68,5 +70,77 @@ describe('evaluateRange', () => {
 
   it('un intento vacío contra un rango vacío es 100% correcto', () => {
     expect(evaluateRange({}, {}, ACTIONS).accuracy).toBe(1);
+  });
+});
+
+describe('paintHand', () => {
+  it('fija la acción del pincel (idempotente, no alterna)', () => {
+    const once = paintHand({}, 'AA', 'ALLIN', ACTIONS);
+    expect(once).toEqual({ AA: 'ALLIN' });
+    expect(paintHand(once, 'AA', 'ALLIN', ACTIONS)).toBe(once);
+    expect(paintHand(once, 'AA', 'CALL', ACTIONS)).toEqual({ AA: 'CALL' });
+  });
+
+  it('ERASE y la acción implícita devuelven la mano a la implícita', () => {
+    expect(paintHand({ AA: 'ALLIN', KK: 'CALL' }, 'AA', ERASE, ACTIONS)).toEqual({ KK: 'CALL' });
+    expect(paintHand({ AA: 'ALLIN' }, 'AA', 'FOLD', ACTIONS)).toEqual({});
+    expect(paintHand({ '72o': 'FOLD' }, '72o', ERASE, ACTIONS)).toEqual({});
+  });
+
+  it('no cambia nada con mano o pincel inválidos, ni al borrar una mano ya implícita', () => {
+    const hands = { AA: 'ALLIN' };
+    expect(paintHand(hands, 'XX', 'ALLIN', ACTIONS)).toBe(hands);
+    expect(paintHand(hands, 'KK', 'LIMP', ACTIONS)).toBe(hands);
+    expect(paintHand(hands, 'KK', ERASE, ACTIONS)).toBe(hands);
+  });
+
+  it('no muta el rango de entrada', () => {
+    const hands = { AA: 'ALLIN' };
+    paintHand(hands, 'KK', 'CALL', ACTIONS);
+    expect(hands).toEqual({ AA: 'ALLIN' });
+  });
+});
+
+describe('rangesEqual', () => {
+  it('compara acciones efectivas, no la representación', () => {
+    expect(rangesEqual({ AA: 'ALLIN', '72o': 'FOLD' }, { AA: 'ALLIN' }, ACTIONS)).toBe(true);
+    expect(rangesEqual({ AA: 'ALLIN' }, { AA: 'CALL' }, ACTIONS)).toBe(false);
+    expect(rangesEqual({}, {}, ACTIONS)).toBe(true);
+  });
+});
+
+describe('rangeStats', () => {
+  it('cuenta manos, combos y % jugados y el desglose por acción en el orden de la situación', () => {
+    const s = rangeStats({ AA: 'ALLIN', KK: 'ALLIN', AKs: 'CALL', AKo: 'CALL' }, ACTIONS);
+    expect(s).toMatchObject({ hands: 4, combos: 28, pct: 28 / 1326 });
+    expect(s.byAction.map(a => a.action)).toEqual(ACTIONS);
+    expect(s.byAction[0]).toEqual({ action: 'ALLIN', hands: 2, combos: 12, pct: 12 / 1326, implicit: false });
+    expect(s.byAction[1]).toEqual({ action: '3BET_C', hands: 0, combos: 0, pct: 0, implicit: false });
+    expect(s.byAction[3]).toMatchObject({ action: 'FOLD', hands: 165, combos: 1298, implicit: true });
+  });
+
+  it('los % de todas las acciones suman 1', () => {
+    const s = rangeStats({ AA: 'ALLIN', '72o': 'CALL' }, ACTIONS);
+    expect(s.byAction.reduce((n, a) => n + a.pct, 0)).toBeCloseTo(1, 10);
+  });
+
+  it('un rango vacío no juega nada', () => {
+    expect(rangeStats({}, LIMP_ACTIONS)).toMatchObject({ hands: 0, combos: 0, pct: 0 });
+  });
+});
+
+describe('exportRange', () => {
+  it('una línea por acción jugada, manos ordenadas, y la implícita al final', () => {
+    const text = exportRange({ AKo: 'ALLIN', KK: 'ALLIN', AA: 'ALLIN', AKs: 'CALL' }, ACTIONS, { title: 'BTN Open · 25 BB' });
+    expect(text).toBe([
+      'BTN Open · 25 BB',
+      'All-in (24 combos): AA, KK, AKo',
+      'Call (4 combos): AKs',
+      'Resto: Fold'
+    ].join('\n'));
+  });
+
+  it('sin título ni manos jugadas solo indica la implícita', () => {
+    expect(exportRange({}, LIMP_ACTIONS)).toBe('Resto: Check');
   });
 });

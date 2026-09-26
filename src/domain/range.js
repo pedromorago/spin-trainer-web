@@ -1,6 +1,9 @@
 // range.js — un rango es { [hand]: action }. Funciones puras compartidas por Explorer, Quiz y Builder.
-import { allHands, combos, getCell, getHand, isValidHand } from './hand';
-import { fallbackAction, isValidAction } from './actions';
+import { allHands, combos, compareHands, getCell, getHand, isValidHand, TOTAL_COMBOS } from './hand';
+import { ACTION_LABELS, fallbackAction, isValidAction } from './actions';
+
+/** Pincel "goma": devuelve la mano a la acción implícita. */
+export const ERASE = 'ERASE';
 
 /**
  * Normaliza un rango: elimina manos inválidas o con acción no permitida en la situación,
@@ -21,6 +24,27 @@ export function normalizeRange(hands, situationActions) {
 /** Acción efectiva de una mano (explícita o implícita). */
 export function actionFor(hands, hand, situationActions) {
   return hands?.[hand] ?? fallbackAction(situationActions);
+}
+
+/**
+ * Pinta una mano con el pincel (una acción de la situación) o la borra (ERASE o la acción implícita).
+ * Fija, no alterna: repetir el trazo es idempotente, lo que permite pintar arrastrando.
+ * Devuelve el mismo objeto si nada cambia (mano o pincel inválidos incluidos).
+ */
+export function paintHand(hands, hand, brush, situationActions) {
+  if (!isValidHand(hand)) return hands;
+  const erase = brush === ERASE || brush === fallbackAction(situationActions);
+  if (!erase && !isValidAction(brush, situationActions)) return hands;
+  const current = hands?.[hand];
+  if (erase ? current === undefined : current === brush) return hands;
+  const next = { ...hands };
+  if (erase) delete next[hand]; else next[hand] = brush;
+  return next;
+}
+
+/** Dos rangos son iguales si todas las manos tienen la misma acción efectiva. */
+export function rangesEqual(a, b, situationActions) {
+  return allHands().every(h => actionFor(a, h, situationActions) === actionFor(b, h, situationActions));
 }
 
 /** Manos cuya acción efectiva no es la implícita, en orden de grid. */
@@ -77,4 +101,42 @@ export function evaluateRange(target, attempt, situationActions) {
     if (ok) { byAction[expected].correct += 1; correct += 1; }
   }
   return { verdicts, correct, total: 169, accuracy: correct / 169, byAction };
+}
+
+/**
+ * Estadísticas para el panel del Explorer. Porcentajes sobre los 1326 combos.
+ * hands/combos/pct cuentan las manos jugadas (acción distinta de la implícita);
+ * byAction sigue el orden de acciones de la situación e incluye la implícita (implicit: true).
+ */
+export function rangeStats(hands, situationActions) {
+  const implicit = fallbackAction(situationActions);
+  const counts = summarize(hands, situationActions);
+  const byAction = situationActions.map(action => {
+    const c = counts[action] ?? { hands: 0, combos: 0 };
+    return { action, hands: c.hands, combos: c.combos, pct: c.combos / TOTAL_COMBOS, implicit: action === implicit };
+  });
+  const played = byAction.filter(a => !a.implicit);
+  const playedCombos = played.reduce((n, a) => n + a.combos, 0);
+  return {
+    hands: played.reduce((n, a) => n + a.hands, 0),
+    combos: playedCombos,
+    pct: playedCombos / TOTAL_COMBOS,
+    byAction
+  };
+}
+
+/**
+ * Texto del rango para copiar: una línea por acción jugada con sus combos y manos
+ * (parejas, suited, offsuit) y una línea final con la acción implícita.
+ */
+export function exportRange(hands, situationActions, { title } = {}) {
+  const label = a => ACTION_LABELS[a] ?? a;
+  const lines = title ? [title] : [];
+  for (const a of rangeStats(hands, situationActions).byAction) {
+    if (a.implicit || a.hands === 0) continue;
+    const list = allHands().filter(h => actionFor(hands, h, situationActions) === a.action).sort(compareHands);
+    lines.push(`${label(a.action)} (${a.combos} combos): ${list.join(', ')}`);
+  }
+  lines.push(`Resto: ${label(fallbackAction(situationActions))}`);
+  return lines.join('\n');
 }

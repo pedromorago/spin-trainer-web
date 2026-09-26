@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allHands, combos, getCell, getHand, isValidHand, TOTAL_COMBOS } from '../hand';
+import { allHands, combos, compareHands, getCell, getHand, isValidHand, TOTAL_COMBOS } from '../hand';
 
 describe('hand', () => {
   it('nombra celdas según la convención del grid', () => {
@@ -27,5 +27,9 @@ describe('hand', () => {
   it('suma 1326 combos', () => {
     expect(allHands()).toHaveLength(169);
     expect(allHands().reduce((n, h) => n + combos(h), 0)).toBe(TOTAL_COMBOS);
+  });
+
+  it('ordena parejas, suited y offsuit, de mayor a menor', () => {
+    expect(['AKo', '72o', 'KQs', '22', 'AKs', 'AA'].sort(compareHands)).toEqual(['AA', '22', 'AKs', 'KQs', 'AKo', '72o']);
   });
 });

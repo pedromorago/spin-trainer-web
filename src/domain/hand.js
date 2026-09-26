@@ -37,6 +37,15 @@ export function allHands() {
   return out;
 }
 
+/** Orden de lectura habitual: parejas, luego suited, luego offsuit; dentro de cada grupo, de mayor a menor. */
+export function compareHands(a, b) {
+  const key = h => {
+    const group = h.length === 2 ? 0 : h[2] === 's' ? 1 : 2;
+    return group * 1000 + RANKS.indexOf(h[0]) * 13 + RANKS.indexOf(h[1]);
+  };
+  return key(a) - key(b);
+}
+
 /** Nº de combos: 6 pareja, 4 suited, 12 offsuit. */
 export function combos(hand) {
   if (hand.length === 2) return 6;
