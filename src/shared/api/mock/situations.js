@@ -1,14 +1,14 @@
-// Catálogo de las 16 situaciones (12 3-max + 4 HU) del PDF de referencia.
+// Catálogo de las 16 situaciones (12 3-max + 4 HU) del PDF de referencia; el mismo que sirve la API (seeds V2 y V5).
 // En producción lo sirve la API (GET /situations); aquí vive solo para el adaptador mock.
-// hero y priorActions (contrato v0.2, ADR-0013) se derivan de las etiquetas del PDF; se validan al hacer el seed.
+// Stacks y acciones salen de las tablas y leyendas del PDF; hero y priorActions (ADR-0013), de sus títulos.
 const OPEN = ['MR_4B_C', 'MR_C_C', 'MR_C_F', 'MR_F_F', 'L_C_C', 'L_C_F', 'ALLIN', 'FOLD'];
 const act = (position, action) => ({ position, action });
 
 export const SITUATIONS = [
   { key: 'btn_open', label: 'BTN Open', format: '3max', hero: 'BTN', priorActions: [],
-    stacks: [25, 20, 15, 12, 10, 8], actions: OPEN },
+    stacks: [25, 20, 15, 12, 10, 8], actions: OPEN, notes: 'A 25 BB, contra un 3bet a 3 BB el amarillo (MR/F/F) es call.' },
   { key: 'sb_open', label: 'SB Open (BTN fold)', format: '3max', hero: 'SB', priorActions: [act('BTN', 'FOLD')],
-    stacks: [25, 20, 15, 12, 10, 8], actions: OPEN,
+    stacks: [25, 20, 15, 12, 10, 8], actions: ['MR_4B_C', 'MR_C_C', 'MR_C_F', 'MR_F_F', 'L_C_F', 'L_F', 'ALLIN', 'FOLD'],
     notes: 'Amarillo parte suited se puede L/C/F. Solo usar la parte gris vs fish pasivo.' },
   { key: 'sb_vs_btn_mr', label: 'SB vs BTN Min-Raise', format: '3max', hero: 'SB', priorActions: [act('BTN', 'MIN_RAISE')],
     stacks: [25, 20, 15, 10], actions: ['ALLIN', '3BET_C', 'CALL', 'FOLD'], notes: 'Pagamos las verdes (call) solo vs 2 fishes.' },
@@ -40,7 +40,7 @@ export const SITUATIONS = [
     priorActions: [act('BTN', 'LIMP'), act('SB', 'CALL')],
     stacks: [25, 20, 15, 10], actions: ['ALLIN', 'ISO_C', 'CHECK'] },
   { key: 'hu_sb_open', label: 'HU SB Open', format: 'hu', hero: 'SB', priorActions: [],
-    stacks: [25, 20, 15, 12, 10, 8], actions: ['MR_4B_C', 'MR_C_C', 'MR_C_F', 'MR_F_F', 'L_PUSH', 'L_C_C', 'L_C_F', 'L_F', 'FOLD'] },
+    stacks: [25, 20, 15, 12, 10, 8], actions: ['MR_4B_C', 'MR_C_C', 'MR_C_F', 'MR_F_F', 'L_PUSH', 'L_C_C', 'L_C_F', 'L_F', 'ALLIN', 'FOLD'] },
   { key: 'hu_bb_vs_mr', label: 'HU BB vs Min-Raise', format: 'hu', hero: 'BB', priorActions: [act('SB', 'MIN_RAISE')],
     stacks: [25, 20, 15, 10, 8], actions: ['ALLIN', '3BET_C', 'CALL', 'FOLD'] },
   { key: 'hu_bb_vs_limp', label: 'HU BB vs Limp', format: 'hu', hero: 'BB', priorActions: [act('SB', 'LIMP')],

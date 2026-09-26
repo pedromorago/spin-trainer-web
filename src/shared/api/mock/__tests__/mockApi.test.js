@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { tableSeats } from '../../../../domain/table';
+import { fallbackAction, isValidAction } from '../../../../domain/actions';
+import { isValidHand } from '../../../../domain/hand';
 import { createMockApi, memoryStorage } from '../mockApi';
+import { SITUATIONS } from '../situations';
 
 let api;
 let now;
@@ -45,17 +48,42 @@ describe('situations', () => {
   });
 });
 
+// Sin el rango de referencia de btn_open@20: el seed los trae todos, así que el caso "sin rango" se prepara aparte.
+const withoutBtnOpen20 = () => createMockApi({
+  storage: memoryStorage(), latency: 0, defaultRanges: { 'btn_open@25': { AA: 'MR_4B_C' } }
+});
+
 describe('default ranges', () => {
-  it('lista solo las combinaciones con seed', async () => {
-    expect((await api.listDefaultRanges()).map(r => `${r.situation}@${r.stack}`)).toEqual(['btn_open@25']);
+  it('trae un rango de referencia por cada combinación del catálogo, en su orden', async () => {
+    const catalog = SITUATIONS.flatMap(s => s.stacks.map(st => `${s.key}@${st}`));
+    expect((await api.listDefaultRanges()).map(r => `${r.situation}@${r.stack}`)).toEqual(catalog);
+  });
+
+  // La copia de reference-ranges.json cumple el catálogo del mock: si la API cambia uno sin el otro, falla aquí.
+  it('los rangos de referencia solo tienen manos canónicas, acciones de su situación y ninguna implícita', async () => {
+    for (const range of await api.listDefaultRanges()) {
+      const { actions } = SITUATIONS.find(s => s.key === range.situation);
+      for (const [hand, action] of Object.entries(range.hands)) {
+        const where = `${range.situation}@${range.stack} ${hand}`;
+        expect(isValidHand(hand), where).toBe(true);
+        expect(isValidAction(action, actions), `${where}: ${action}`).toBe(true);
+        expect(action, where).not.toBe(fallbackAction(actions));
+      }
+    }
   });
 
   it('sirve el rango de referencia de una combinación con seed', async () => {
-    expect(await api.getDefaultRange('btn_open', 25)).toMatchObject({ situation: 'btn_open', stack: 25, source: 'default', version: 1 });
+    expect(await api.getDefaultRange('btn_open', 25)).toMatchObject({
+      situation: 'btn_open', stack: 25, source: 'default', version: 1, hands: expect.objectContaining({ AA: 'MR_4B_C' })
+    });
   });
 
-  it.each([['nope', 25], ['btn_open', 99], ['btn_open', 20]])('404 para %s@%s (desconocida o sin seed)', async (s, st) => {
+  it.each([['nope', 25], ['btn_open', 99]])('404 para %s@%s (desconocida)', async (s, st) => {
     expect(await problemOf(api.getDefaultRange(s, st))).toEqual(P(404, 'not-found'));
+  });
+
+  it('404 para una combinación del catálogo sin seed', async () => {
+    expect(await problemOf(withoutBtnOpen20().getDefaultRange('btn_open', 20))).toEqual(P(404, 'not-found'));
   });
 });
 
@@ -140,10 +168,13 @@ describe('quiz attempts', () => {
   it.each([
     ['mano inválida', { hand: 'AAs' }, P(400, 'validation')],
     ['acción no permitida', { given: 'CHECK' }, P(400, 'validation')],
-    ['combinación desconocida', { stack: 99 }, P(404, 'not-found')],
-    ['combinación sin rango', { stack: 20 }, P(422, 'no-range')]
+    ['combinación desconocida', { stack: 99 }, P(404, 'not-found')]
   ])('POST con %s', async (_case, patch, expected) => {
     expect(await problemOf(api.recordAttempt({ ...answer, ...patch }))).toEqual(expected);
+  });
+
+  it('POST con combinación sin rango (ni de referencia ni del usuario)', async () => {
+    expect(await problemOf(withoutBtnOpen20().recordAttempt({ ...answer, stack: 20 }))).toEqual(P(422, 'no-range'));
   });
 
   it('lista del más reciente al más antiguo con paginación por cursor y filtros', async () => {

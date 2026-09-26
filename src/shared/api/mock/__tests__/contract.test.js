@@ -46,7 +46,9 @@ describe('errores del mock conformes a Problem (RFC 9457)', () => {
     ['400', () => api.putUserRange('btn_open', 25, { hands: { AAs: 'ALLIN' }, version: 1 })],
     ['404', () => api.getDefaultRange('nope', 25)],
     ['409', () => api.putUserRange('btn_open', 25, { hands: {}, version: 0 })],
-    ['422', () => api.recordAttempt({ situation: 'btn_open', stack: 20, hand: 'AA', given: 'ALLIN' })]
+    // El seed trae todas las combinaciones: el 422 necesita un mock sin el rango de btn_open@20.
+    ['422', () => createMockApi({ storage: memoryStorage(), latency: 0, defaultRanges: {} })
+      .recordAttempt({ situation: 'btn_open', stack: 20, hand: 'AA', given: 'ALLIN' })]
   ])('%s → Problem', async (_status, call) => expectValid(schema('Problem'), await problemOf(call())));
 });
 

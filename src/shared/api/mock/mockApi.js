@@ -8,7 +8,7 @@ import { isValidAction } from '../../../domain/actions';
 import { actionFor, normalizeRange } from '../../../domain/range';
 import { aggregateAttempts, progressByDay } from '../../../domain/stats';
 import { SITUATIONS } from './situations';
-import { DEFAULT_RANGES } from './defaultRanges';
+import { loadDefaultRanges } from './defaultRanges';
 
 // v2: forma de datos del contrato v0.2 (los intentos de v1 no son compatibles).
 const LS_KEY = 'spin-trainer.mock.v2';
@@ -29,18 +29,22 @@ export function memoryStorage() {
   return { getItem: k => data.get(k) ?? null, setItem: (k, v) => data.set(k, String(v)) };
 }
 
-const defaultRange = (situation, stack) => {
-  const hands = DEFAULT_RANGES[key(situation, stack)];
-  return hands ? { situation, stack: Number(stack), hands: { ...hands }, source: 'default', version: SEED_VERSION } : null;
-};
-
 /**
  * @param {object} [opts]
  * @param {{getItem, setItem}} [opts.storage] por defecto localStorage (memoria si no existe)
  * @param {number} [opts.latency] ms de latencia simulada
  * @param {() => Date} [opts.clock] reloj inyectable (tests)
+ * @param {Record<string, Record<string, string>>} [opts.defaultRanges] rangos de referencia por `situación@stack`;
+ *   por defecto los del seed, cargados al pedirlos por primera vez (tests: para probar spots sin rango)
  */
-export function createMockApi({ storage = globalThis.localStorage ?? memoryStorage(), latency = 50, clock = () => new Date() } = {}) {
+export function createMockApi({ storage = globalThis.localStorage ?? memoryStorage(), latency = 50, clock = () => new Date(),
+  defaultRanges } = {}) {
+  let reference = defaultRanges ? Promise.resolve(defaultRanges) : null;
+  const referenceRanges = () => (reference ??= loadDefaultRanges());
+  const defaultRange = (ranges, situation, stack) => {
+    const hands = ranges[key(situation, stack)];
+    return hands ? { situation, stack: Number(stack), hands: { ...hands }, source: 'default', version: SEED_VERSION } : null;
+  };
   const delay = () => (latency ? new Promise(r => setTimeout(r, latency)) : Promise.resolve());
   const load = () => {
     try { return JSON.parse(storage.getItem(LS_KEY)) ?? empty(); }
@@ -66,13 +70,14 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
 
     async listDefaultRanges() {
       await delay();
-      return SITUATIONS.flatMap(s => s.stacks.map(st => defaultRange(s.key, st))).filter(Boolean);
+      const ranges = await referenceRanges();
+      return SITUATIONS.flatMap(s => s.stacks.map(st => defaultRange(ranges, s.key, st))).filter(Boolean);
     },
 
     async getDefaultRange(situation, stack) {
       await delay();
       spot(situation, stack);
-      const range = defaultRange(situation, stack);
+      const range = defaultRange(await referenceRanges(), situation, stack);
       if (!range) throw notFound(`Sin rango de referencia para ${situation}@${stack}`);
       return range;
     },
@@ -128,8 +133,9 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
       if (!isValidHand(hand)) throw invalid(`Mano inválida: ${hand}`, [{ field: 'hand', message: 'mano inválida' }]);
       if (!isValidAction(given, s.actions)) throw invalid(`Acción no permitida en ${situation}: ${given}`, [{ field: 'given', message: 'acción no permitida' }]);
 
+      const ranges = await referenceRanges();
       const state = load();
-      const range = state.userRanges[key(situation, stack)] ?? defaultRange(situation, stack);
+      const range = state.userRanges[key(situation, stack)] ?? defaultRange(ranges, situation, stack);
       if (!range) throw noRange(`Sin rango para ${situation}@${stack}: no se puede corregir`);
       const expected = actionFor(range.hands, hand, s.actions);
       const stored = {

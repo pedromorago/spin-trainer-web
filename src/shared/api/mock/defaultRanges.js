@@ -1,11 +1,11 @@
-// Rangos default de ejemplo para el mock. Los reales se cargan del PDF en la API (Fase 3, seed Flyway).
-export const DEFAULT_RANGES = {
-  'btn_open@25': {
-    AA: 'MR_4B_C', KK: 'MR_4B_C', QQ: 'MR_4B_C', AKs: 'MR_4B_C', AKo: 'MR_4B_C',
-    JJ: 'MR_C_C', TT: 'MR_C_C', AQs: 'MR_C_C', AQo: 'MR_C_C',
-    '99': 'MR_C_F', '88': 'MR_C_F', AJs: 'MR_C_F', KQs: 'MR_C_F',
-    '77': 'MR_F_F', '66': 'MR_F_F', ATs: 'MR_F_F', KJs: 'MR_F_F', QJs: 'MR_F_F', AJo: 'MR_F_F', KQo: 'MR_F_F',
-    '55': 'L_C_C', '44': 'L_C_C', '33': 'L_C_C', '22': 'L_C_C',
-    T9s: 'L_C_F', '98s': 'L_C_F', '87s': 'L_C_F', '76s': 'L_C_F'
-  }
-};
+// Rangos de referencia del mock: los del seed de la API (Tablasmentov3.pdf). reference-ranges.json es una copia de
+// spin-trainer-api/reference-ranges.json que no se edita a mano (npm run ranges:sync / ranges:check).
+
+/** { 'btn_open@25': { AA: 'MR_4B_C', ... } }: solo las manos con acción explícita. */
+export const bySpot = ranges => Object.freeze(Object.fromEntries(ranges.map(r => [`${r.situation}@${r.stack}`, Object.freeze(r.hands)])));
+
+/**
+ * Carga perezosa: el JSON va en su propio chunk, que solo se descarga en modo mock al pedir rangos; el build http
+ * (sin mock) no lo incluye.
+ */
+export const loadDefaultRanges = () => import('./reference-ranges.json').then(m => bySpot(m.default.ranges));

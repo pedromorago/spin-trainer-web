@@ -15,7 +15,7 @@ concurrency:
 
 env:
   # Opcional: token de solo lectura sobre spin-trainer-api (el mismo secreto que usa spin-trainer-qa). Con él, spec:check
-  # compara docs/openapi.yaml con el contrato de la API; sin él, se omite y el contract test valida el mock contra la copia.
+  # y ranges:check comparan las copias con las de la API; sin él, se omiten y los tests validan el mock contra las copias.
   SIBLINGS_TOKEN: ${{ secrets.SPIN_TRAINER_REPOS_TOKEN }}
 
 defaults:
@@ -53,7 +53,9 @@ jobs:
           ref: ${{ steps.api.outputs.ref }}
           token: ${{ env.SIBLINGS_TOKEN }}
           path: spin-trainer-api
-          sparse-checkout: openapi.yaml
+          sparse-checkout: |
+            openapi.yaml
+            reference-ranges.json
           sparse-checkout-cone-mode: false
 
       - uses: actions/setup-node@v7
@@ -64,8 +66,8 @@ jobs:
 
       - run: npm ci
 
-      - name: La copia del contrato coincide con el de la API
-        run: npm run spec:check
+      - name: Las copias del contrato y de los rangos de referencia coinciden con las de la API
+        run: npm run spec:check && npm run ranges:check
 
       - name: Lint (incluye las reglas de capas)
         run: npm run lint

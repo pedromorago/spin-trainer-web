@@ -24,6 +24,7 @@ npm run test:coverage # umbral 90% en domain/ y mock
 npm run lint          # ESLint, incluye reglas de capas
 npm run build         # también build:mock
 npm run spec:check    # docs/openapi.yaml == ../spin-trainer-api/openapi.yaml
+npm run ranges:check  # mock/reference-ranges.json == ../spin-trainer-api/reference-ranges.json
 ```
 Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 
@@ -40,6 +41,8 @@ Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 - El mock (`shared/api/mock`) valida como la API y es dueño de los campos de servidor. Contrato v0.2 (ADR-0013): el servidor corrige los intentos,
   `PUT` exige `version`, stats agregadas por API y política en `domain/stats.js`. Cambiar el contrato = cambiar primero `spin-trainer-api/openapi.yaml`
   y traerlo con `npm run spec:sync` (`spec:check` detecta la divergencia); `mock/__tests__/contract.test.js` valida el mock contra la copia.
+- Rangos de referencia del mock: `mock/reference-ranges.json`, copia del seed de la API (`npm run ranges:sync`; no se edita a mano),
+  cargada con `import()` dinámico para que no entre en el build http. Los tests que necesitan un spot sin rango pasan `defaultRanges`.
 
 ## Convenciones
 - Router en *data mode* (`createBrowserRouter`, rutas lazy en `src/App.jsx`).

@@ -25,9 +25,10 @@ En modo mock no hace falta login ni API: los datos viven en memoria/localStorage
 | `npm run test:coverage` | Cobertura v8 + lcov (umbral 90%) |
 | `npm run lint` | ESLint, incluidas las reglas de capas |
 | `npm run spec:check` / `spec:sync` | Comprueba / trae la copia del contrato desde `../spin-trainer-api/openapi.yaml` |
+| `npm run ranges:check` / `ranges:sync` | Comprueba / trae la copia de los rangos de referencia (`../spin-trainer-api/reference-ranges.json`) que usa el mock |
 
-CI (`.github/workflows/ci.yml`): `spec:check`, lint, tests con cobertura y los dos builds en cada push a `main` y en cada
-PR. El `spec:check` compara con la API solo si existe el secreto `SPIN_TRAINER_REPOS_TOKEN` (repos privados); sin él se
+CI (`.github/workflows/ci.yml`): `spec:check` y `ranges:check`, lint, tests con cobertura y los dos builds en cada push a `main` y en cada
+PR. Las comprobaciones de copias comparan con la API solo si existe el secreto `SPIN_TRAINER_REPOS_TOKEN` (repos privados); sin él se
 omite. Los E2E de la web viven en spin-trainer-qa (Playwright, contra el mock y contra la API real).
 
 ## Con la API real
