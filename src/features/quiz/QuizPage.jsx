@@ -63,7 +63,7 @@ function QuizSession({ situation, stack, range, scope }) {
     const r = engine.check(hand, given);
     setResult(r);
     setSession(s => ({ correct: s.correct + (r.correct ? 1 : 0), total: s.total + 1 }));
-    record.mutate({ situation: situation.key, stack, hand, expected: r.expected, given, correct: r.correct });
+    record.mutate({ situation: situation.key, stack, hand, expected: r.expected, given });
   };
 
   const next = () => { setResult(null); setHand(engine.nextHand()); };

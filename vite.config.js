@@ -10,7 +10,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: ['src/domain/**/*.js'],
+      include: ['src/domain/**/*.js', 'src/shared/api/mock/**/*.js'],
       exclude: ['src/**/__tests__/**'],
       thresholds: { lines: 90, functions: 90, branches: 90, statements: 90 }
     }
