@@ -3,14 +3,16 @@ import { AuthContext } from './authContext';
 import { getSupabase } from './supabaseClient';
 
 const MOCK = import.meta.env.VITE_API_MODE === 'mock';
-const MOCK_USER = { id: 'mock-user', email: 'mock@local' };
+// In mock mode each email is a different user (id from the email): signing in as someone else on the same tab starts
+// from that user's own caches, as with Supabase.
+const mockUser = (email = 'mock@local') => ({ id: `mock:${email}`, email });
 
 /**
  * A single source of truth for the session across the whole app (a single Supabase subscription).
  * In mock mode there is no Supabase: it starts signed in and the login accepts any credentials.
  */
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(MOCK ? MOCK_USER : null);
+  const [user, setUser] = useState(MOCK ? mockUser() : null);
   const [loading, setLoading] = useState(!MOCK);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export function AuthProvider({ children }) {
     user,
     loading,
     signIn: MOCK
-      ? async email => { setUser({ ...MOCK_USER, email: email || MOCK_USER.email }); return { error: null }; }
+      ? async email => { setUser(mockUser(email || undefined)); return { error: null }; }
       : async (email, password) => (await getSupabase()).auth.signInWithPassword({ email, password }),
     signUp: MOCK
       ? async () => ({ error: null })

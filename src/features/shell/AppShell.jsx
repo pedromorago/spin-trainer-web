@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useSituations, useSlowRequests } from '../../shared/api/queries';
 import { useAuth } from '../../shared/auth/useAuth';
 import { useSession } from '../../shared/session/useSession';
@@ -15,6 +15,7 @@ import { ServerWakeNotice } from '../../shared/ui/ServerWakeNotice';
 export function AppShell() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { session, accuracy } = useSession();
   const situations = useSituations();
   const selection = useSituationSelection(situations.data);
@@ -26,7 +27,7 @@ export function AppShell() {
         : <Outlet context={{ situations: situations.data, selection }} />;
 
   return (
-    <Layout user={user} onSignOut={() => navigate('/logout')} score={{ accuracy, streak: session.streak, total: session.total }}
+    <Layout user={user} onSignOut={() => navigate('/logout', { state: { from: location } })} score={{ accuracy, streak: session.streak, total: session.total }}
       toolbar={situations.data?.length ? <SituationBar situations={situations.data} selection={selection} /> : null}>
       <ServerWakeNotice visible={waking} />
       {content}
