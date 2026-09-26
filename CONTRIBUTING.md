@@ -4,8 +4,9 @@ Frontend de Spin Trainer. Reglas comunes a los tres repos, resumidas aquí para 
 
 ## Reglas globales (resumen)
 - Calidad de portfolio > velocidad. Fuente de verdad: `docs/SPIN_TRAINER_PROJECT_CONTEXT.md`, `docs/ARCHITECTURE.md`, `docs/adr/*`, `docs/openapi-draft.yaml`.
-- ADRs cerrados (0001..0011); solo se reabren con fallo concreto y justificado.
+- ADRs cerrados (0001..0012); solo se reabren con fallo concreto y justificado.
 - Solo Spin & Go (3-max y HU, 16 situaciones). Del prototipo MTT 6-max se toman UI y flujos, no código ni rangos (ADR-0011).
+- Rango efectivo = personalizado si existe, si no el del PDF (`useEffectiveRange`). Solo el Explorer escribe rangos; el Builder no persiste (ADR-0012).
 - Supabase solo emite el JWT; todos los datos van por la API. Rangos default en BD (Flyway). Intentos de Quiz = eventos inmutables.
 - Sin TypeScript en este repo. Descartados: OWASP ZAP, carga, Pact, pgTAP.
 - Commits **siempre a nombre de Pedro** (autor y committer: `Pedro Morago López-Vázquez <pedromoragolv@gmail.com>`; verificar `git config user.name/user.email` antes de commitear). Conventional Commits, sin trailer de coautoría ni de atribución.
@@ -45,6 +46,8 @@ Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 - Estado que depende de (situación, stack): reiniciar con `key` en un componente hijo, no con `setState` dentro de efectos.
 - Accesibilidad: controles con rol y nombre accesible (Playwright `getByRole`/`getByLabel` primero).
   Celdas del grid: `"<mano>: <acción>"`. Confirmaciones en línea con `ConfirmBar`, no `window.confirm`.
+- Grid editable: `HandGrid onPaint` + `domain/range.js#paintHand` (fija, no alterna; `ERASE` = goma). Cambios sin guardar: `useUnsavedChanges` + `UnsavedChangesBar`.
+- Texto sobre colores de acción: `shared/theme/contrast.js#readableText` (test WCAG AA ≥ 4.5:1 para todas las acciones).
 - Selectores de test: `data-testid` en kebab-case `<feature>-<elemento>`; atributos `data-hand`, `data-action` (acción efectiva),
   `data-implicit`, `data-verdict`, `data-stack`.
 - El contrato definitivo vive en `spin-trainer-api/openapi.yaml`; `docs/openapi-draft.yaml` es solo borrador.

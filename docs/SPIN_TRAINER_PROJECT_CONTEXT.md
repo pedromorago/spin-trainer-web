@@ -23,7 +23,7 @@ Stack profesional: Java + REST Assured + JUnit 5 (backend), Playwright + TypeScr
 - Supabase = Auth (JWT) + Postgres. **Único camino de datos: la API.** Tablas en esquema `app`, no expuesto a PostgREST.
 
 ## Decisiones cerradas
-Gradle, no Maven · sin TS en producto · Supabase solo Auth · rangos default en BD (seed) · intentos de Quiz como eventos · validación contra spec en lugar de Pact · solo Spin & Go; del prototipo MTT solo UI y flujos (ADR-0011).
+Gradle, no Maven · sin TS en producto · Supabase solo Auth · rangos default en BD (seed) · intentos de Quiz como eventos · validación contra spec en lugar de Pact · solo Spin & Go; del prototipo MTT solo UI y flujos (ADR-0011) · rango efectivo = personalizado si existe; solo el Explorer lo escribe (ADR-0012).
 **Rechazado:** OWASP ZAP, herramientas de carga, Pact, pgTAP, TypeScript en producto.
 
 ## Patrones QA a replicar (de mi framework profesional)
