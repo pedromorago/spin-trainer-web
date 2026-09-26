@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { getHand, RANKS } from '../../domain/hand';
 import { ACTION_LABELS, fallbackAction } from '../../domain/actions';
 import { actionFor } from '../../domain/range';
@@ -7,6 +7,7 @@ import { readableText } from '../theme/contrast';
 import { VERDICT_STYLES } from '../theme/verdictStyles';
 import { theme } from '../theme/theme';
 import { CELL_GAP, cellFontSize, gridCellSize } from './gridSize';
+import { useElementWidth } from './useElementWidth';
 
 /**
  * Grid 13x13. Solo presenta. Pinta la acción EFECTIVA de cada mano (domain/range#actionFor):
@@ -21,7 +22,7 @@ import { CELL_GAP, cellFontSize, gridCellSize } from './gridSize';
  */
 export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto', showLabels = true,
   highlight = null, verdicts = null, label = 'Rango 13×13' }) {
-  const [width, wrapperRef] = useAvailableWidth(cellSize === 'auto');
+  const [width, wrapperRef] = useElementWidth(cellSize === 'auto');
   const size = cellSize === 'auto' ? (width ? gridCellSize(width) : 42) : cellSize;
   const stroke = useStroke(onPaint);
   const implicit = fallbackAction(actions);
@@ -94,19 +95,6 @@ export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto'
       </div>
     </div>
   );
-}
-
-/** Ancho disponible del contenedor (ResizeObserver). Solo se mide si `enabled`. */
-function useAvailableWidth(enabled) {
-  const ref = useRef(null);
-  const [width, setWidth] = useState(null);
-  useEffect(() => {
-    if (!enabled || !ref.current || typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [enabled]);
-  return [width, ref];
 }
 
 /**
