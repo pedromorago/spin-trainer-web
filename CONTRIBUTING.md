@@ -66,3 +66,5 @@ Before committing: `npm run lint && npm test && npm run build` green.
   crosshair/tooltip also by keyboard, plus a table view. Colors `theme.colors.chart*`, validated with the dataviz palette validator
   against the dark surface (L 0.48–0.67, ≥ 3:1); text never takes the series color.
 - The contract lives in `spin-trainer-api/openapi.yaml`; `docs/openapi.yaml` is a copy that is not edited by hand.
+- Production headers live in `vercel.json` (ADR-0016): the CSP allows no inline scripts or `<style>` elements (React's
+  `style` props are fine) and only connects to the API and Supabase. The QA E2E suite serves the build with those headers.
