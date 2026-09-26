@@ -3,7 +3,8 @@ import { getAccessToken } from '../auth/supabaseClient';
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
 const UNREACHABLE = { title: 'Sin conexión', detail: 'No se ha podido conectar con el servidor.' };
-const NOT_THE_API = { title: 'Servidor no disponible', detail: 'El servidor todavía no responde; se reintenta solo.' };
+// Not "it retries by itself": the queries give up after a while (retry.js) and the message stays on screen.
+const NOT_THE_API = { title: 'Servidor no disponible', detail: 'El servidor todavía no responde.' };
 
 async function request(method, path, body) {
   const token = await getAccessToken();

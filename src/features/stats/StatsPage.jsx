@@ -85,7 +85,8 @@ export function StatsPage() {
                 </div>
               </div>
               {progress.isLoading ? <Loading /> : progress.error ? <ErrorBox error={progress.error} /> : (
-                <ProgressChart series={dailySeries(progress.data, { days, today: todayIn(TZ) })} stale={progress.isPlaceholderData} />
+                <ProgressChart series={dailySeries(progress.data.rows, { days: progress.data.days, today: todayIn(TZ) })}
+                  stale={progress.isPlaceholderData} />
               )}
             </div>
 

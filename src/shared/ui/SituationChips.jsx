@@ -23,8 +23,11 @@ export function SituationChips({ situations, stats, selectedKey }) {
               <span>{s.label}</span>
               <strong style={{ fontFamily: theme.font.mono }}>{st ? pct(st.accuracy) : '—'}</strong>
             </div>
-            <div role="meter" aria-label={`Precisión en ${s.label}`} aria-valuemin={0} aria-valuemax={100}
-              aria-valuenow={st ? Math.round(st.accuracy * 100) : 0}
+            {/* Without attempts there is no value to measure (not 0 %): the empty track is decoration. */}
+            <div {...(st
+              ? { role: 'meter', 'aria-label': `Precisión en ${s.label}`, 'aria-valuemin': 0, 'aria-valuemax': 100,
+                'aria-valuenow': Math.round(st.accuracy * 100) }
+              : { 'aria-hidden': true })}
               style={{ height: 6, marginTop: 6, borderRadius: theme.radius.pill, background: theme.colors.accentSoft, overflow: 'hidden' }}>
               <div style={{ width: st ? `${st.accuracy * 100}%` : 0, height: '100%', background: theme.colors.chartAccent }} />
             </div>

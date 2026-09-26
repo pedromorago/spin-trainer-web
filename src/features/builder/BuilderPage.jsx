@@ -26,7 +26,7 @@ export function BuilderPage() {
   const [pickedBrush, setPickedBrush] = useState(null);
 
   if (effective.isLoading) return <Loading />;
-  if (effective.error) return <ErrorBox error={effective.error} />;
+  if (effective.error) return <ErrorBox error={effective.error} onRetry={effective.refetch} />;
 
   const toSpot = combo => {
     const range = effective.ranges.get(comboKey(combo));

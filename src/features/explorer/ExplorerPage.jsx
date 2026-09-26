@@ -36,7 +36,9 @@ export function ExplorerPage() {
 function RangeWorkbench({ situation, stack }) {
   const effective = useEffectiveRange(situation.key, stack);
   if (effective.isLoading) return <Loading />;
-  if (!effective.range && effective.error) return <ErrorBox error={effective.error} />;
+  // Also when only the custom ranges fail: showing the PDF one instead would hide the user's range (and saving over
+  // it with version 0 would end in a conflict).
+  if (effective.error) return <ErrorBox error={effective.error} onRetry={effective.refetch} />;
   return (
     <RangeEditor situation={situation} stack={stack} saved={effective.userRange} reference={effective.defaultRange}
       onReload={effective.refetchUserRange} />
@@ -66,6 +68,8 @@ function RangeEditor({ situation, stack, saved, reference, onReload }) {
   const busy = save.isPending || remove.isPending;
 
   const paint = hand => {
+    // While saving or deleting the grid is frozen: the save's success clears the draft, and it would take these edits.
+    if (busy) return;
     setCopyStatus(null);
     setPending(p => {
       const current = p?.hands ?? base;

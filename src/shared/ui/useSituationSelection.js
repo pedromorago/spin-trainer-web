@@ -13,12 +13,17 @@ export function useSituationSelection(situations = []) {
   const situationKey = resolved?.situationKey ?? null;
   const stack = resolved?.stack ?? null;
 
-  const update = (key, st) => setParams(prev => {
-    const next = new URLSearchParams(prev);
-    next.set('s', key);
-    next.set('stack', String(st));
-    return next;
-  }, { replace: true });
+  const update = (key, st) => {
+    // Choosing what is already selected changes nothing, not even the URL: without ?s=&stack= (the defaults) writing
+    // them would count as a navigation and trip the unsaved-changes guard.
+    if (key === situationKey && st === stack) return;
+    setParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('s', key);
+      next.set('stack', String(st));
+      return next;
+    }, { replace: true });
+  };
 
   return {
     situationKey,

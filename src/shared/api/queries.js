@@ -32,6 +32,9 @@ export function useUserRanges() {
   return useQuery({ queryKey: keys.userRanges, queryFn: api.listUserRanges });
 }
 
+// Only a list that could not be loaded is an error: if a background refetch fails, the loaded data stays on screen.
+const loadError = query => (query.data === undefined ? query.error : null) ?? null;
+
 /**
  * Range used for training (ADR-0012): the custom one if it exists; otherwise, the reference one (PDF).
  * Exposes both for whoever needs to tell them apart (badges and the Explorer's Reset).
@@ -48,8 +51,9 @@ export function useEffectiveRange(situation, stack) {
     defaultRange,
     userRange,
     isLoading: defaults.isLoading || users.isLoading,
-    error: defaults.error ?? users.error ?? null,
-    refetchUserRange: users.refetch
+    error: loadError(defaults) ?? loadError(users),
+    refetchUserRange: users.refetch,
+    refetch: () => Promise.all([defaults.refetch(), users.refetch()])
   };
 }
 
@@ -64,7 +68,8 @@ export function useEffectiveRanges() {
   return {
     ranges,
     isLoading: defaults.isLoading || users.isLoading,
-    error: defaults.error ?? users.error ?? null
+    error: loadError(defaults) ?? loadError(users),
+    refetch: () => Promise.all([defaults.refetch(), users.refetch()])
   };
 }
 
@@ -120,11 +125,16 @@ export function useHandStats(filters = {}) {
 }
 
 /**
- * Attempts and correct answers per day (only days with activity). When the period changes it keeps the previous data
- * (`isPlaceholderData`) so the chart does not flicker while reloading.
+ * Attempts and correct answers per day (only days with activity), as `{ days, rows }`. When the period changes it keeps
+ * the previous data (`isPlaceholderData`) so the chart does not flicker while reloading; `days` is the period of those
+ * rows, not the one being loaded, so the chart keeps its own axis meanwhile.
  */
 export function useProgress({ days = 30, tz = 'UTC' } = {}) {
-  return useQuery({ queryKey: keys.progress({ days, tz }), queryFn: () => api.getProgress({ days, tz }), placeholderData: keepPreviousData });
+  return useQuery({
+    queryKey: keys.progress({ days, tz }),
+    queryFn: async () => ({ days, rows: await api.getProgress({ days, tz }) }),
+    placeholderData: keepPreviousData
+  });
 }
 
 /**

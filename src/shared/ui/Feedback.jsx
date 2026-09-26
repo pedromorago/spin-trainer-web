@@ -7,11 +7,19 @@ export function Empty({ children }) {
   );
 }
 
-export function ErrorBox({ error }) {
+/** Error of a request; with `onRetry`, a button to try again (queries stop retrying on their own at some point). */
+export function ErrorBox({ error, onRetry }) {
   if (!error) return null;
   return (
-    <div style={{ padding: theme.space.md, border: `1px solid ${theme.colors.danger}`, borderRadius: theme.radius.sm,
-      color: theme.colors.danger }} data-testid="error">{error.title ?? 'Error'}: {error.message}</div>
+    <div style={{ display: 'flex', gap: theme.space.md, alignItems: 'center', flexWrap: 'wrap', padding: theme.space.md,
+      border: `1px solid ${theme.colors.danger}`, borderRadius: theme.radius.sm, color: theme.colors.danger }} data-testid="error">
+      <span>{error.title ?? 'Error'}: {error.message}</span>
+      {onRetry && (
+        <button type="button" onClick={() => onRetry()} data-testid="error-retry"
+          style={{ padding: `${theme.space.xs} ${theme.space.md}`, borderRadius: theme.radius.sm, cursor: 'pointer',
+            border: `1px solid ${theme.colors.border}`, background: 'transparent', color: theme.colors.text }}>Reintentar</button>
+      )}
+    </div>
   );
 }
 
