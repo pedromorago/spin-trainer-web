@@ -52,6 +52,12 @@ describe('httpApi (contrato v0.2)', () => {
     expect(await httpApi.deleteUserRange('btn_open', 25)).toBeNull();
   });
 
+  it('acepta JSON y Problem Details en todas las operaciones (el DELETE solo produce Problems)', async () => {
+    fetchMock.mockResolvedValueOnce(json(204));
+    await httpApi.deleteUserRange('btn_open', 25);
+    expect(lastCall().headers.Accept).toBe('application/json, application/problem+json');
+  });
+
   it('un Problem (application/problem+json) se convierte en ApiError con su tipo y estado', async () => {
     fetchMock.mockResolvedValueOnce(json(409, { type: 'urn:spin-trainer:conflict', title: 'Conflict', status: 409, detail: 'recarga' }, 'application/problem+json'));
     const err = await httpApi.putUserRange('btn_open', 25, { hands: {}, version: 1 }).catch(e => e);

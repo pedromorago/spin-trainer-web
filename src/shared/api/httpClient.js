@@ -5,7 +5,8 @@ const BASE = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
 
 async function request(method, path, body) {
   const token = await getAccessToken();
-  const headers = { Accept: 'application/json', 'X-Correlation-Id': crypto.randomUUID() };
+  // Los errores llegan como Problem Details (RFC 9457): hay que aceptarlos, o un DELETE (sin cuerpo si va bien) da 406.
+  const headers = { Accept: 'application/json, application/problem+json', 'X-Correlation-Id': crypto.randomUUID() };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
