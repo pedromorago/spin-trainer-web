@@ -37,12 +37,13 @@ Mejoras a documentar: dividir god-objects · Lombok @Builder · ThreadLocalRando
 ## Estado
 - Prototipo vanilla (single file, localStorage): funcional, uso personal.
 - Web v2: shell común (selector único con "Any", marcador de sesión) y las cuatro features del prototipo adaptadas a Spin & Go: Explorer editable (pincel, Guardar/Reset/Copiar, panel), Quiz sobre mesa (atajos, manos difíciles), Builder con veredictos por tipo y Stats con progreso diario. 222 tests Vitest (dominio, mock + conformidad con la spec, adaptador http, invariantes de color, contraste y veredictos), cobertura ≥90%, ESLint con reglas de capas. Sin desplegar.
-- API: en construcción por bloques (esqueleto, plataforma, esquema y módulos). El contrato v0.2 (ADR-0013) vive en `spin-trainer-api/openapi.yaml`; la web guarda una copia (`docs/openapi.yaml`, `npm run spec:check`) que implementa el mock.
+- API: las 11 operaciones del contrato v0.2 (ADR-0013) implementadas (situation, range, quiz, stats) con seguridad JWT, Problem Details, roles de BD con mínimos privilegios y ArchUnit. 128 tests unitarios y 80 de integración (Testcontainers, JWT reales, respuestas validadas contra la spec); cobertura de líneas ~98%. Probada de extremo a extremo con la web en modo http. Sin desplegar. El seed trae las 16 situaciones; los rangos del PDF están pendientes (roadmap 2).
+- El contrato vive en `spin-trainer-api/openapi.yaml`; la web guarda una copia (`docs/openapi.yaml`, `npm run spec:check`) que implementa el mock.
 - Suite QA: no empezada.
 
 ## Roadmap
 0. Entorno Windows 10/11 desde cero (Node LTS, Java 21, Git, Docker Desktop, IDE, gh CLI).
-1. Contrato v0.2 validado (ADR-0013) → crear spin-trainer-api (Gradle, openapi-generator, Flyway, ArchUnit, Testcontainers).
+1. ~~Contrato v0.2 validado (ADR-0013) → crear spin-trainer-api (Gradle, openapi-generator, Flyway, ArchUnit, Testcontainers).~~ Hecho.
 2. Seed de rangos del PDF (Flyway), situación por situación, validando conmigo.
 3. Conectar web a API real (`VITE_API_MODE=http`), Supabase Auth en producción.
 4. spin-trainer-qa: API tests + contrato + E2E (contra mock y contra API real) + Allure + CI.

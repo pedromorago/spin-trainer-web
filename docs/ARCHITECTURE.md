@@ -92,19 +92,44 @@ Spring Boot 4.1 sobre Java 21 (ADR-0014). Monolito modular, hexagonal por módul
 
 ```
 com.pedromorago.spintrainer
-  situation/   domain · application · adapter.in.rest · adapter.out.persistence
-  range/       (default ranges + user ranges, versionado optimista)
-  quiz/        (QuizAttempt como evento inmutable)
-  stats/       (consultas sobre attempts)
-  shared/      security (JWT resource server, JWKS Supabase), problem details, correlation id
+  situation/   catálogo (seed); en memoria tras la primera lectura
+  range/       rangos de referencia (solo lectura) y del usuario (versionado optimista); rango efectivo
+  quiz/        intentos corregidos en el servidor, eventos inmutables, paginación por cursor
+  stats/       lado de lectura de quiz: GROUP BY por mano y por día (zona IANA)
+    └─ cada módulo: domain · application (port.in, port.out, servicio) · adapter.in.rest · adapter.out.persistence
+  shared/      kernel (Hand, Stack, Action, SituationKey, UserId, DomainException) · security (JWT de Supabase)
+               · web (Problem Details, correlation id, CORS, ETag) · config (Clock)
+  api/         generado desde openapi.yaml (interfaces *Api y DTOs); no se versiona
 ```
 
-- `openapi-generator` genera interfaces `*Api` desde `openapi.yaml`; los controllers las implementan → el código no puede desviarse del contrato.
-- Errores en RFC 9457 (Problem Details, sustituye a la 7807). Tipos: `urn:spin-trainer:validation`, `unauthorized`, `not-found`, `conflict`, `no-range`.
-- `PUT /ranges/user/{situation}/{stack}` reemplaza el rango completo; `version` obligatoria (0 = crear, N = reemplazar la N) → 409 si no coincide.
-- El servidor corrige los intentos (`expected`, `correct`) contra el rango efectivo; `stats` agrega con SQL y el cliente aplica la política de estudio (ADR-0013).
-- Persistencia con `JdbcClient` y SQL explícito, sin JPA; dos roles de BD con mínimos privilegios: la inmutabilidad de los intentos la impone la base de datos (ADR-0015).
-- Actuator `/actuator/health`, logs JSON con `correlationId`.
+Reglas que comprueba ArchUnit (`ArchitectureTest`): dominio y kernel sin Spring, Jakarta, Jackson ni JDBC; `application`
+sin adaptadores ni transporte; solo `adapter.in.rest` usa el código generado y cada `@RestController` implementa una
+interfaz generada; solo `adapter.out.persistence` usa JDBC; entre módulos solo se usan `application.port.in` y el
+dominio publicado; `shared` no depende de ningún módulo; sin ciclos.
+
+- **Contrato:** `openapi-generator` genera las interfaces sin implementación por defecto: una operación sin implementar
+  no compila. Lo que el generador no traduce (múltiplos de 0,5, claves del mapa `hands`, orden de la mano, acciones de
+  la situación) lo valida el dominio; `additionalProperties: false` se cumple con `FAIL_ON_UNKNOWN_PROPERTIES`.
+- **Una regla de acción por mano:** `range/domain/RangeRules#actionFor` es el equivalente de `domain/range.js#actionFor`;
+  el servidor corrige el Quiz con ella y guarda `expected`, `rangeSource` y `rangeVersion` en cada intento.
+- **Persistencia (ADR-0015):** `JdbcClient` con SQL explícito, sin JPA. Esquema `app` migrado por Flyway con
+  numeración secuencial (esquema y seed en orden de aplicación). La base de datos rechaza datos imposibles (claves
+  foráneas a la tabla de 169 manos y a las acciones de cada situación, `CHECK (correct = (given = expected))`).
+  Dos roles: `spin_migrator` (dueño, Flyway) y `spin_app` (la API): lectura del catálogo y de los rangos de
+  referencia, escritura de los rangos del usuario y solo `INSERT` + `SELECT` en `quiz_attempt`. Los roles los crea
+  `db/bootstrap/bootstrap.sql` una vez por entorno.
+- **Concurrencia:** `PUT` de un rango es `INSERT … ON CONFLICT DO NOTHING` (versión 0) o `UPDATE … WHERE version = ?`;
+  0 filas → 409 con la versión actual. Un test con 8 escrituras simultáneas comprueba que gana exactamente una.
+- **Seguridad (ADR-0003):** resource server sin estado; firma ES256 contra el JWKS de Supabase, emisor, `aud` y
+  `role = authenticated` (los tokens `anon`/`service_role` no sirven) y `sub` UUID. CORS por configuración.
+- **Errores:** RFC 9457 en un único `@RestControllerAdvice` (también los 401): `urn:spin-trainer:validation`,
+  `unauthorized`, `not-found`, `conflict`, `no-range`, `unsupported` (405/406/415) e `internal`, con `correlationId`
+  y `errors` por campo en los 400.
+- **Caché:** catálogo y rangos de referencia con `ETag` y `Cache-Control: no-cache, private` (304 con `If-None-Match`).
+- **Observabilidad:** `X-Correlation-Id` aceptado o generado → MDC → respuesta y Problem; logs JSON (ECS) en `prod`;
+  Actuator solo `health` (liveness/readiness).
+- **Desarrollo local:** `gradlew bootTestRun` levanta la API con un Postgres de Testcontainers preparado como
+  producción y un emisor de JWT local (imprime un token); con `SUPABASE_URL` valida los tokens reales de la web.
 
 ## Contrato v0.2 (ADR-0013; `spin-trainer-api/openapi.yaml`, copia en `docs/openapi.yaml`)
 
@@ -129,10 +154,10 @@ contra los schemas del YAML (Ajv, JSON Schema 2020-12): si mock y spec divergen,
 
 | Nivel | Web | API | QA repo |
 |---|---|---|---|
-| Unit | Vitest sobre `domain/`, adaptadores mock y http (cobertura ≥90%) | JUnit 5 sobre domain/application | — |
+| Unit | Vitest sobre `domain/`, adaptadores mock y http (cobertura ≥90%) | JUnit 6 + AssertJ sobre dominio y casos de uso, sin Spring (JaCoCo: ≥90% dominio/casos de uso/kernel) | — |
 | Arquitectura | ESLint: reglas de capas en `eslint.config.js` | ArchUnit | — |
-| Integración | — | Testcontainers Postgres + Flyway | — |
-| Contrato | Mock validado contra la copia `docs/openapi.yaml` (Ajv) | — | Validación de respuestas contra `openapi.yaml` |
+| Integración | — | App completa con MockMvc, Postgres 17 de Testcontainers con los roles de producción y JWT reales contra un JWKS local | — |
+| Contrato | Mock validado contra la copia `docs/openapi.yaml` (Ajv) | Cada respuesta de los tests de integración validada contra `openapi.yaml` (estado declarado + schema) | Validación de respuestas contra `openapi.yaml` |
 | API funcional | — | — | REST Assured + Cucumber; Newman en regresión |
 | E2E | — | — | Playwright (TS), contra API real y contra mock |
 | Reporting | — | — | Allure; SonarCloud en los tres repos; GitHub Actions |
