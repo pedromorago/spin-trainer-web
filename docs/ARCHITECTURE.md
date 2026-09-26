@@ -97,7 +97,8 @@ com.pedromorago.spintrainer
   situation/   catálogo (seed); en memoria tras la primera lectura
   range/       rangos de referencia (solo lectura) y del usuario (versionado optimista); rango efectivo
   quiz/        intentos corregidos en el servidor, eventos inmutables, paginación por cursor
-  stats/       lado de lectura de quiz: GROUP BY por mano y por día (zona IANA)
+  stats/       lado de lectura de quiz: GROUP BY por mano y por día (límites de cada día calculados en java.time
+               para la zona IANA pedida; Postgres no interpreta nombres de zona)
     └─ cada módulo: domain · application (port.in, port.out, servicio) · adapter.in.rest · adapter.out.persistence
   shared/      kernel (Hand, Stack, Action, SituationKey, UserId, DomainException) · security (JWT de Supabase)
                · web (Problem Details, correlation id, CORS, ETag) · config (Clock)
@@ -111,7 +112,13 @@ dominio publicado; `shared` no depende de ningún módulo; sin ciclos.
 
 - **Contrato:** `openapi-generator` genera las interfaces sin implementación por defecto: una operación sin implementar
   no compila. Lo que el generador no traduce (múltiplos de 0,5, claves del mapa `hands`, orden de la mano, acciones de
-  la situación) lo valida el dominio; `additionalProperties: false` se cumple con `FAIL_ON_UNKNOWN_PROPERTIES`.
+  la situación) lo valida el dominio. JSON estricto (`JsonConfig`): campos desconocidos (`additionalProperties: false`),
+  coerciones (`"25"` por 25, `0.9` por 0, índices como enum) y documentos de más de 64 KB son un 400.
+- **Orden de validación:** forma de la petición (400) → existencia de la combinación (404) → reglas de negocio
+  (400 por mano, 409, 422). El mock valida primero la existencia; la diferencia solo se ve con peticiones que fallan
+  en ambas cosas a la vez.
+- **Lecturas consistentes:** un rango (versión + manos) se lee en una sola sentencia (`rango LEFT JOIN manos`), así que
+  nunca se mezclan dos escrituras y el control de versiones no puede aceptar un rango leído a medias.
 - **Una regla de acción por mano:** `range/domain/RangeRules#actionFor` es el equivalente de `domain/range.js#actionFor`;
   el servidor corrige el Quiz con ella y guarda `expected`, `rangeSource` y `rangeVersion` en cada intento.
 - **Persistencia (ADR-0015):** `JdbcClient` con SQL explícito, sin JPA. Esquema `app` migrado por Flyway con
@@ -122,11 +129,13 @@ dominio publicado; `shared` no depende de ningún módulo; sin ciclos.
   `db/bootstrap/bootstrap.sql` una vez por entorno.
 - **Concurrencia:** `PUT` de un rango es `INSERT … ON CONFLICT DO NOTHING` (versión 0) o `UPDATE … WHERE version = ?`;
   0 filas → 409 con la versión actual. Un test con 8 escrituras simultáneas comprueba que gana exactamente una.
-- **Seguridad (ADR-0003):** resource server sin estado; firma ES256 contra el JWKS de Supabase, emisor, `aud` y
-  `role = authenticated` (los tokens `anon`/`service_role` no sirven) y `sub` UUID. CORS por configuración.
+- **Seguridad (ADR-0003):** resource server sin estado; firma ES256 contra el JWKS de Supabase, emisor, `exp`
+  obligatoria, `aud` y `role = authenticated` (los tokens `anon`/`service_role` no sirven) y `sub` UUID. CORS por
+  configuración.
 - **Errores:** RFC 9457 en un único `@RestControllerAdvice` (también los 401): `urn:spin-trainer:validation`,
-  `unauthorized`, `not-found`, `conflict`, `no-range`, `unsupported` (405/406/415) e `internal`, con `correlationId`
-  y `errors` por campo en los 400.
+  `unauthorized`, `not-found`, `conflict`, `no-range`, `unsupported` (405/406/413/415), `unavailable` (503: el JWKS de
+  Supabase no responde; no se confunde con una sesión cerrada) e `internal`, con `correlationId` y `errors` por campo
+  en los 400.
 - **Caché:** catálogo y rangos de referencia con `ETag` y `Cache-Control: no-cache, private` (304 con `If-None-Match`).
 - **Observabilidad:** `X-Correlation-Id` aceptado o generado → MDC → respuesta y Problem; logs JSON (ECS) en `prod`;
   Actuator solo `health` (liveness/readiness).
