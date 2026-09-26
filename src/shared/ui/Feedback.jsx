@@ -15,6 +15,24 @@ export function ErrorBox({ error }) {
   );
 }
 
+/** Confirmación en línea (sin window.confirm): accesible y fácil de automatizar. */
+export function ConfirmBar({ message, confirmLabel, cancelLabel = 'Cancelar', onConfirm, onCancel, testId = 'confirm' }) {
+  const btn = {
+    padding: `${theme.space.xs} ${theme.space.md}`, borderRadius: theme.radius.sm, cursor: 'pointer',
+    border: `1px solid ${theme.colors.border}`, background: 'transparent', color: theme.colors.text
+  };
+  return (
+    <div role="alertdialog" aria-label={message} data-testid={testId}
+      style={{ display: 'flex', gap: theme.space.md, alignItems: 'center', flexWrap: 'wrap', padding: theme.space.md,
+        border: `1px solid ${theme.colors.danger}`, borderRadius: theme.radius.sm }}>
+      <span>{message}</span>
+      <button style={{ ...btn, borderColor: theme.colors.danger, color: theme.colors.danger }} onClick={onConfirm}
+        data-testid={`${testId}-yes`}>{confirmLabel}</button>
+      <button style={btn} onClick={onCancel} data-testid={`${testId}-no`} autoFocus>{cancelLabel}</button>
+    </div>
+  );
+}
+
 export function Loading() {
   return <small style={{ color: theme.colors.textMuted }} data-testid="loading">Cargando…</small>;
 }

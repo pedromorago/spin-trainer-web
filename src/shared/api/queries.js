@@ -39,6 +39,14 @@ export function useSaveUserRange(situation, stack) {
   });
 }
 
+export function useDeleteUserRange(situation, stack) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.deleteUserRange(situation, stack),
+    onSuccess: () => qc.setQueryData(keys.userRange(situation, stack), null)
+  });
+}
+
 export function useRecordAttempt() {
   const qc = useQueryClient();
   return useMutation({
