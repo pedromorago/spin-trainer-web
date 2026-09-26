@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { evaluateRange, normalizeRange, summarize } from '../range';
+import { allHands } from '../hand';
+import { boundaryHands, evaluateRange, explicitHands, normalizeRange, summarize } from '../range';
 
 const ACTIONS = ['ALLIN', '3BET_C', 'CALL', 'FOLD'];
 const LIMP_ACTIONS = ['ALLIN', 'ISO_C', 'CHECK'];
@@ -26,6 +27,29 @@ describe('summarize', () => {
 
   it('con implícita CHECK cuenta las manos no listadas como CHECK', () => {
     expect(summarize({ AA: 'ALLIN' }, LIMP_ACTIONS).CHECK.hands).toBe(168);
+  });
+});
+
+describe('explicitHands', () => {
+  it('devuelve las manos con acción distinta de la implícita, en orden de grid', () => {
+    expect(explicitHands({ KK: 'CALL', '72o': 'FOLD', AA: 'ALLIN' }, ACTIONS)).toEqual(['AA', 'KK']);
+  });
+});
+
+describe('boundaryHands', () => {
+  it('devuelve las manos implícitas adyacentes en el grid a una explícita', () => {
+    expect(boundaryHands({ AA: 'ALLIN' }, ACTIONS)).toEqual(['AKs', 'AKo']);
+    expect(boundaryHands({ KK: 'ALLIN' }, ACTIONS)).toEqual(['AKs', 'AKo', 'KQs', 'KQo']);
+  });
+
+  it('no incluye manos explícitas', () => {
+    expect(boundaryHands({ AA: 'ALLIN', AKs: 'CALL' }, ACTIONS)).toEqual(['AQs', 'AKo', 'KK']);
+  });
+
+  it('un rango vacío o completo no tiene frontera', () => {
+    expect(boundaryHands({}, ACTIONS)).toEqual([]);
+    const full = Object.fromEntries(allHands().map(h => [h, 'CALL']));
+    expect(boundaryHands(full, ACTIONS)).toEqual([]);
   });
 });
 

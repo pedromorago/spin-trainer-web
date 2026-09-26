@@ -1,5 +1,5 @@
 // range.js — un rango es { [hand]: action }. Funciones puras compartidas por Explorer, Quiz y Builder.
-import { allHands, combos, isValidHand } from './hand';
+import { allHands, combos, getCell, getHand, isValidHand } from './hand';
 import { fallbackAction, isValidAction } from './actions';
 
 /**
@@ -21,6 +21,27 @@ export function normalizeRange(hands, situationActions) {
 /** Acción efectiva de una mano (explícita o implícita). */
 export function actionFor(hands, hand, situationActions) {
   return hands?.[hand] ?? fallbackAction(situationActions);
+}
+
+/** Manos cuya acción efectiva no es la implícita, en orden de grid. */
+export function explicitHands(hands, situationActions) {
+  const implicit = fallbackAction(situationActions);
+  return allHands().filter(h => actionFor(hands, h, situationActions) !== implicit);
+}
+
+/**
+ * Frontera del rango: manos con acción implícita adyacentes (arriba, abajo, izquierda, derecha en el grid)
+ * a alguna mano con acción explícita. Son las decisiones "juego / no juego" más fáciles de fallar.
+ */
+export function boundaryHands(hands, situationActions) {
+  const explicit = new Set(explicitHands(hands, situationActions));
+  const neighbours = hand => {
+    const [r, c] = getCell(hand);
+    return [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]]
+      .filter(([nr, nc]) => nr >= 0 && nr < 13 && nc >= 0 && nc < 13)
+      .map(([nr, nc]) => getHand(nr, nc));
+  };
+  return allHands().filter(h => !explicit.has(h) && neighbours(h).some(n => explicit.has(n)));
 }
 
 /** Recuento de manos y combos por acción, incluyendo la implícita. */
