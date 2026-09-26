@@ -1,4 +1,4 @@
-// Adaptador en memoria (persistido en localStorage) con el mismo contrato que httpApi: docs/openapi-draft.yaml v0.2.
+// Adaptador en memoria (persistido en localStorage) con el mismo contrato que httpApi: docs/openapi.yaml v0.2.
 // Permite desarrollar y ejecutar E2E sin backend. Valida como la API y es dueño de los campos de servidor
 // (id, answeredAt, expected, correct, rangeSource, rangeVersion, version, updatedAt). Un test valida sus respuestas
 // contra los schemas de la spec (mock/__tests__/contract.test.js).

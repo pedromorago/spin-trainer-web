@@ -3,8 +3,8 @@
 Frontend de Spin Trainer. Reglas comunes a los tres repos, resumidas aquí para que este repo sea autosuficiente.
 
 ## Reglas globales (resumen)
-- Calidad de portfolio > velocidad. Fuente de verdad: `docs/SPIN_TRAINER_PROJECT_CONTEXT.md`, `docs/ARCHITECTURE.md`, `docs/adr/*`, `docs/openapi-draft.yaml`.
-- ADRs cerrados (0001..0013); solo se reabren con fallo concreto y justificado.
+- Calidad de portfolio > velocidad. Fuente de verdad: `docs/SPIN_TRAINER_PROJECT_CONTEXT.md`, `docs/ARCHITECTURE.md`, `docs/adr/*`, `docs/openapi.yaml` (copia del contrato de la API).
+- ADRs cerrados (0001..0015); solo se reabren con fallo concreto y justificado.
 - Solo Spin & Go (3-max y HU, 16 situaciones). Del prototipo MTT 6-max se toman UI y flujos, no código ni rangos (ADR-0011).
 - Rango efectivo = personalizado si existe, si no el del PDF (`useEffectiveRange`). Solo el Explorer escribe rangos; el Builder no persiste (ADR-0012).
 - Supabase solo emite el JWT; todos los datos van por la API. Rangos default en BD (Flyway). Intentos de Quiz = eventos inmutables.
@@ -23,6 +23,7 @@ npm test              # Vitest
 npm run test:coverage # umbral 90% en domain/ y mock
 npm run lint          # ESLint, incluye reglas de capas
 npm run build         # también build:mock
+npm run spec:check    # docs/openapi.yaml == ../spin-trainer-api/openapi.yaml
 ```
 Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 
@@ -37,8 +38,8 @@ Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 - Colores de acción solo en `shared/theme/actionColors.js`; el dominio no conoce colores. Dentro de una situación no se repiten (test).
 - Las reglas de capas las verifica `eslint.config.js`; si cambian, se cambian ahí y en `docs/ARCHITECTURE.md`.
 - El mock (`shared/api/mock`) valida como la API y es dueño de los campos de servidor. Contrato v0.2 (ADR-0013): el servidor corrige los intentos,
-  `PUT` exige `version`, stats agregadas por API y política en `domain/stats.js`. Cambiar el contrato = cambiar primero `docs/openapi-draft.yaml`;
-  `mock/__tests__/contract.test.js` valida el mock contra ese YAML.
+  `PUT` exige `version`, stats agregadas por API y política en `domain/stats.js`. Cambiar el contrato = cambiar primero `spin-trainer-api/openapi.yaml`
+  y traerlo con `npm run spec:sync` (`spec:check` detecta la divergencia); `mock/__tests__/contract.test.js` valida el mock contra la copia.
 
 ## Convenciones
 - Router en *data mode* (`createBrowserRouter`, rutas lazy en `src/App.jsx`).
@@ -59,4 +60,4 @@ Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 - Gráficos: nunca doble eje (dos medidas → dos gráficos alineados); una serie → sin leyenda, el título la nombra; etiqueta directa selectiva;
   crosshair/tooltip también por teclado y vista de tabla. Colores `theme.colors.chart*`, validados con el validador de paleta de dataviz
   contra la superficie oscura (L 0.48–0.67, ≥ 3:1); el texto nunca lleva el color de la serie.
-- El contrato definitivo vive en `spin-trainer-api/openapi.yaml`; `docs/openapi-draft.yaml` es solo borrador.
+- El contrato vive en `spin-trainer-api/openapi.yaml`; `docs/openapi.yaml` es una copia que no se edita a mano.

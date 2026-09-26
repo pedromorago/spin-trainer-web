@@ -1,4 +1,4 @@
-// Hooks de estado de servidor (TanStack Query). Un hook por operación del contrato v0.2 (docs/openapi-draft.yaml).
+// Hooks de estado de servidor (TanStack Query). Un hook por operación del contrato v0.2 (docs/openapi.yaml).
 import { useMemo } from 'react';
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { mergeEffectiveRanges } from '../../domain/range';

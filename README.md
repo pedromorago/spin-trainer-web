@@ -24,6 +24,7 @@ En modo mock no hace falta login ni API: los datos viven en memoria/localStorage
 | `npm test` | Vitest: dominio, adaptador mock, invariante de colores |
 | `npm run test:coverage` | Cobertura v8 + lcov (umbral 90%) |
 | `npm run lint` | ESLint, incluidas las reglas de capas |
+| `npm run spec:check` / `spec:sync` | Comprueba / trae la copia del contrato desde `../spin-trainer-api/openapi.yaml` |
 
 ## Con la API real
 
@@ -35,7 +36,8 @@ En modo mock no hace falta login ni API: los datos viven en memoria/localStorage
 src/domain/    reglas de negocio en JS puro, con tests
 src/shared/    api (http | mock), auth, ui, theme
 src/features/  explorer · quiz · builder · stats · auth
-docs/          contexto, arquitectura, ADRs, contrato v0.2 (OpenAPI), prompt
+docs/          contexto, arquitectura, ADRs, copia del contrato v0.2 (OpenAPI), prompt
+scripts/       sincronización del contrato con spin-trainer-api
 ```
 
 Ver `docs/ARCHITECTURE.md`.

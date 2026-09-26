@@ -5,7 +5,7 @@
 ```
  ┌──────────────┐  JWT (Supabase Auth)   ┌──────────────────────┐
  │ spin-trainer │ ─────────────────────▶ │   spin-trainer-api    │
- │    -web      │  REST /api/v1 (OpenAPI)│ Spring Boot 3 · Java 21│
+ │    -web      │  REST /api/v1 (OpenAPI)│Spring Boot 4.1·Java 21│
  │ React 19     │ ◀───────────────────── │ Gradle · Flyway        │
  └──────┬───────┘                        └──────────┬───────────┘
         │ login/signup                               │ JDBC (rol propio)
@@ -88,7 +88,7 @@ El progreso a largo plazo son los intentos persistidos en la API (ADR-0007).
 
 ## API (repo spin-trainer-api)
 
-Monolito modular, hexagonal por módulo, verificado con ArchUnit:
+Spring Boot 4.1 sobre Java 21 (ADR-0014). Monolito modular, hexagonal por módulo, verificado con ArchUnit:
 
 ```
 com.pedromorago.spintrainer
@@ -103,9 +103,10 @@ com.pedromorago.spintrainer
 - Errores en RFC 9457 (Problem Details, sustituye a la 7807). Tipos: `urn:spin-trainer:validation`, `unauthorized`, `not-found`, `conflict`, `no-range`.
 - `PUT /ranges/user/{situation}/{stack}` reemplaza el rango completo; `version` obligatoria (0 = crear, N = reemplazar la N) → 409 si no coincide.
 - El servidor corrige los intentos (`expected`, `correct`) contra el rango efectivo; `stats` agrega con SQL y el cliente aplica la política de estudio (ADR-0013).
+- Persistencia con `JdbcClient` y SQL explícito, sin JPA; dos roles de BD con mínimos privilegios: la inmutabilidad de los intentos la impone la base de datos (ADR-0015).
 - Actuator `/actuator/health`, logs JSON con `correlationId`.
 
-## Contrato v0.2 (ADR-0013; borrador en `docs/openapi-draft.yaml`, pasará a spin-trainer-api)
+## Contrato v0.2 (ADR-0013; `spin-trainer-api/openapi.yaml`, copia en `docs/openapi.yaml`)
 
 | Método | Ruta | Descripción |
 |---|---|---|
@@ -131,7 +132,7 @@ contra los schemas del YAML (Ajv, JSON Schema 2020-12): si mock y spec divergen,
 | Unit | Vitest sobre `domain/`, adaptadores mock y http (cobertura ≥90%) | JUnit 5 sobre domain/application | — |
 | Arquitectura | ESLint: reglas de capas en `eslint.config.js` | ArchUnit | — |
 | Integración | — | Testcontainers Postgres + Flyway | — |
-| Contrato | Mock validado contra `openapi-draft.yaml` (Ajv) | — | Validación de respuestas contra `openapi.yaml` |
+| Contrato | Mock validado contra la copia `docs/openapi.yaml` (Ajv) | — | Validación de respuestas contra `openapi.yaml` |
 | API funcional | — | — | REST Assured + Cucumber; Newman en regresión |
 | E2E | — | — | Playwright (TS), contra API real y contra mock |
 | Reporting | — | — | Allure; SonarCloud en los tres repos; GitHub Actions |

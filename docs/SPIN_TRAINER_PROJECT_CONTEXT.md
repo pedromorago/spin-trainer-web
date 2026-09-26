@@ -18,12 +18,12 @@ Stack profesional: Java + REST Assured + JUnit 5 (backend), Playwright + TypeScr
 
 ## Arquitectura (ver docs/ARCHITECTURE.md y docs/adr/)
 - **spin-trainer-web** (este repo): React 19, React Router 7, Vite, TanStack Query, CSS-in-JS inline, sin TypeScript. `domain/` puro + `shared/` + `features/`. Adaptador `mock` para desarrollar y correr E2E sin backend. Vercel.
-- **spin-trainer-api**: Spring Boot 3, Java 21, Gradle. Monolito modular hexagonal (situation, range, quiz, stats) verificado con ArchUnit. OpenAPI-first con openapi-generator. Flyway (esquema + seed de rangos). JWT de Supabase validado como resource server. RFC 9457 (Problem Details). Fly.io o Render.
+- **spin-trainer-api**: Spring Boot 4.1 (ADR-0014), Java 21, Gradle. Monolito modular hexagonal (situation, range, quiz, stats) verificado con ArchUnit. OpenAPI-first con openapi-generator (dueño de `openapi.yaml`). JDBC explícito con `JdbcClient` y roles de BD con mínimos privilegios (ADR-0015). Flyway (esquema + seed de rangos). JWT de Supabase validado como resource server. RFC 9457 (Problem Details). Fly.io o Render.
 - **spin-trainer-qa**: REST Assured + JUnit 5 + Cucumber, Testcontainers, Newman, Playwright + TS, validación contra la spec, Allure, SonarCloud, GitHub Actions.
 - Supabase = Auth (JWT) + Postgres. **Único camino de datos: la API.** Tablas en esquema `app`, no expuesto a PostgREST.
 
 ## Decisiones cerradas
-Gradle, no Maven · sin TS en producto · Supabase solo Auth · rangos default en BD (seed) · intentos de Quiz como eventos · validación contra spec en lugar de Pact · solo Spin & Go; del prototipo MTT solo UI y flujos (ADR-0011) · rango efectivo = personalizado si existe; solo el Explorer lo escribe (ADR-0012).
+Gradle, no Maven · sin TS en producto · Supabase solo Auth · rangos default en BD (seed) · intentos de Quiz como eventos · validación contra spec en lugar de Pact · solo Spin & Go; del prototipo MTT solo UI y flujos (ADR-0011) · rango efectivo = personalizado si existe; solo el Explorer lo escribe (ADR-0012) · Spring Boot 4.1 (ADR-0014) · JdbcClient sin JPA, intentos inmutables por permisos de BD (ADR-0015).
 **Rechazado:** OWASP ZAP, herramientas de carga, Pact, pgTAP, TypeScript en producto.
 
 ## Patrones QA a replicar (de mi framework profesional)
@@ -37,7 +37,8 @@ Mejoras a documentar: dividir god-objects · Lombok @Builder · ThreadLocalRando
 ## Estado
 - Prototipo vanilla (single file, localStorage): funcional, uso personal.
 - Web v2: shell común (selector único con "Any", marcador de sesión) y las cuatro features del prototipo adaptadas a Spin & Go: Explorer editable (pincel, Guardar/Reset/Copiar, panel), Quiz sobre mesa (atajos, manos difíciles), Builder con veredictos por tipo y Stats con progreso diario. 222 tests Vitest (dominio, mock + conformidad con la spec, adaptador http, invariantes de color, contraste y veredictos), cobertura ≥90%, ESLint con reglas de capas. Sin desplegar.
-- API y suite QA: no empezadas. Contrato v0.2 en `docs/openapi-draft.yaml` (ADR-0013), implementado por el mock.
+- API: en construcción por bloques (esqueleto, plataforma, esquema y módulos). El contrato v0.2 (ADR-0013) vive en `spin-trainer-api/openapi.yaml`; la web guarda una copia (`docs/openapi.yaml`, `npm run spec:check`) que implementa el mock.
+- Suite QA: no empezada.
 
 ## Roadmap
 0. Entorno Windows 10/11 desde cero (Node LTS, Java 21, Git, Docker Desktop, IDE, gh CLI).

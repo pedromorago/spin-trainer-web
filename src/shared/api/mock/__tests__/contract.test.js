@@ -1,4 +1,4 @@
-// El mock cumple el contrato: sus respuestas y errores validan contra los schemas de docs/openapi-draft.yaml.
+// El mock cumple el contrato: sus respuestas y errores validan contra los schemas de docs/openapi.yaml.
 // Es la versión en el frontend de la "validación contra la spec" de ADR-0008: si la spec o el mock divergen, falla.
 import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -7,7 +7,7 @@ import addFormats from 'ajv-formats';
 import { parse } from 'yaml';
 import { createMockApi, memoryStorage } from '../mockApi';
 
-const spec = parse(readFileSync(new URL('../../../../../docs/openapi-draft.yaml', import.meta.url), 'utf8'));
+const spec = parse(readFileSync(new URL('../../../../../docs/openapi.yaml', import.meta.url), 'utf8'));
 // strict: false porque el documento OpenAPI tiene claves que no son JSON Schema (paths, example, x-enum-varnames…).
 const ajv = addFormats(new Ajv2020({ strict: false, allErrors: true }));
 ajv.addSchema(spec, 'spec');
@@ -27,7 +27,7 @@ beforeAll(async () => {
   for (const given of ['ALLIN', 'MR_4B_C', 'FOLD']) await api.recordAttempt({ situation: 'btn_open', stack: 25, hand: 'AA', given });
 });
 
-describe('respuestas del mock conformes a docs/openapi-draft.yaml', () => {
+describe('respuestas del mock conformes a docs/openapi.yaml', () => {
   it('GET /situations → Situation[]', async () => expectValid(arrayOf('Situation'), await api.listSituations()));
   it('GET /ranges/default → Range[]', async () => expectValid(arrayOf('Range'), await api.listDefaultRanges()));
   it('GET /ranges/default/{s}/{st} → Range', async () => expectValid(schema('Range'), await api.getDefaultRange('btn_open', 25)));

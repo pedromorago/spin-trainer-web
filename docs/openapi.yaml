@@ -1,4 +1,4 @@
-# BORRADOR v0.2 — el fichero definitivo vivirá en spin-trainer-api. Cambios respecto a v0 y motivos: ADR-0013.
+# Copia de spin-trainer-api/openapi.yaml (fuente de verdad, ADR-0004). No editar aquí: `npm run spec:sync` la actualiza.
 openapi: 3.1.0
 info:
   title: Spin Trainer API

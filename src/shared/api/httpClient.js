@@ -23,7 +23,7 @@ const query = params => {
   return entries.length ? `?${new URLSearchParams(entries)}` : '';
 };
 
-/** Adaptador HTTP del contrato v0.2 (docs/openapi-draft.yaml). Mismo contrato que mock/mockApi.js. */
+/** Adaptador HTTP del contrato v0.2 (docs/openapi.yaml). Mismo contrato que mock/mockApi.js. */
 export const httpApi = {
   listSituations: () => request('GET', '/situations'),
   listDefaultRanges: () => request('GET', '/ranges/default'),
