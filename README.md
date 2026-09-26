@@ -1,6 +1,9 @@
 # spin-trainer-web
 
 Spin Trainer frontend: a preflop range trainer for Spin & Go (3-max and heads-up). A study tool and QA portfolio project.
+API in [spin-trainer-api](https://github.com/pedromorago/spin-trainer-api); the test strategy, what the tests found and the
+black-box suites are in [spin-trainer-qa](https://github.com/pedromorago/spin-trainer-qa). Context, architecture and
+ADRs: [`docs/`](docs/).
 
 React 19 · React Router 7 · Vite · TanStack Query · inline CSS-in-JS · Supabase Auth · Vercel. No TypeScript in product code.
 

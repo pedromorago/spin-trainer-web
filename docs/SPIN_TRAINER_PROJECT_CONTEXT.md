@@ -47,7 +47,7 @@ Improvements to document: split god-objects · Lombok @Builder · ThreadLocalRan
 2. ~~Range seed from the PDF (Flyway)~~ Done (V5); still to be validated with me situation by situation. To be decided: the PDF's "3H OS call" table (call vs open-shove thresholds in 3-max) is not in the catalog.
 3. Connect the web app to the real API (`VITE_API_MODE=http`), Supabase Auth in production.
 4. ~~spin-trainer-qa: API tests + contract + E2E (against the mock and the real API) + Allure + CI.~~ Done (CI secret still missing).
-5. Deploy for free (Vercel + Render + Supabase, ADR-0016 and ADR-0018) and a portfolio README with links to ADRs and reports. Prepared without accounts: `vercel.json`, `render.yaml`, the native image, the deploy workflow and `docs/DEPLOY.md`; the accounts, secrets and domains are pending.
+5. Deploy for free (Vercel + Render + Supabase, ADR-0016 and ADR-0018) and a portfolio README with links to ADRs and reports. The portfolio README is spin-trainer-qa's (figures, findings, techniques, system under test); the published reports need public repos (GitHub Pages). Prepared without accounts: `vercel.json`, `render.yaml`, the native image, the deploy workflow and `docs/DEPLOY.md`; the accounts, secrets and domains are pending.
 
 ## How to work with me
 Concise, technical, no marketing. Iterative: you propose, I validate, you continue. I number my requests. I review and correct.
