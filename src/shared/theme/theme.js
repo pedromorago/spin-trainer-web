@@ -7,7 +7,7 @@ export const theme = {
     accent: '#d8b35a', accentStrong: '#f0cd7a', accentSoft: 'rgba(216, 179, 90, 0.14)', onAccent: '#1b1407',
     danger: '#e5484d', success: '#30a46c',
     actionOrange: '#f76b15', actionRed: '#e5484d', actionYellow: '#f5d90a', actionPink: '#d6409f',
-    actionGreen: '#30a46c', actionBlue: '#3e63dd', actionPurple: '#8e4ec6', actionCyan: '#00a2c7',
+    actionGreen: '#30a46c', actionBlue: '#3a55c9', actionPurple: '#7b44b5', actionCyan: '#00a2c7',
     actionBrown: '#ad7f58', actionGray: '#3a3f47'
   },
   gradients: {
