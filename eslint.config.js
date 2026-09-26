@@ -5,7 +5,7 @@ import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 
-const noFeatures = { group: ['**/features/**'], message: 'shared/ y domain/ no dependen de features/.' };
+const noFeatures = { group: ['**/features/**'], message: 'shared/ and domain/ do not depend on features/.' };
 
 export default [
   { ignores: ['dist', 'coverage', 'reports', '.stryker-tmp'] },
@@ -40,14 +40,14 @@ export default [
     rules: {
       'no-restricted-imports': ['error', {
         patterns: [
-          { group: ['react', 'react-*', 'react/*', '@tanstack/*', '@supabase/*'], message: 'domain/ no importa React ni librerías de I/O.' },
-          { group: ['**/shared/**'], message: 'domain/ no depende de shared/.' },
+          { group: ['react', 'react-*', 'react/*', '@tanstack/*', '@supabase/*'], message: 'domain/ does not import React or I/O libraries.' },
+          { group: ['**/shared/**'], message: 'domain/ does not depend on shared/.' },
           noFeatures
         ]
       }],
       'no-restricted-globals': ['error',
         ...['fetch', 'XMLHttpRequest', 'localStorage', 'sessionStorage', 'indexedDB', 'window', 'document', 'navigator']
-          .map(name => ({ name, message: 'domain/ no hace I/O ni accede al navegador.' }))
+          .map(name => ({ name, message: 'domain/ does no I/O and does not touch the browser.' }))
       ]
     }
   },
@@ -64,7 +64,7 @@ export default [
     rules: {
       'no-restricted-imports': ['error', {
         patterns: [
-          { group: ['**/api', '**/api/**', '@tanstack/*'], message: 'shared/ui no importa shared/api: recibe los datos por props.' },
+          { group: ['**/api', '**/api/**', '@tanstack/*'], message: 'shared/ui does not import shared/api: it receives data through props.' },
           noFeatures
         ]
       }]
@@ -77,7 +77,7 @@ export default [
     rules: {
       'no-restricted-imports': ['error', {
         patterns: [
-          { group: ['**/api', '**/api/**', '@tanstack/*'], message: 'shared/session no accede a la API: el histórico son los intentos.' },
+          { group: ['**/api', '**/api/**', '@tanstack/*'], message: 'shared/session does not access the API: the history is the attempts.' },
           noFeatures
         ]
       }]
@@ -92,9 +92,9 @@ export default [
         patterns: [
           {
             group: ['**/shared/api/*', '!**/shared/api/index*', '!**/shared/api/queries*', '**/shared/api/*/**'],
-            message: 'features/ solo usa shared/api/index.js y shared/api/queries.js.'
+            message: 'features/ only uses shared/api/index.js and shared/api/queries.js.'
           },
-          { group: ['@tanstack/*', '@supabase/*'], message: 'features/ accede a datos y auth vía shared/.' }
+          { group: ['@tanstack/*', '@supabase/*'], message: 'features/ reaches data and auth through shared/.' }
         ]
       }]
     }
