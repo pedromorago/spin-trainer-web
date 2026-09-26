@@ -1,12 +1,12 @@
-# ADR-0004: OpenAPI-first con generación de interfaces
+# ADR-0004: OpenAPI-first with interface generation
 
-Estado: aceptada · Fecha: 2026-09-26
+Status: Accepted · Date: 2026-09-26
 
-## Contexto
-Shift Left figura en el CV. Mantener spec y código a mano se desincroniza.
+## Context
+Shift Left is on the CV. A spec and code maintained by hand drift apart.
 
-## Decisión
-`openapi.yaml` es la fuente de verdad. El plugin openapi-generator de Gradle genera las interfaces `*Api` y los DTOs; los controllers las implementan. Los tests QA validan las respuestas reales contra la misma spec.
+## Decision
+`openapi.yaml` is the source of truth. The Gradle openapi-generator plugin generates the `*Api` interfaces and the DTOs; the controllers implement them. The QA tests validate actual responses against the same spec.
 
-## Consecuencias
-Cambiar la API exige cambiar primero la spec. Los tests de contrato no necesitan schemas mantenidos a mano.
+## Consequences
+Changing the API requires changing the spec first. Contract tests need no hand-maintained schemas.

@@ -1,49 +1,49 @@
 # spin-trainer-web
 
-Frontend de Spin Trainer: entrenador de rangos preflop para Spin & Go (3-max y heads-up). Proyecto de estudio y portfolio QA.
+Spin Trainer frontend: a preflop range trainer for Spin & Go (3-max and heads-up). A study tool and QA portfolio project.
 
-React 19 · React Router 7 · Vite · TanStack Query · CSS-in-JS inline · Supabase Auth · Vercel. Sin TypeScript en producto.
+React 19 · React Router 7 · Vite · TanStack Query · inline CSS-in-JS · Supabase Auth · Vercel. No TypeScript in product code.
 
-Requisitos: Node `^22.13` o `>=24`.
+Requirements: Node `^22.13` or `>=24`.
 
-## Arrancar sin backend
+## Running without a backend
 
 ```bash
 npm install
-npm run dev:mock                # http://localhost:5173 (modo mock, funciona en Windows)
+npm run dev:mock                # http://localhost:5173 (mock mode, works on Windows)
 ```
 
-En modo mock no hace falta login ni API: los datos viven en memoria/localStorage con el mismo contrato que la API real.
+Mock mode needs no login and no API: data lives in memory/localStorage with the same contract as the real API.
 
 ## Scripts
 
-| Script | Qué hace |
+| Script | What it does |
 |---|---|
-| `npm run dev` / `dev:mock` | Servidor de desarrollo (API real / mock) |
-| `npm run build` / `build:mock` | Build de producción (API real / mock, para E2E) |
-| `npm test` | Vitest: dominio, adaptador mock, invariante de colores |
-| `npm run test:coverage` | Cobertura v8 + lcov (umbral 90%) |
-| `npm run lint` | ESLint, incluidas las reglas de capas |
-| `npm run spec:check` / `spec:sync` | Comprueba / trae la copia del contrato desde `../spin-trainer-api/openapi.yaml` |
-| `npm run ranges:check` / `ranges:sync` | Comprueba / trae la copia de los rangos de referencia (`../spin-trainer-api/reference-ranges.json`) que usa el mock |
+| `npm run dev` / `dev:mock` | Development server (real API / mock) |
+| `npm run build` / `build:mock` | Production build (real API / mock, for E2E) |
+| `npm test` | Vitest: domain, mock adapter, color invariant |
+| `npm run test:coverage` | v8 coverage + lcov (90% threshold) |
+| `npm run lint` | ESLint, including the layer rules |
+| `npm run spec:check` / `spec:sync` | Checks / pulls the contract copy from `../spin-trainer-api/openapi.yaml` |
+| `npm run ranges:check` / `ranges:sync` | Checks / pulls the copy of the reference ranges (`../spin-trainer-api/reference-ranges.json`) used by the mock |
 
-CI (`.github/workflows/ci.yml`): `spec:check` y `ranges:check`, lint, tests con cobertura y los dos builds en cada push a `main` y en cada
-PR. Las comprobaciones de copias comparan con la API solo si existe el secreto `SPIN_TRAINER_REPOS_TOKEN` (repos privados); sin él se
-omite. Los E2E de la web viven en spin-trainer-qa (Playwright, contra el mock y contra la API real).
+CI (`.github/workflows/ci.yml`): `spec:check` and `ranges:check`, lint, tests with coverage and both builds on every push to `main` and on every
+PR. The copy checks compare against the API only if the `SPIN_TRAINER_REPOS_TOKEN` secret exists (private repos); without it they are
+skipped. The web E2E tests live in spin-trainer-qa (Playwright, against the mock and against the real API).
 
-## Con la API real
+## With the real API
 
-`cp .env.example .env.local` y ajusta `VITE_API_MODE=http`, `VITE_API_BASE_URL` (spin-trainer-api) y las credenciales de Supabase Auth; después `npm run dev`.
+`cp .env.example .env.local` and set `VITE_API_MODE=http`, `VITE_API_BASE_URL` (spin-trainer-api) and the Supabase Auth credentials; then `npm run dev`.
 
-## Estructura
+## Structure
 
 ```
-src/domain/    reglas de negocio en JS puro, con tests
+src/domain/    business rules in pure JS, with tests
 src/shared/    api (http | mock), auth, ui, theme
 src/features/  explorer · quiz · builder · stats · auth
-docs/          contexto, arquitectura, ADRs, copia del contrato v0.2 (OpenAPI), prompt
-scripts/       sincronización del contrato con spin-trainer-api
+docs/          context, architecture, ADRs, copy of the v0.2 contract (OpenAPI), prompt
+scripts/       contract sync with spin-trainer-api
 .github/       CI
 ```
 
-Ver `docs/ARCHITECTURE.md`.
+See `docs/ARCHITECTURE.md`.

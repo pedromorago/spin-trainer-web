@@ -1,12 +1,12 @@
-# ADR-0005: Monolito modular hexagonal verificado con ArchUnit
+# ADR-0005: Hexagonal modular monolith verified with ArchUnit
 
-Estado: aceptada · Fecha: 2026-09-26
+Status: Accepted · Date: 2026-09-26
 
-## Contexto
-La preocupación arquitectónica central es mantener consistente la lógica de rangos entre vistas y casos de uso. Sin reglas explícitas, la lógica acaba en controllers y repositorios.
+## Context
+The central architectural concern is keeping range logic consistent across views and use cases. Without explicit rules, logic ends up in controllers and repositories.
 
-## Decisión
-Paquete por módulo de negocio (situation, range, quiz, stats) con capas domain / application / adapter. El dominio no depende de Spring ni JPA. ArchUnit impone las dependencias entre capas y entre módulos.
+## Decision
+Package by business module (situation, range, quiz, stats) with domain / application / adapter layers. The domain does not depend on Spring or JPA. ArchUnit enforces the dependencies between layers and between modules.
 
-## Consecuencias
-Más clases y mapeos. A cambio, dominio testeable en aislamiento y arquitectura verificada en CI, no solo documentada.
+## Consequences
+More classes and mappings. In return, a domain that is testable in isolation and an architecture that is verified in CI, not just documented.

@@ -19,7 +19,7 @@ const FILES = {
 const [mode, name] = process.argv.slice(2);
 const file = FILES[name];
 if (!['check', 'sync'].includes(mode) || !file) {
-  console.error('Uso: node scripts/sync.mjs <check|sync> <spec|ranges>');
+  console.error('Usage: node scripts/sync.mjs <check|sync> <spec|ranges>');
   process.exit(2);
 }
 const copy = fileURLToPath(new URL(file.copy, import.meta.url));
@@ -29,7 +29,7 @@ const lf = text => text.replace(/\r\n/g, '\n');
 const body = text => (file.header ? lf(text).split('\n').slice(1).join('\n') : lf(text));
 
 if (!existsSync(source)) {
-  console.log(`${name}: no existe ${source}; nada que comparar.`);
+  console.log(`${name}: ${source} does not exist; nothing to compare.`);
   process.exit(mode === 'sync' ? 1 : 0);
 }
 
@@ -37,10 +37,10 @@ const api = readFileSync(source, 'utf8');
 if (mode === 'sync') {
   const header = file.header ? `${readFileSync(copy, 'utf8').split(/\r?\n/, 1)[0]}\n` : '';
   writeFileSync(copy, header + body(api));
-  console.log(`${name}: ${file.copy.replace('../', '')} actualizado desde spin-trainer-api.`);
+  console.log(`${name}: ${file.copy.replace('../', '')} updated from spin-trainer-api.`);
 } else if (body(api) !== body(readFileSync(copy, 'utf8'))) {
-  console.error(`${name}: ${file.copy.replace('../', '')} difiere de spin-trainer-api. Ejecuta \`npm run ${file.sync}\`.`);
+  console.error(`${name}: ${file.copy.replace('../', '')} differs from spin-trainer-api. Run \`npm run ${file.sync}\`.`);
   process.exit(1);
 } else {
-  console.log(`${name}: ${file.copy.replace('../', '')} está al día.`);
+  console.log(`${name}: ${file.copy.replace('../', '')} is up to date.`);
 }

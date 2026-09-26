@@ -1,6 +1,6 @@
-# Arquitectura — Spin Trainer
+# Architecture — Spin Trainer
 
-## Sistema
+## System
 
 ```
  ┌──────────────┐  JWT (Supabase Auth)   ┌──────────────────────┐
@@ -8,167 +8,167 @@
  │    -web      │  REST /api/v1 (OpenAPI)│Spring Boot 4.1·Java 21│
  │ React 19     │ ◀───────────────────── │ Gradle · Flyway        │
  └──────┬───────┘                        └──────────┬───────────┘
-        │ login/signup                               │ JDBC (rol propio)
+        │ login/signup                               │ JDBC (own role)
         ▼                                            ▼
  ┌──────────────┐                        ┌──────────────────────┐
  │ Supabase Auth│  JWKS ──────────────▶  │ Postgres (Supabase)   │
- └──────────────┘  (la API valida el JWT)│ esquema `app`, no     │
-                                         │ expuesto a PostgREST  │
+ └──────────────┘  (API verifies the JWT)│ schema `app`, not     │
+                                         │ exposed to PostgREST  │
                                          └──────────────────────┘
  ┌──────────────────────────────────────────────────────────────┐
  │ spin-trainer-qa: REST Assured+Cucumber · Testcontainers ·    │
- │ Newman · Playwright(TS) · validación contra la spec · Allure  │
+ │ Newman · Playwright(TS) · validation against spec · Allure   │
  └──────────────────────────────────────────────────────────────┘
 ```
 
-Reglas:
-- **Un solo camino de datos:** el frontend solo habla con la API. Supabase emite el JWT y nada más.
-- **La API es dueña del esquema** (Flyway) y de los rangos default (seed versionado). Tablas en esquema `app`, sin permisos para los roles `anon`/`authenticated` de PostgREST.
-- **Contrato primero:** `openapi.yaml` vive en el repo de la API, se publica como artefacto y lo consumen web y QA.
+Rules:
+- **Single data path:** the frontend only talks to the API. Supabase issues the JWT and nothing else.
+- **The API owns the schema** (Flyway) and the default ranges (versioned seed). Tables in the `app` schema, with no privileges for PostgREST's `anon`/`authenticated` roles.
+- **Contract first:** `openapi.yaml` lives in the API repo, is published as an artifact and is consumed by web and QA.
 
-## Frontend (este repo)
+## Frontend (this repo)
 
 ```
 src/
-  domain/      JS puro: hand, actions, range, quiz, stats, selection, session, cards, table, random. Sin React, sin I/O. Tests Vitest.
+  domain/      pure JS: hand, actions, range, quiz, stats, selection, session, cards, table, random. No React, no I/O. Vitest tests.
   shared/
-    api/       contrato de acceso a datos: httpClient (real) | mock (memoria+localStorage); queries (TanStack Query)
-    auth/      Supabase Auth (cargado bajo demanda) + AuthProvider + RequireAuth
-    session/   marcador de la sesión de estudio (sessionStorage). No accede a la API.
-    ui/        componentes de presentación (HandGrid, ActionPalette, Layout, SituationBar, PokerTable, VerdictLegend…)
-    theme/     tokens (fondo con degradado, dorado, Bebas Neue / DM Sans / JetBrains Mono) y mapa acción→color
-  features/    una carpeta por módulo: shell, explorer, quiz, builder, stats, auth. Solo composición.
+    api/       data access contract: httpClient (real) | mock (memory+localStorage); queries (TanStack Query)
+    auth/      Supabase Auth (loaded on demand) + AuthProvider + RequireAuth
+    session/   study session scoreboard (sessionStorage). Does not access the API.
+    ui/        presentation components (HandGrid, ActionPalette, Layout, SituationBar, PokerTable, VerdictLegend…)
+    theme/     tokens (gradient background, gold, Bebas Neue / DM Sans / JetBrains Mono) and action→color map
+  features/    one folder per module: shell, explorer, quiz, builder, stats, auth. Composition only.
 ```
 
-Dependencias permitidas: `features → shared → domain`. `domain` no importa nada. `shared/ui` no importa `shared/api`.
-`features` nunca importa `httpClient` ni `mockApi`; solo `shared/api/index.js` y `queries.js`.
-Estas reglas no son solo documentación: `eslint.config.js` las verifica (`no-restricted-imports`/`no-restricted-globals` por capa), igual que ArchUnit en la API.
+Allowed dependencies: `features → shared → domain`. `domain` depends on nothing. `shared/ui` does not import `shared/api`.
+`features` never imports `httpClient` or `mockApi`; only `shared/api/index.js` and `queries.js`.
+These rules are not just documentation: `eslint.config.js` enforces them (`no-restricted-imports`/`no-restricted-globals` per layer), like ArchUnit in the API.
 
-La única implementación de "qué acción tiene esta mano" es `domain/range.js#actionFor`. Explorer, Quiz y Builder la comparten;
-el Builder evalúa comparando la acción efectiva mano a mano (`evaluateRange`), lo que elimina la clase de bug `tgtRaise`/`tgtCall` del prototipo.
+The only implementation of "which action does this hand have" is `domain/range.js#actionFor`. Explorer, Quiz and Builder share it;
+the Builder evaluates by comparing the effective action hand by hand (`evaluateRange`), which removes the prototype's `tgtRaise`/`tgtCall` class of bug.
 
-Rango efectivo (ADR-0012): el personalizado si existe, si no el del PDF, resuelto en un único hook (`useEffectiveRange`),
-derivado de las listas `GET /ranges/default` y `GET /ranges/user` que ya comparten el Quiz y el modo "Any" (ni una
-petición por combinación ni un 404 cuando aún no hay rango).
-El Explorer es el único que escribe rangos: pincel por acción + goma (`paintHand`: fija, no alterna, así que se puede pintar
-arrastrando con ratón o dedo), Guardar (`PUT` con la versión de partida → 409 si otro la cambió), Reset (`DELETE`) y Copiar
-(`exportRange`). El Builder es un ejercicio sin persistencia que se verifica contra el rango efectivo:
-la pregunta es la selección actual o una combinación al azar con rango ("Nueva pregunta"), y "Verificar" usa
-`evaluateRange`, que clasifica cada mano (correcta, acción equivocada, de más, faltó) y puntúa solo las manos jugadas
-en alguno de los dos rangos; con un rango cerrado, acertar los folds de las 169 inflaría la nota.
+Effective range (ADR-0012): the custom one if it exists, otherwise the PDF one, resolved in a single hook (`useEffectiveRange`),
+derived from the `GET /ranges/default` and `GET /ranges/user` lists already shared by the Quiz and "Any" mode (no
+request per combination and no 404 while there is no range yet).
+The Explorer is the only one that writes ranges: a brush per action + eraser (`paintHand`: sets, does not toggle, so you can paint
+by dragging with a mouse or finger), Guardar (`PUT` with the starting version → 409 if someone else changed it), Reset (`DELETE`) and Copiar
+(`exportRange`). The Builder is a non-persistent exercise checked against the effective range:
+the question is the current selection or a random combination with a range ("Nueva pregunta"), and "Verificar" uses
+`evaluateRange`, which classifies each hand (correct, wrong action, extra, missing) and scores only the hands played
+in either of the two ranges; with a tight range, getting the folds of all 169 right would inflate the score.
 
-Quiz: cada pregunta la decide `domain/quiz.js#nextQuestion` sobre los *spots* de la selección (combinaciones con rango
-efectivo; varias con "Any", así que la combinación cambia en cada pregunta). En modo "solo difíciles" elige con probabilidad
-proporcional al peso de `domain/stats.js#hardHands` (≥ 2 fallos; peso = 2·fallos − 0,5·aciertos; la mano sale del pool
-al llegar a 0), calculado sobre `GET /stats/hands`. La mesa (`shared/ui/PokerTable`) se dibuja desde `domain/table.js`
-(asientos por formato, héroe, dealer, apuestas previas desde `Situation.priorActions`) y las cartas desde `domain/cards.js`
-(palos coherentes con pareja/suited/offsuit). Atajos 1..n y Enter/→ con `useEffectEvent`. La corrección local da feedback
-inmediato; la API vuelve a corregir al registrar el intento.
+Quiz: each question is decided by `domain/quiz.js#nextQuestion` over the selection's *spots* (combinations with an effective
+range; several with "Any", so the combination changes with every question). In hard-hands mode ("solo difíciles") it picks with probability
+proportional to the weight from `domain/stats.js#hardHands` (≥ 2 misses; weight = 2·misses − 0.5·correct answers; the hand leaves the pool
+when it reaches 0), computed from `GET /stats/hands`. The table (`shared/ui/PokerTable`) is drawn from `domain/table.js`
+(seats per format, hero, dealer, prior bets from `Situation.priorActions`) and the cards from `domain/cards.js`
+(suits consistent with pair/suited/offsuit). Shortcuts 1..n and Enter/→ with `useEffectEvent`. Local grading gives immediate
+feedback; the API grades again when the attempt is recorded.
 
-Stats separa la **sesión** (local, reiniciable: precisión, mejor racha, manos) del **histórico** (API): totales, manos
-difíciles, precisión por situación (chips con medidor), top 10 de fallos por situación/stack/mano y el progreso diario
-(`GET /stats/progress` en la zona horaria del navegador, completado día a día con `domain/stats.js#dailySeries`).
-El gráfico de progreso sigue el método de visualización del proyecto: dos gráficos alineados por día (precisión como
-línea = la historia, manos jugadas como columnas en gris = el contexto) en lugar de un doble eje; colores validados con
-el validador de paleta sobre la superficie real (`theme.colors.chart*`); crosshair y tooltip con ratón y teclado;
-vista de tabla como equivalente accesible; al cambiar de periodo se mantiene el render anterior atenuado.
+Stats separates the **session** (local, resettable: accuracy, best streak, hands) from the **history** (API): totals, hard
+hands, accuracy per situation (chips with a meter), top 10 misses by situation/stack/hand and daily progress
+(`GET /stats/progress` in the browser's time zone, filled in day by day with `domain/stats.js#dailySeries`).
+The progress chart follows the project's visualization method: two charts aligned by day (accuracy as a
+line = the story, hands played as gray columns = the context) instead of a dual axis; colors validated with
+the palette validator against the actual surface (`theme.colors.chart*`); crosshair and tooltip with mouse and keyboard;
+a table view as the accessible equivalent; when the period changes, the previous render stays on screen, dimmed.
 
-`VITE_API_MODE=mock` (`npm run dev:mock`, `npm run build:mock`) permite desarrollar y correr E2E sin backend con el mismo contrato.
-El mock valida como la API (400/404/409) y es dueño de los campos de servidor (`id`, `at`, `correct`, `version`); los builds http no lo incluyen.
+`VITE_API_MODE=mock` (`npm run dev:mock`, `npm run build:mock`) makes it possible to develop and run E2E without a backend, with the same contract.
+The mock validates like the API (400/404/409) and owns the server-side fields (`id`, `at`, `correct`, `version`); http builds do not include it.
 
-Routing en *data mode* (`createBrowserRouter`): rutas lazy por feature y `useBlocker` para los cambios sin guardar.
+Routing in *data mode* (`createBrowserRouter`): lazy routes per feature and `useBlocker` for unsaved changes.
 
-`features/shell/AppShell` es el marco de todas las pestañas: carga el catálogo, pinta la cabecera con el marcador de sesión
-y un único selector de situación/stack, y pasa `{ situations, selection }` a las páginas con `useOutletContext()`.
-La selección vive en la URL (`?s=<key|any>&stack=<bb|any>`, normalizada por `domain/selection.js`): un solo estado
-compartido entre pestañas y enlaces directos a cualquier situación. Con "Any", el Quiz elige combinación en cada pregunta, el Builder
-una por pregunta y el Explorer muestra el modo aleatorio.
+`features/shell/AppShell` is the frame for every tab: it loads the catalog, renders the header with the session scoreboard
+and a single situation/stack selector, and passes `{ situations, selection }` to the pages via `useOutletContext()`.
+The selection lives in the URL (`?s=<key|any>&stack=<bb|any>`, normalized by `domain/selection.js`): a single piece of state
+shared across tabs, and direct links to any situation. With "Any", the Quiz picks a combination for each question, the Builder
+one per question, and the Explorer shows random mode.
 
-Sesión de estudio vs. progreso: la sesión (`shared/session`, reglas en `domain/session.js`) es el marcador en curso
-de las respuestas del Quiz (precisión, racha, manos), vive en `sessionStorage` y se puede reiniciar.
-El progreso a largo plazo son los intentos persistidos en la API (ADR-0007).
+Study session vs. progress: the session (`shared/session`, rules in `domain/session.js`) is the running scoreboard
+of Quiz answers (accuracy, streak, hands); it lives in `sessionStorage` and can be reset.
+Long-term progress is the attempts persisted in the API (ADR-0007).
 
-## API (repo spin-trainer-api)
+## API (spin-trainer-api repo)
 
-Spring Boot 4.1 sobre Java 21 (ADR-0014). Monolito modular, hexagonal por módulo, verificado con ArchUnit:
+Spring Boot 4.1 on Java 21 (ADR-0014). Modular monolith, hexagonal per module, verified with ArchUnit:
 
 ```
 com.pedromorago.spintrainer
-  situation/   catálogo (seed); en memoria tras la primera lectura
-  range/       rangos de referencia (solo lectura) y del usuario (versionado optimista); rango efectivo
-  quiz/        intentos corregidos en el servidor, eventos inmutables, paginación por cursor
-  stats/       lado de lectura de quiz: GROUP BY por mano y por día (límites de cada día calculados en java.time
-               para la zona IANA pedida; Postgres no interpreta nombres de zona)
-    └─ cada módulo: domain · application (port.in, port.out, servicio) · adapter.in.rest · adapter.out.persistence
-  shared/      kernel (Hand, Stack, Action, SituationKey, UserId, DomainException) · security (JWT de Supabase)
+  situation/   catalog (seed); in memory after the first read
+  range/       reference ranges (read-only) and user ranges (optimistic versioning); effective range
+  quiz/        attempts graded on the server, immutable events, cursor pagination
+  stats/       read side of quiz: GROUP BY hand and by day (each day's bounds computed in java.time
+               for the requested IANA zone; Postgres does not interpret zone names)
+    └─ each module: domain · application (port.in, port.out, service) · adapter.in.rest · adapter.out.persistence
+  shared/      kernel (Hand, Stack, Action, SituationKey, UserId, DomainException) · security (Supabase JWT)
                · web (Problem Details, correlation id, CORS, ETag) · config (Clock)
-  api/         generado desde openapi.yaml (interfaces *Api y DTOs); no se versiona
+  api/         generated from openapi.yaml (*Api interfaces and DTOs); not committed
 ```
 
-Reglas que comprueba ArchUnit (`ArchitectureTest`): dominio y kernel sin Spring, Jakarta, Jackson ni JDBC; `application`
-sin adaptadores ni transporte; solo `adapter.in.rest` usa el código generado y cada `@RestController` implementa una
-interfaz generada; solo `adapter.out.persistence` usa JDBC; entre módulos solo se usan `application.port.in` y el
-dominio publicado; `shared` no depende de ningún módulo; sin ciclos.
+Rules checked by ArchUnit (`ArchitectureTest`): domain and kernel free of Spring, Jakarta, Jackson and JDBC; `application`
+free of adapters and transport; only `adapter.in.rest` uses the generated code and every `@RestController` implements a
+generated interface; only `adapter.out.persistence` uses JDBC; across modules only `application.port.in` and the
+published domain are used; `shared` depends on no module; no cycles.
 
-- **Contrato:** `openapi-generator` genera las interfaces sin implementación por defecto: una operación sin implementar
-  no compila. Lo que el generador no traduce (múltiplos de 0,5, claves del mapa `hands`, orden de la mano, acciones de
-  la situación) lo valida el dominio. JSON estricto (`JsonConfig`): campos desconocidos (`additionalProperties: false`),
-  coerciones (`"25"` por 25, `0.9` por 0, índices como enum) y documentos de más de 64 KB son un 400.
-- **Orden de validación:** forma de la petición (400) → existencia de la combinación (404) → reglas de negocio
-  (400 por mano, 409, 422). El mock valida primero la existencia; la diferencia solo se ve con peticiones que fallan
-  en ambas cosas a la vez.
-- **Lecturas consistentes:** un rango (versión + manos) se lee en una sola sentencia (`rango LEFT JOIN manos`), así que
-  nunca se mezclan dos escrituras y el control de versiones no puede aceptar un rango leído a medias.
-- **Una regla de acción por mano:** `range/domain/RangeRules#actionFor` es el equivalente de `domain/range.js#actionFor`;
-  el servidor corrige el Quiz con ella y guarda `expected`, `rangeSource` y `rangeVersion` en cada intento.
-- **Persistencia (ADR-0015):** `JdbcClient` con SQL explícito, sin JPA. Esquema `app` migrado por Flyway con
-  numeración secuencial (esquema y seed en orden de aplicación). La base de datos rechaza datos imposibles (claves
-  foráneas a la tabla de 169 manos y a las acciones de cada situación, `CHECK (correct = (given = expected))`).
-  Dos roles: `spin_migrator` (dueño, Flyway) y `spin_app` (la API): lectura del catálogo y de los rangos de
-  referencia, escritura de los rangos del usuario y solo `INSERT` + `SELECT` en `quiz_attempt`. Los roles los crea
-  `db/bootstrap/bootstrap.sql` una vez por entorno.
-- **Concurrencia:** `PUT` de un rango es `INSERT … ON CONFLICT DO NOTHING` (versión 0) o `UPDATE … WHERE version = ?`;
-  0 filas → 409 con la versión actual. Un test con 8 escrituras simultáneas comprueba que gana exactamente una.
-- **Seguridad (ADR-0003):** resource server sin estado; firma ES256 contra el JWKS de Supabase, emisor, `exp`
-  obligatoria, `aud` y `role = authenticated` (los tokens `anon`/`service_role` no sirven) y `sub` UUID. CORS por
-  configuración.
-- **Errores:** RFC 9457 en un único `@RestControllerAdvice` (también los 401): `urn:spin-trainer:validation`,
-  `unauthorized`, `not-found`, `conflict`, `no-range`, `unsupported` (405/406/413/415), `unavailable` (503: el JWKS de
-  Supabase no responde; no se confunde con una sesión cerrada) e `internal`, con `correlationId` y `errors` por campo
-  en los 400.
-- **Caché:** catálogo y rangos de referencia con `ETag` y `Cache-Control: no-cache, private` (304 con `If-None-Match`).
-- **Observabilidad:** `X-Correlation-Id` aceptado o generado → MDC → respuesta y Problem; logs JSON (ECS) en `prod`;
-  Actuator solo `health` (liveness/readiness).
-- **Desarrollo local:** `gradlew bootTestRun` levanta la API con un Postgres de Testcontainers preparado como
-  producción y un emisor de JWT local (imprime un token); con `SUPABASE_URL` valida los tokens reales de la web.
+- **Contract:** `openapi-generator` generates the interfaces without default implementations: an unimplemented operation
+  does not compile. What the generator cannot express (multiples of 0.5, keys of the `hands` map, rank order in the hand, the
+  situation's actions) is validated by the domain. Strict JSON (`JsonConfig`): unknown fields (`additionalProperties: false`),
+  coercions (`"25"` as 25, `0.9` as 0, indices as enum) and documents over 64 KB are a 400.
+- **Validation order:** request shape (400) → combination exists (404) → business rules
+  (400 per hand, 409, 422). The mock checks existence first; the difference only shows with requests that fail
+  both checks at once.
+- **Consistent reads:** a range (version + hands) is read in a single statement (`range LEFT JOIN hands`), so
+  two writes are never mixed and the version check cannot accept a half-read range.
+- **A single action rule per hand:** `range/domain/RangeRules#actionFor` is the counterpart of `domain/range.js#actionFor`;
+  the server grades the Quiz with it and stores `expected`, `rangeSource` and `rangeVersion` on every attempt.
+- **Persistence (ADR-0015):** `JdbcClient` with explicit SQL, no JPA. `app` schema migrated by Flyway with
+  sequential numbering (schema and seed in application order). The database rejects impossible data (foreign
+  keys to the 169-hand table and to each situation's actions, `CHECK (correct = (given = expected))`).
+  Two roles: `spin_migrator` (owner, Flyway) and `spin_app` (the API): reads the catalog and the reference
+  ranges, writes the user's ranges and has only `INSERT` + `SELECT` on `quiz_attempt`. The roles are created by
+  `db/bootstrap/bootstrap.sql` once per environment.
+- **Concurrency:** a range `PUT` is `INSERT … ON CONFLICT DO NOTHING` (version 0) or `UPDATE … WHERE version = ?`;
+  0 rows → 409 with the current version. A test with 8 simultaneous writes checks that exactly one wins.
+- **Security (ADR-0003):** stateless resource server; ES256 signature against Supabase's JWKS, issuer, mandatory
+  `exp`, `aud` and `role = authenticated` (`anon`/`service_role` tokens are rejected) and a UUID `sub`. CORS via
+  configuration.
+- **Errors:** RFC 9457 in a single `@RestControllerAdvice` (401s included): `urn:spin-trainer:validation`,
+  `unauthorized`, `not-found`, `conflict`, `no-range`, `unsupported` (405/406/413/415), `unavailable` (503: Supabase's
+  JWKS is not responding; not to be confused with a signed-out session) and `internal`, with `correlationId` and per-field
+  `errors` on 400s.
+- **Caching:** catalog and reference ranges with `ETag` and `Cache-Control: no-cache, private` (304 with `If-None-Match`).
+- **Observability:** `X-Correlation-Id` accepted or generated → MDC → response and Problem; JSON logs (ECS) in `prod`;
+  Actuator exposes only `health` (liveness/readiness).
+- **Local development:** `gradlew bootTestRun` starts the API with a Testcontainers Postgres set up like
+  production and a local JWT issuer (it prints a token); with `SUPABASE_URL` it validates the web app's real tokens.
 
-## Contrato v0.2 (ADR-0013; `spin-trainer-api/openapi.yaml`, copia en `docs/openapi.yaml`)
+## Contract v0.2 (ADR-0013; `spin-trainer-api/openapi.yaml`, copy in `docs/openapi.yaml`)
 
-| Método | Ruta | Descripción |
+| Method | Path | Description |
 |---|---|---|
-| GET | /situations | Catálogo de 16 situaciones: stacks, acciones, héroe, acciones previas, notas |
-| GET | /ranges/default | Todos los rangos de referencia con seed |
-| GET | /ranges/default/{situation}/{stack} | Rango de referencia (404 si no hay seed) |
-| GET | /ranges/user | Todos los rangos personalizados del usuario |
-| GET | /ranges/user/{situation}/{stack} | Rango personalizado (404 si no existe) |
-| PUT | /ranges/user/{situation}/{stack} | Crea (201) o reemplaza (200) con `version` obligatoria → 409 |
-| DELETE | /ranges/user/{situation}/{stack} | Borra el personalizado (204, idempotente) |
-| POST | /quiz/attempts | Registra `{situation, stack, hand, given}`; el servidor corrige (422 si no hay rango) |
-| GET | /quiz/attempts | Intentos, del más reciente al más antiguo, paginados por cursor |
-| GET | /stats/hands | Intentos/aciertos por situación, stack y mano |
-| GET | /stats/progress | Intentos/aciertos por día (zona horaria IANA) |
+| GET | /situations | Catalog of the 16 situations: stacks, actions, hero, prior actions, notes |
+| GET | /ranges/default | All seeded reference ranges |
+| GET | /ranges/default/{situation}/{stack} | Reference range (404 if not seeded) |
+| GET | /ranges/user | All of the user's custom ranges |
+| GET | /ranges/user/{situation}/{stack} | Custom range (404 if it does not exist) |
+| PUT | /ranges/user/{situation}/{stack} | Creates (201) or replaces (200) with mandatory `version` → 409 |
+| DELETE | /ranges/user/{situation}/{stack} | Deletes the custom range (204, idempotent) |
+| POST | /quiz/attempts | Records `{situation, stack, hand, given}`; the server grades it (422 if there is no range) |
+| GET | /quiz/attempts | Attempts, newest first, cursor-paginated |
+| GET | /stats/hands | Attempts/correct answers by situation, stack and hand |
+| GET | /stats/progress | Attempts/correct answers per day (IANA time zone) |
 
-El mock (`shared/api/mock`) implementa este contrato y `mock/__tests__/contract.test.js` valida sus respuestas y errores
-contra los schemas del YAML (Ajv, JSON Schema 2020-12): si mock y spec divergen, falla un test.
+The mock (`shared/api/mock`) implements this contract and `mock/__tests__/contract.test.js` validates its responses and errors
+against the YAML's schemas (Ajv, JSON Schema 2020-12): if mock and spec diverge, a test fails.
 
 ## Testing
 
-| Nivel | Web | API | QA repo |
+| Level | Web | API | QA repo |
 |---|---|---|---|
-| Unit | Vitest sobre `domain/`, adaptadores mock y http (cobertura ≥90%) | JUnit 6 + AssertJ sobre dominio y casos de uso, sin Spring (JaCoCo: ≥90% dominio/casos de uso/kernel) | — |
-| Arquitectura | ESLint: reglas de capas en `eslint.config.js` | ArchUnit | — |
-| Integración | — | App completa con MockMvc, Postgres 17 de Testcontainers con los roles de producción y JWT reales contra un JWKS local | — |
-| Contrato | Mock validado contra la copia `docs/openapi.yaml` (Ajv) | Cada respuesta de los tests de integración validada contra `openapi.yaml` (estado declarado + schema) | Cada respuesta de REST Assured y Cucumber validada contra una copia fijada de la spec (estado, Content-Type, schema y formatos) |
-| API funcional | — | — | Caja negra contra la imagen Docker de la API: REST Assured + JUnit (particiones, límites, tabla de decisión, estados), Cucumber en español y Newman |
-| E2E | — | — | Playwright (TS): las mismas specs contra el mock y contra la API real; axe (WCAG 2.2 AA) |
-| Reporting | — | — | Allure combinado (API, Newman, E2E) en GitHub Actions; SonarCloud en los tres repos (pendiente) |
+| Unit | Vitest on `domain/`, mock and http adapters (coverage ≥90%) | JUnit 6 + AssertJ on domain and use cases, without Spring (JaCoCo: ≥90% domain/use cases/kernel) | — |
+| Architecture | ESLint: layer rules in `eslint.config.js` | ArchUnit | — |
+| Integration | — | Full app with MockMvc, Testcontainers Postgres 17 with the production roles and real JWTs against a local JWKS | — |
+| Contract | Mock validated against the `docs/openapi.yaml` copy (Ajv) | Every integration test response validated against `openapi.yaml` (declared status + schema) | Every REST Assured and Cucumber response validated against a pinned copy of the spec (status, Content-Type, schema and formats) |
+| Functional API | — | — | Black-box against the API's Docker image: REST Assured + JUnit (partitions, boundary values, decision table, states), Cucumber in Spanish and Newman |
+| E2E | — | — | Playwright (TS): the same specs against the mock and against the real API; axe (WCAG 2.2 AA) |
+| Reporting | — | — | Combined Allure (API, Newman, E2E) in GitHub Actions; SonarCloud in all three repos (pending) |

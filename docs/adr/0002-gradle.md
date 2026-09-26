@@ -1,12 +1,12 @@
-# ADR-0002: Gradle en lugar de Maven
+# ADR-0002: Gradle instead of Maven
 
-Estado: aceptada · Fecha: 2026-09-26
+Status: Accepted · Date: 2026-09-26
 
-## Contexto
-El stack profesional de Pedro usa Gradle. Una primera propuesta recomendaba Maven.
+## Context
+Pedro's professional stack uses Gradle. An initial proposal recommended Maven.
 
-## Decisión
-Gradle (Kotlin DSL) para la API y la suite QA Java.
+## Decision
+Gradle (Kotlin DSL) for the API and the Java QA suite.
 
-## Consecuencias
-Consistencia con el entorno de trabajo real; toolchains de Java 21 y version catalogs para las dependencias.
+## Consequences
+Consistency with the real working environment; Java 21 toolchains and version catalogs for dependencies.
