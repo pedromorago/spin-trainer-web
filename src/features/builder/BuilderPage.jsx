@@ -1,21 +1,23 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useBeforeUnload, useBlocker, useOutletContext } from 'react-router';
-import { evaluateRange, explicitHands, normalizeRange, summarize } from '../../domain/range';
+import { useMemo, useState } from 'react';
+import { useOutletContext } from 'react-router';
+import { ERASE, evaluateRange, explicitHands, paintHand, summarize } from '../../domain/range';
 import { ACTION_LABELS } from '../../domain/actions';
 import { comboKey } from '../../domain/selection';
-import { useDefaultRange, useDeleteUserRange, useSaveUserRange, useUserRange } from '../../shared/api/queries';
+import { useEffectiveRange } from '../../shared/api/queries';
 import { HandGrid } from '../../shared/ui/HandGrid';
 import { ActionPalette } from '../../shared/ui/ActionPalette';
 import { ComboPicker } from '../../shared/ui/ComboPicker';
-import { ConfirmBar, ErrorBox, Loading } from '../../shared/ui/Feedback';
+import { Empty, ErrorBox, Loading } from '../../shared/ui/Feedback';
 import { layout } from '../../shared/ui/styles';
 import { theme } from '../../shared/theme/theme';
 
-const NO_HANDS = Object.freeze({});
-
+/**
+ * Builder: ejercicio de autoevaluación. Construyes el rango de memoria y lo verificas contra el rango efectivo
+ * (custom si existe, si no el del PDF; ADR-0012). No persiste nada: guardar rangos es cosa del Explorer.
+ */
 export function BuilderPage() {
   const { situations, selection } = useOutletContext();
-  const [pickedAction, setPickedAction] = useState(null);
+  const [pickedBrush, setPickedBrush] = useState(null);
 
   return (
     <div style={layout.page}>
@@ -25,104 +27,61 @@ export function BuilderPage() {
         situations={situations} combos={selection.combos} random={selection.isAny}>
         {(combo, situation) => (
           <BuilderCombo key={comboKey(combo)} situation={situation} stack={combo.stack}
-            pickedAction={pickedAction} onPickAction={setPickedAction} />
+            pickedBrush={pickedBrush} onPickBrush={setPickedBrush} />
         )}
       </ComboPicker>
     </div>
   );
 }
 
-function BuilderCombo({ situation, stack, pickedAction, onPickAction }) {
-  const def = useDefaultRange(situation.key, stack);
-  const userRange = useUserRange(situation.key, stack);
-  // Acción de pincel derivada: se conserva entre situaciones si sigue siendo válida.
-  const paintAction = situation.actions.includes(pickedAction) ? pickedAction : situation.actions[0];
+function BuilderCombo({ situation, stack, pickedBrush, onPickBrush }) {
+  const effective = useEffectiveRange(situation.key, stack);
+  // Pincel derivado: se conserva entre situaciones si sigue siendo válido (la goma siempre lo es).
+  const brush = pickedBrush === ERASE || situation.actions.includes(pickedBrush) ? pickedBrush : situation.actions[0];
+
+  if (effective.isLoading) return <Loading />;
+  if (!effective.range && effective.error) return <ErrorBox error={effective.error} />;
+  const target = effective.range?.hands ?? {};
+  if (explicitHands(target, situation.actions).length === 0) {
+    return <Empty>Rango sin cargar para esta situación / stack: no hay nada con qué comparar.</Empty>;
+  }
 
   return (
     <>
-      <ActionPalette actions={situation.actions} selected={paintAction} onSelect={onPickAction} />
-      <ErrorBox error={userRange.error} />
-      {userRange.isLoading ? <Loading /> : (
-        <RangeEditor situation={situation} stack={stack} saved={userRange.data} target={def.data?.hands ?? {}}
-          paintAction={paintAction} onReload={() => userRange.refetch()} />
+      {effective.userRange && (
+        <small style={{ color: theme.colors.accent }} data-testid="builder-custom-target">
+          Se verifica contra tu rango personalizado (guardado en el Explorer).
+        </small>
       )}
+      <ActionPalette actions={situation.actions} selected={brush} onSelect={onPickBrush} eraser />
+      <BuilderExercise situation={situation} target={target} brush={brush} />
     </>
   );
 }
 
-function RangeEditor({ situation, stack, saved, target, paintAction, onReload }) {
-  const save = useSaveUserRange(situation.key, stack);
-  const remove = useDeleteUserRange(situation.key, stack);
-  // Borrador solo mientras hay cambios sin guardar. Recuerda la versión sobre la que se empezó a editar:
-  // un refetch en segundo plano no pisa el borrador y el PUT sigue detectando el conflicto (409).
-  const [pending, setPending] = useState(null); // { hands, baseVersion } | null
+function BuilderExercise({ situation, target, brush }) {
+  const [draft, setDraft] = useState({});
   const [evaluation, setEvaluation] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const dirty = pending !== null;
-  const hands = pending?.hands ?? saved?.hands ?? NO_HANDS;
+  const actions = situation.actions;
+  const summary = useMemo(() => summarize(draft, actions), [draft, actions]);
 
-  // Cambios sin guardar: bloquea navegación interna (incluido cambiar situación/stack, que vive en la URL) y cierre de pestaña.
-  const blocker = useBlocker(({ currentLocation: a, nextLocation: b }) => dirty && (a.pathname !== b.pathname || a.search !== b.search));
-  useBeforeUnload(useCallback(e => { if (dirty) e.preventDefault(); }, [dirty]));
-
-  const edit = next => {
-    setPending(p => ({ hands: next, baseVersion: p ? p.baseVersion : saved?.version }));
+  const paint = hand => {
+    setDraft(d => paintHand(d, hand, brush, actions));
     setEvaluation(null);
   };
-  const paint = hand => {
-    const next = { ...hands };
-    if (next[hand] === paintAction) delete next[hand]; else next[hand] = paintAction;
-    edit(next);
-  };
-  const persist = () => save.mutate(
-    { hands: normalizeRange(hands, situation.actions), version: pending.baseVersion },
-    { onSuccess: () => setPending(null) }
-  );
-  const discardAndReload = () => { setPending(null); save.reset(); onReload(); };
-  const deleteSaved = () => {
-    setConfirmDelete(false);
-    remove.mutate(undefined, { onSuccess: () => { setPending(null); setEvaluation(null); } });
-  };
-
-  const summary = useMemo(() => summarize(hands, situation.actions), [hands, situation.actions]);
-  const canCompare = explicitHands(target, situation.actions).length > 0;
-  const busy = save.isPending || remove.isPending;
 
   return (
     <>
-      {blocker.state === 'blocked' && (
-        <ConfirmBar testId="builder-unsaved" message="Tienes cambios sin guardar." confirmLabel="Descartar cambios"
-          cancelLabel="Seguir editando" onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
-      )}
-      <ErrorBox error={save.error ?? remove.error} />
-      {save.error?.isConflict && (
-        <button style={{ ...layout.secondary, alignSelf: 'flex-start' }} onClick={discardAndReload} data-testid="builder-reload">
-          Descartar mis cambios y cargar la versión guardada
-        </button>
-      )}
-      <HandGrid assignments={hands} actions={situation.actions} onCellClick={paint} verdicts={evaluation?.verdicts} />
+      <HandGrid assignments={draft} actions={actions} onPaint={paint} verdicts={evaluation?.verdicts} label="Tu rango" />
       <div style={layout.mono} data-testid="builder-summary">
         {Object.entries(summary).map(([a, s]) => `${ACTION_LABELS[a] ?? a}: ${s.hands}`).join(' · ')}
-        {saved && ` · guardado v${saved.version}`}{dirty && ' · sin guardar'}
       </div>
       <div style={layout.row}>
-        <button style={layout.primary} onClick={persist} disabled={!dirty || busy} data-testid="builder-save">
-          {save.isPending ? 'Guardando…' : 'Guardar rango'}
-        </button>
-        <button style={layout.secondary} onClick={() => setEvaluation(evaluateRange(target, hands, situation.actions))}
-          disabled={!canCompare} data-testid="builder-evaluate"
-          title={canCompare ? '' : 'Sin rango default cargado para comparar'}>Comparar con el rango correcto</button>
-        <button style={layout.secondary} onClick={() => edit({})} data-testid="builder-clear">Limpiar</button>
-        {saved && (
-          <button style={layout.secondary} onClick={() => setConfirmDelete(true)} disabled={busy} data-testid="builder-delete">
-            Borrar rango guardado
-          </button>
-        )}
+        <button type="button" style={layout.primary} onClick={() => setEvaluation(evaluateRange(target, draft, actions))}
+          data-testid="builder-evaluate">Verificar</button>
+        <button type="button" style={layout.secondary} onClick={() => { setDraft({}); setEvaluation(null); }}
+          data-testid="builder-clear">Limpiar</button>
       </div>
-      {confirmDelete && (
-        <ConfirmBar testId="builder-delete-confirm" message="¿Borrar tu rango guardado para esta situación y stack?"
-          confirmLabel="Borrar" onConfirm={deleteSaved} onCancel={() => setConfirmDelete(false)} />
-      )}
       {evaluation && (
         <div data-testid="builder-evaluation" style={{ padding: theme.space.md, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.sm }}>
           <strong>{evaluation.correct} / {evaluation.total}</strong> manos correctas ({Math.round(evaluation.accuracy * 100)}%)

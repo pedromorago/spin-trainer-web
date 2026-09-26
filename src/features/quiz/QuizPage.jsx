@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router';
 import { createQuizEngine, quizPool } from '../../domain/quiz';
 import { ACTION_LABELS } from '../../domain/actions';
 import { comboKey } from '../../domain/selection';
-import { useDefaultRange, useRecordAttempt } from '../../shared/api/queries';
+import { useEffectiveRange, useRecordAttempt } from '../../shared/api/queries';
 import { useSession } from '../../shared/session/useSession';
 import { ActionPalette } from '../../shared/ui/ActionPalette';
 import { ComboPicker } from '../../shared/ui/ComboPicker';
@@ -40,15 +40,25 @@ export function QuizPage() {
 }
 
 function QuizCombo({ situation, stack, scope }) {
-  const def = useDefaultRange(situation.key, stack);
-  if (def.isLoading) return <Loading />;
-  if (def.error) return <ErrorBox error={def.error} />;
-  const range = def.data?.hands ?? {};
+  // Rango efectivo (ADR-0012): el custom si existe, si no el del PDF.
+  const effective = useEffectiveRange(situation.key, stack);
+  if (effective.isLoading) return <Loading />;
+  if (!effective.range && effective.error) return <ErrorBox error={effective.error} />;
+  const range = effective.range?.hands ?? {};
   if (quizPool(range, situation.actions).length === 0) {
     return <Empty>Rango sin cargar para esta situación / stack: no hay nada que preguntar.</Empty>;
   }
-  // La key reinicia la ronda al cambiar el alcance (sin setState en efectos).
-  return <QuizSession key={scope} situation={situation} stack={stack} range={range} scope={scope} />;
+  return (
+    <>
+      {effective.userRange && (
+        <small style={{ color: theme.colors.accent }} data-testid="quiz-custom-range">
+          Entrenando tu rango personalizado (guardado en el Explorer).
+        </small>
+      )}
+      {/* La key reinicia la ronda al cambiar el alcance (sin setState en efectos). */}
+      <QuizSession key={scope} situation={situation} stack={stack} range={range} scope={scope} />
+    </>
+  );
 }
 
 function QuizSession({ situation, stack, range, scope }) {

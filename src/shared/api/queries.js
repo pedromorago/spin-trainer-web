@@ -31,6 +31,23 @@ export function useUserRange(situation, stack) {
   });
 }
 
+/**
+ * Rango con el que se entrena (ADR-0012): el custom del usuario si existe; si no, el default del PDF.
+ * Expone ambos para quien necesite distinguirlos (badges y Reset del Explorer).
+ */
+export function useEffectiveRange(situation, stack) {
+  const def = useDefaultRange(situation, stack);
+  const user = useUserRange(situation, stack);
+  return {
+    range: user.data ?? def.data ?? null,
+    defaultRange: def.data ?? null,
+    userRange: user.data ?? null,
+    isLoading: def.isLoading || user.isLoading,
+    error: def.error ?? user.error ?? null,
+    refetchUserRange: user.refetch
+  };
+}
+
 export function useSaveUserRange(situation, stack) {
   const qc = useQueryClient();
   return useMutation({
