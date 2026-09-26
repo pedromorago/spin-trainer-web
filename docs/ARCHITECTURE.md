@@ -168,7 +168,7 @@ contra los schemas del YAML (Ajv, JSON Schema 2020-12): si mock y spec divergen,
 | Unit | Vitest sobre `domain/`, adaptadores mock y http (cobertura ≥90%) | JUnit 6 + AssertJ sobre dominio y casos de uso, sin Spring (JaCoCo: ≥90% dominio/casos de uso/kernel) | — |
 | Arquitectura | ESLint: reglas de capas en `eslint.config.js` | ArchUnit | — |
 | Integración | — | App completa con MockMvc, Postgres 17 de Testcontainers con los roles de producción y JWT reales contra un JWKS local | — |
-| Contrato | Mock validado contra la copia `docs/openapi.yaml` (Ajv) | Cada respuesta de los tests de integración validada contra `openapi.yaml` (estado declarado + schema) | Validación de respuestas contra `openapi.yaml` |
-| API funcional | — | — | REST Assured + Cucumber; Newman en regresión |
-| E2E | — | — | Playwright (TS), contra API real y contra mock |
-| Reporting | — | — | Allure; SonarCloud en los tres repos; GitHub Actions |
+| Contrato | Mock validado contra la copia `docs/openapi.yaml` (Ajv) | Cada respuesta de los tests de integración validada contra `openapi.yaml` (estado declarado + schema) | Cada respuesta de REST Assured y Cucumber validada contra una copia fijada de la spec (estado, Content-Type, schema y formatos) |
+| API funcional | — | — | Caja negra contra la imagen Docker de la API: REST Assured + JUnit (particiones, límites, tabla de decisión, estados), Cucumber en español y Newman |
+| E2E | — | — | Playwright (TS): las mismas specs contra el mock y contra la API real; axe (WCAG 2.2 AA) |
+| Reporting | — | — | Allure combinado (API, Newman, E2E) en GitHub Actions; SonarCloud en los tres repos (pendiente) |

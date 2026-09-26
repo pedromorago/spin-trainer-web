@@ -36,17 +36,17 @@ Mejoras a documentar: dividir god-objects · Lombok @Builder · ThreadLocalRando
 
 ## Estado
 - Prototipo vanilla (single file, localStorage): funcional, uso personal.
-- Web v2: shell común (selector único con "Any", marcador de sesión) y las cuatro features del prototipo adaptadas a Spin & Go: Explorer editable (pincel, Guardar/Reset/Copiar, panel), Quiz sobre mesa (atajos, manos difíciles), Builder con veredictos por tipo y Stats con progreso diario. 222 tests Vitest (dominio, mock + conformidad con la spec, adaptador http, invariantes de color, contraste y veredictos), cobertura ≥90%, ESLint con reglas de capas. Sin desplegar.
-- API: las 11 operaciones del contrato v0.2 (ADR-0013) implementadas (situation, range, quiz, stats) con seguridad JWT, Problem Details, roles de BD con mínimos privilegios y ArchUnit. 131 tests unitarios y 90 de integración (Testcontainers, JWT reales, respuestas validadas contra la spec, formatos incluidos); cobertura de líneas ~97%. Probada de extremo a extremo con la web en modo http. Sin desplegar. El seed trae las 16 situaciones; los rangos del PDF están pendientes (roadmap 2).
+- Web v2: shell común (selector único con "Any", marcador de sesión) y las cuatro features del prototipo adaptadas a Spin & Go: Explorer editable (pincel, Guardar/Reset/Copiar, panel), Quiz sobre mesa (atajos, manos difíciles), Builder con veredictos por tipo y Stats con progreso diario. 223 tests Vitest (dominio, mock + conformidad con la spec, adaptador http, invariantes de color, contraste y veredictos), cobertura ≥90%, ESLint con reglas de capas. Sin desplegar.
+- API: las 11 operaciones del contrato v0.2 (ADR-0013) implementadas (situation, range, quiz, stats) con seguridad JWT, Problem Details, roles de BD con mínimos privilegios y ArchUnit. 131 tests unitarios y 93 de integración (Testcontainers, JWT reales, respuestas validadas contra la spec, formatos incluidos); cobertura de líneas ~97%. Probada de extremo a extremo con la web en modo http. Sin desplegar. El seed trae las 16 situaciones; los rangos del PDF están pendientes (roadmap 2).
 - El contrato vive en `spin-trainer-api/openapi.yaml`; la web guarda una copia (`docs/openapi.yaml`, `npm run spec:check`) que implementa el mock.
-- Suite QA: no empezada.
+- Suite QA (spin-trainer-qa): caja negra contra el sistema en Docker (API construida desde su repo, Postgres con los roles de producción y WireMock como emisor de JWT). 117 tests de API en JUnit y 23 escenarios de Cucumber en español, validados contra la spec; colección de Newman; 26 E2E de Playwright contra el mock (25 también contra la API real), con axe. Informe de Allure combinado y workflow de GitHub Actions (necesita el secreto `SPIN_TRAINER_REPOS_TOKEN` mientras los repos sean privados). Los E2E encontraron un 406 en el DELETE de rangos desde la web, ya corregido en API y web.
 
 ## Roadmap
 0. Entorno Windows 10/11 desde cero (Node LTS, Java 21, Git, Docker Desktop, IDE, gh CLI).
 1. ~~Contrato v0.2 validado (ADR-0013) → crear spin-trainer-api (Gradle, openapi-generator, Flyway, ArchUnit, Testcontainers).~~ Hecho.
 2. Seed de rangos del PDF (Flyway), situación por situación, validando conmigo.
 3. Conectar web a API real (`VITE_API_MODE=http`), Supabase Auth en producción.
-4. spin-trainer-qa: API tests + contrato + E2E (contra mock y contra API real) + Allure + CI.
+4. ~~spin-trainer-qa: API tests + contrato + E2E (contra mock y contra API real) + Allure + CI.~~ Hecho (falta el secreto del CI).
 5. Deploy (Vercel + Fly.io/Render) y README de portfolio con enlaces a ADRs y reports.
 
 ## Cómo trabajar conmigo
