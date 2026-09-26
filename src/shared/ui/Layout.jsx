@@ -4,7 +4,8 @@ import { theme } from '../theme/theme';
 
 const TABS = [['/explorer', 'Explorer'], ['/quiz', 'Quiz'], ['/builder', 'Builder'], ['/stats', 'Stats']];
 // Mismo ancho y márgenes para la barra de selección y el contenido.
-const container = { maxWidth: 1200, margin: '0 auto', padding: `0 ${theme.space.xl}` };
+const gutter = `clamp(${theme.space.md}, 4vw, ${theme.space.xl})`;
+const container = { maxWidth: 1200, margin: '0 auto', padding: `0 ${gutter}` };
 
 /**
  * Marco de la app. Solo presenta: recibe usuario, marcador de sesión y barra de selección por props.
@@ -14,8 +15,8 @@ export function Layout({ user, onSignOut, score, toolbar, children }) {
   const { search } = useLocation();
   const header = {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: theme.space.lg, flexWrap: 'wrap',
-    padding: `${theme.space.md} ${theme.space.xl}`, borderBottom: `1px solid ${theme.colors.border}`,
-    background: 'rgba(11, 14, 19, 0.72)', backdropFilter: 'blur(8px)', position: 'sticky', top: 0, zIndex: 10
+    padding: `${theme.space.md} ${gutter}`, borderBottom: `1px solid ${theme.colors.border}`,
+    background: 'rgba(11, 14, 19, 0.72)', backdropFilter: 'blur(8px)', zIndex: 10
   };
   const link = ({ isActive }) => ({
     color: isActive ? theme.colors.accentStrong : theme.colors.textMuted, textDecoration: 'none',
@@ -24,7 +25,8 @@ export function Layout({ user, onSignOut, score, toolbar, children }) {
   });
   return (
     <>
-      <header style={header}>
+      {/* Fija arriba solo en pantallas anchas (global.css): en móvil ocuparía media pantalla. */}
+      <header className="app-header" style={header}>
         <span style={{ fontFamily: theme.font.display, fontSize: 28, letterSpacing: 2, color: theme.colors.accent }}>Spin Trainer</span>
         {/* La navegación conserva la selección (?s=&stack=) al cambiar de pestaña. */}
         <nav style={{ display: 'flex', gap: theme.space.lg }} aria-label="Secciones">
