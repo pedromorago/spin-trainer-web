@@ -65,6 +65,25 @@ describe('httpApi (contrato v0.2)', () => {
     expect(err).toMatchObject({ status: 409, type: 'urn:spin-trainer:conflict', message: 'recarga', isConflict: true });
   });
 
+  it('sin conexión → ApiError transitorio (estado 0) con un mensaje para el jugador', async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const err = await httpApi.listSituations().catch(e => e);
+    expect(err).toMatchObject({ status: 0, isTransient: true, message: 'No se ha podido conectar con el servidor.' });
+  });
+
+  it('un 200 que no es JSON no viene de la API (p. ej. la página de espera del host): 502 transitorio', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('<html>waking up</html>', { status: 200, headers: { 'content-type': 'text/html' } }));
+    const err = await httpApi.listSituations().catch(e => e);
+    expect(err).toMatchObject({ status: 502, isTransient: true });
+  });
+
+  it('un error sin cuerpo JSON conserva su estado, y solo 502/503/504 son transitorios', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('bad gateway', { status: 503 }));
+    expect(await httpApi.listSituations().catch(e => e)).toMatchObject({ status: 503, isTransient: true });
+    fetchMock.mockResolvedValueOnce(json(400, { title: 'Bad Request', status: 400 }, 'application/problem+json'));
+    expect(await httpApi.listSituations().catch(e => e)).toMatchObject({ status: 400, isTransient: false });
+  });
+
   it('codifica los parámetros de ruta', async () => {
     await httpApi.getUserRange('a/b', 25);
     expect(lastCall().url).toBe('/api/v1/ranges/user/a%2Fb/25');

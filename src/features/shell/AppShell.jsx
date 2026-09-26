@@ -1,11 +1,12 @@
 import { Outlet } from 'react-router';
-import { useSituations } from '../../shared/api/queries';
+import { useSituations, useSlowRequests } from '../../shared/api/queries';
 import { useAuth } from '../../shared/auth/useAuth';
 import { useSession } from '../../shared/session/useSession';
 import { useSituationSelection } from '../../shared/ui/useSituationSelection';
 import { Layout } from '../../shared/ui/Layout';
 import { SituationBar } from '../../shared/ui/SituationBar';
 import { Empty, ErrorBox, Loading } from '../../shared/ui/Feedback';
+import { ServerWakeNotice } from '../../shared/ui/ServerWakeNotice';
 
 /**
  * Common frame of the tabs: header with the session scoreboard and a single situation/stack selector.
@@ -16,6 +17,7 @@ export function AppShell() {
   const { session, accuracy } = useSession();
   const situations = useSituations();
   const selection = useSituationSelection(situations.data);
+  const waking = useSlowRequests();
 
   const content = situations.isLoading ? <Loading />
     : situations.error ? <ErrorBox error={situations.error} />
@@ -25,6 +27,7 @@ export function AppShell() {
   return (
     <Layout user={user} onSignOut={signOut} score={{ accuracy, streak: session.streak, total: session.total }}
       toolbar={situations.data?.length ? <SituationBar situations={situations.data} selection={selection} /> : null}>
+      <ServerWakeNotice visible={waking} />
       {content}
     </Layout>
   );

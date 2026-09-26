@@ -82,7 +82,7 @@ Route errors (a page that throws while rendering, or a chunk that cannot be down
 *Ir al inicio*; the technical detail goes to the console.
 
 Deployment (ADR-0016, `docs/DEPLOY.md`): the web on Vercel (`vercel.json`: SPA fallback except `/assets/`, immutable
-assets, CSP and security headers) and the API on Fly.io (`fly.toml`, the same image QA tests), with Supabase in the same
+assets, CSP and security headers) and the API on Render's free plan as a native image (ADR-0018, `render.yaml`, the same image QA tests), with Supabase in the same
 region. The E2E tests serve the build with the headers of `vercel.json`.
 
 `features/shell/AppShell` is the frame for every tab: it loads the catalog, renders the header with the session scoreboard

@@ -1,6 +1,6 @@
 # ADR-0016: Deployment: web on Vercel, API on Fly.io
 
-Status: Accepted · Date: 2026-09-26
+Status: Accepted · Date: 2026-09-26 · API hosting superseded by ADR-0018 (Render, native image)
 
 ## Context
 Roadmap step 5 deploys the system. The web app is a static build (Vercel, as the project context already said); the

@@ -2,6 +2,8 @@ import { ApiError } from './errors';
 import { getAccessToken } from '../auth/supabaseClient';
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
+const UNREACHABLE = { title: 'Sin conexión', detail: 'No se ha podido conectar con el servidor.' };
+const NOT_THE_API = { title: 'Servidor no disponible', detail: 'El servidor todavía no responde; se reintenta solo.' };
 
 async function request(method, path, body) {
   const token = await getAccessToken();
@@ -10,10 +12,17 @@ async function request(method, path, body) {
   if (token) headers.Authorization = `Bearer ${token}`;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
-  const res = await fetch(`${BASE}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+  } catch {
+    throw new ApiError(UNREACHABLE, 0);
+  }
   if (res.status === 204) return null;
   const isJson = res.headers.get('content-type')?.includes('json');
-  const data = isJson ? await res.json() : null;
+  // The API always answers JSON: anything else comes from in between (e.g. a host's page while the server wakes up).
+  if (!isJson) throw new ApiError(res.ok ? NOT_THE_API : null, res.ok ? 502 : res.status);
+  const data = await res.json();
   if (!res.ok) throw new ApiError(data, res.status);
   return data;
 }

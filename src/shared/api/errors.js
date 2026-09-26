@@ -10,4 +10,6 @@ export class ApiError extends Error {
   }
   get isNotFound() { return this.status === 404; }
   get isConflict() { return this.status === 409; }
+  /** No connection, a gateway error or a server still starting: retrying can fix it (ADR-0018). */
+  get isTransient() { return this.status === 0 || this.status === 502 || this.status === 503 || this.status === 504; }
 }

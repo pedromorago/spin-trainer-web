@@ -1,6 +1,6 @@
 // Server state hooks (TanStack Query). One hook per operation of contract v0.2 (docs/openapi.yaml).
-import { useMemo } from 'react';
-import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { keepPreviousData, useInfiniteQuery, useIsFetching, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { mergeEffectiveRanges } from '../../domain/range';
 import { comboKey } from '../../domain/selection';
 import { api } from './index';
@@ -125,4 +125,22 @@ export function useHandStats(filters = {}) {
  */
 export function useProgress({ days = 30, tz = 'UTC' } = {}) {
   return useQuery({ queryKey: keys.progress({ days, tz }), queryFn: () => api.getProgress({ days, tz }), placeholderData: keepPreviousData });
+}
+
+/**
+ * True while some query has been loading for longer than `delayMs`: the free API instance is probably waking up
+ * (ADR-0018), and the shell says so instead of leaving the page on a silent spinner.
+ */
+export function useSlowRequests(delayMs = 4000) {
+  const fetching = useIsFetching() > 0;
+  const [elapsed, setElapsed] = useState(false);
+  useEffect(() => {
+    if (!fetching) return undefined;
+    const timer = setTimeout(() => setElapsed(true), delayMs);
+    return () => {
+      clearTimeout(timer);
+      setElapsed(false);
+    };
+  }, [fetching, delayMs]);
+  return fetching && elapsed;
 }
