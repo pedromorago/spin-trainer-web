@@ -30,7 +30,8 @@ export function ActionPalette({ actions, selected, onSelect, disabled = false, e
         return (
           <button key={action} type="button" style={btn} disabled={disabled} onClick={() => onSelect?.(action)} data-action={action}
             aria-pressed={onSelect ? active : undefined} aria-keyshortcuts={shortcuts ? String(i + 1) : undefined}>
-            {shortcuts && <kbd style={{ fontFamily: theme.font.mono, fontSize: theme.font.sizeXs, color: theme.colors.textMuted }}>{i + 1}</kbd>}
+            {/* El atajo se anuncia con aria-keyshortcuts; el kbd no debe entrar en el nombre accesible. */}
+            {shortcuts && <kbd aria-hidden="true" style={{ fontFamily: theme.font.mono, fontSize: theme.font.sizeXs, color: theme.colors.textMuted }}>{i + 1}</kbd>}
             <span aria-hidden="true" style={swatch} />
             <span>{isEraser ? 'Goma' : ACTION_LABELS[action] ?? action}</span>
           </button>
