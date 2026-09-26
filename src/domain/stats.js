@@ -45,6 +45,13 @@ export function mostFailed(rows, limit = 10) {
     .slice(0, limit);
 }
 
+/** Adds n days to a 'YYYY-MM-DD' date (UTC arithmetic: no jumps from daylight saving time changes). */
+function addDays(date, n) {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
 /**
  * Attempts and correct answers per day in an IANA time zone (emulates GET /stats/progress). Only days with activity,
  * from oldest to most recent, within the last `days` days counting today.
@@ -53,7 +60,8 @@ export function mostFailed(rows, limit = 10) {
 export function progressByDay(attempts, { days = 30, tz = 'UTC', now = new Date() } = {}) {
   const dayOf = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
   const today = dayOf.format(now);
-  const first = dayOf.format(new Date(now.getTime() - (days - 1) * 86_400_000));
+  // Calendar days, not 24 h steps: around a daylight saving change a day lasts 23 or 25 hours.
+  const first = addDays(today, 1 - days);
   const byDay = new Map();
   for (const a of attempts) {
     const date = dayOf.format(new Date(a.answeredAt));
@@ -85,13 +93,6 @@ export function hardHands(rows) {
     })
     .filter(h => h.fails >= HARD_MIN_FAILS && h.weight > 0)
     .sort((a, b) => b.weight - a.weight || handKey(a).localeCompare(handKey(b)));
-}
-
-/** Adds n days to a 'YYYY-MM-DD' date (UTC arithmetic: no jumps from daylight saving time changes). */
-function addDays(date, n) {
-  const d = new Date(`${date}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
 }
 
 /**

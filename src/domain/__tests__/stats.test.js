@@ -74,6 +74,19 @@ describe('progressByDay', () => {
     expect(progressByDay(late, { now, tz: 'Europe/Madrid' })[0].date).toBe('2026-09-23');
   });
 
+  it('la ventana son días de calendario también en los cambios de hora (días de 23 y 25 horas)', () => {
+    const tz = 'Europe/Madrid';
+    const day = (date, time) => ({ answeredAt: `${date}T${time}Z`, correct: true });
+    // 30/03 00:30 CEST (after the spring change): the window of 2 days is 29 and 30, not 28.
+    const spring = [day('2026-03-28', '12:00:00'), day('2026-03-29', '12:00:00'), day('2026-03-29', '22:15:00')];
+    expect(progressByDay(spring, { tz, days: 2, now: new Date('2026-03-29T22:30:00Z') }).map(d => d.date))
+      .toEqual(['2026-03-29', '2026-03-30']);
+    // 25/10 23:30 CET (after the autumn change): the window of 2 days is 24 and 25, not only 25.
+    const autumn = [day('2026-10-24', '12:00:00'), day('2026-10-25', '12:00:00')];
+    expect(progressByDay(autumn, { tz, days: 2, now: new Date('2026-10-25T22:30:00Z') }).map(d => d.date))
+      .toEqual(['2026-10-24', '2026-10-25']);
+  });
+
   it('zona horaria inválida → RangeError', () => {
     expect(() => progressByDay(ATTEMPTS, { now, tz: 'Nope/Zone' })).toThrow(RangeError);
   });
