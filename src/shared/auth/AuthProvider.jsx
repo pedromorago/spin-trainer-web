@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AuthContext } from './authContext';
-import { supabase } from './supabaseClient';
+import { getSupabase } from './supabaseClient';
 
 const MOCK = import.meta.env.VITE_API_MODE === 'mock';
 const MOCK_USER = { id: 'mock-user', email: 'mock@local' };
@@ -15,12 +15,17 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (MOCK) return;
-    supabase.auth.getSession().then(({ data }) => {
+    let cancelled = false;
+    let unsubscribe = null;
+    getSupabase().then(async supabase => {
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
       setUser(data.session?.user ?? null);
       setLoading(false);
+      const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setUser(session?.user ?? null));
+      unsubscribe = () => sub.subscription.unsubscribe();
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setUser(session?.user ?? null));
-    return () => sub.subscription.unsubscribe();
+    return () => { cancelled = true; unsubscribe?.(); };
   }, []);
 
   const value = useMemo(() => ({
@@ -28,13 +33,13 @@ export function AuthProvider({ children }) {
     loading,
     signIn: MOCK
       ? async email => { setUser({ ...MOCK_USER, email: email || MOCK_USER.email }); return { error: null }; }
-      : (email, password) => supabase.auth.signInWithPassword({ email, password }),
+      : async (email, password) => (await getSupabase()).auth.signInWithPassword({ email, password }),
     signUp: MOCK
       ? async () => ({ error: null })
-      : (email, password) => supabase.auth.signUp({ email, password }),
+      : async (email, password) => (await getSupabase()).auth.signUp({ email, password }),
     signOut: MOCK
       ? async () => setUser(null)
-      : () => supabase.auth.signOut()
+      : async () => (await getSupabase()).auth.signOut()
   }), [user, loading]);
 
   return <AuthContext value={value}>{children}</AuthContext>;
