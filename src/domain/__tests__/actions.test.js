@@ -20,7 +20,7 @@ describe('isValidAction', () => {
 
 describe('catálogo', () => {
   it('toda acción tiene etiqueta', () => {
-    expect(ACTIONS).toHaveLength(19);
+    expect(ACTIONS).toHaveLength(18);
     for (const a of ACTIONS) expect(ACTION_LABELS[a]).toBeTruthy();
   });
 });

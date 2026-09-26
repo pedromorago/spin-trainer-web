@@ -29,7 +29,7 @@ export const SITUATIONS = [
   { key: 'hu_sb_open', label: 'HU SB Open', format: 'hu', stacks: [25, 20, 15, 12, 10, 8],
     actions: ['MR_4B_C', 'MR_C_C', 'MR_C_F', 'MR_F_F', 'L_PUSH', 'L_C_C', 'L_C_F', 'L_F', 'FOLD'] },
   { key: 'hu_bb_vs_mr', label: 'HU BB vs Min-Raise', format: 'hu', stacks: [25, 20, 15, 10, 8],
-    actions: ['ALLIN', '3B_CALL', 'CALL', 'FOLD'] },
+    actions: ['ALLIN', '3BET_C', 'CALL', 'FOLD'] },
   { key: 'hu_bb_vs_limp', label: 'HU BB vs Limp', format: 'hu', stacks: [25, 20, 15, 12, 10, 8],
     actions: ['ALLIN', 'ISO_C', 'ISO_F', 'CHECK'] },
   // Stacks = límite superior de cada banda del PDF (25-20, 20-15, 15-12, 12-10, 10-8, 8-6)

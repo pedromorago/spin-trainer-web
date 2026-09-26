@@ -12,7 +12,6 @@ export const ACTION_LABELS = {
   ALLIN: 'All-in',
   '3BET': '3-bet',
   '3BET_C': '3-bet / Call',
-  '3B_CALL': '3-bet / Call',
   CALL: 'Call',
   CALL_VS_X2: 'Call vs x2',
   ISO_C: 'Iso / Call',
