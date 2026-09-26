@@ -35,7 +35,7 @@ src/
     api/       contrato de acceso a datos: httpClient (real) | mock (memoria+localStorage); queries (TanStack Query)
     auth/      Supabase Auth (cargado bajo demanda) + AuthProvider + RequireAuth
     session/   marcador de la sesión de estudio (sessionStorage). No accede a la API.
-    ui/        componentes de presentación (HandGrid, ActionPalette, Layout, SituationBar, ComboPicker…)
+    ui/        componentes de presentación (HandGrid, ActionPalette, Layout, SituationBar, PokerTable, VerdictLegend…)
     theme/     tokens (fondo con degradado, dorado, Bebas Neue / DM Sans / JetBrains Mono) y mapa acción→color
   features/    una carpeta por módulo: shell, explorer, quiz, builder, stats, auth. Solo composición.
 ```
@@ -50,7 +50,10 @@ el Builder evalúa comparando la acción efectiva mano a mano (`evaluateRange`),
 Rango efectivo (ADR-0012): el personalizado si existe, si no el del PDF, resuelto en un único hook (`useEffectiveRange`).
 El Explorer es el único que escribe rangos: pincel por acción + goma (`paintHand`: fija, no alterna, así que se puede pintar
 arrastrando con ratón o dedo), Guardar (`PUT` con la versión de partida → 409 si otro la cambió), Reset (`DELETE`) y Copiar
-(`exportRange`). El Builder es un ejercicio sin persistencia que se verifica contra el rango efectivo.
+(`exportRange`). El Builder es un ejercicio sin persistencia que se verifica contra el rango efectivo:
+la pregunta es la selección actual o una combinación al azar con rango ("Nueva pregunta"), y "Verificar" usa
+`evaluateRange`, que clasifica cada mano (correcta, acción equivocada, de más, faltó) y puntúa solo las manos jugadas
+en alguno de los dos rangos; con un rango cerrado, acertar los folds de las 169 inflaría la nota.
 
 Quiz: cada pregunta la decide `domain/quiz.js#nextQuestion` sobre los *spots* de la selección (combinaciones con rango
 efectivo; varias con "Any", así que la combinación cambia en cada pregunta). En modo "solo difíciles" elige con probabilidad
@@ -68,8 +71,8 @@ Routing en *data mode* (`createBrowserRouter`): rutas lazy por feature y `useBlo
 `features/shell/AppShell` es el marco de todas las pestañas: carga el catálogo, pinta la cabecera con el marcador de sesión
 y un único selector de situación/stack, y pasa `{ situations, selection }` a las páginas con `useOutletContext()`.
 La selección vive en la URL (`?s=<key|any>&stack=<bb|any>`, normalizada por `domain/selection.js`): un solo estado
-compartido entre pestañas y enlaces directos a cualquier situación. Con "Any", Quiz y Builder eligen una combinación al azar
-(`ComboPicker`) y el Explorer muestra el modo aleatorio.
+compartido entre pestañas y enlaces directos a cualquier situación. Con "Any", el Quiz elige combinación en cada pregunta, el Builder
+una por pregunta y el Explorer muestra el modo aleatorio.
 
 Sesión de estudio vs. progreso: la sesión (`shared/session`, reglas en `domain/session.js`) es el marcador en curso
 de las respuestas del Quiz (precisión, racha, manos), vive en `sessionStorage` y se puede reiniciar.

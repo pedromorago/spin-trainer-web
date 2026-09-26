@@ -1,95 +1,168 @@
 import { useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router';
-import { ERASE, evaluateRange, explicitHands, paintHand, summarize } from '../../domain/range';
-import { ACTION_LABELS } from '../../domain/actions';
-import { comboKey } from '../../domain/selection';
-import { useEffectiveRange } from '../../shared/api/queries';
+import { ERASE, evaluateRange, paintHand, summarize } from '../../domain/range';
+import { ACTION_LABELS, fallbackAction } from '../../domain/actions';
+import { playableSpots } from '../../domain/quiz';
+import { comboKey, pickCombo } from '../../domain/selection';
+import { useEffectiveRanges } from '../../shared/api/queries';
 import { HandGrid } from '../../shared/ui/HandGrid';
 import { ActionPalette } from '../../shared/ui/ActionPalette';
-import { ComboPicker } from '../../shared/ui/ComboPicker';
+import { VerdictLegend } from '../../shared/ui/VerdictLegend';
 import { Empty, ErrorBox, Loading } from '../../shared/ui/Feedback';
 import { layout } from '../../shared/ui/styles';
+import { colorFor } from '../../shared/theme/actionColors';
 import { theme } from '../../shared/theme/theme';
 
+const pct = x => `${Math.round(x * 100)}%`;
+
 /**
- * Builder: ejercicio de autoevaluación. Construyes el rango de memoria y lo verificas contra el rango efectivo
- * (custom si existe, si no el del PDF; ADR-0012). No persiste nada: guardar rangos es cosa del Explorer.
+ * Builder: ejercicio de autoevaluación. Construyes de memoria el rango de una situación y stack y lo verificas contra
+ * el rango efectivo (personalizado si existe, si no el del PDF; ADR-0012). No persiste nada.
+ * La pregunta es la selección actual o una combinación al azar ("Nueva pregunta").
  */
 export function BuilderPage() {
   const { situations, selection } = useOutletContext();
+  const effective = useEffectiveRanges();
   const [pickedBrush, setPickedBrush] = useState(null);
+
+  if (effective.isLoading) return <Loading />;
+  if (effective.error) return <ErrorBox error={effective.error} />;
+
+  const toSpot = combo => {
+    const range = effective.ranges.get(comboKey(combo));
+    const situation = situations.find(s => s.key === combo.situation);
+    return range && situation ? { situation: combo.situation, stack: combo.stack, actions: situation.actions, hands: range.hands, source: range.source } : null;
+  };
+  const allSpots = playableSpots([...effective.ranges.values()].map(toSpot).filter(Boolean));
+  const selectionSpots = playableSpots(selection.combos.map(toSpot).filter(Boolean));
 
   return (
     <div style={layout.page}>
       <h2 style={layout.title}>Builder</h2>
-      {/* La key reinicia la elección de combinación al cambiar la selección. */}
-      <ComboPicker key={`${selection.situationKey}@${selection.stack}`}
-        situations={situations} combos={selection.combos} random={selection.isAny}>
-        {(combo, situation) => (
-          <BuilderCombo key={comboKey(combo)} situation={situation} stack={combo.stack}
-            pickedBrush={pickedBrush} onPickBrush={setPickedBrush} />
-        )}
-      </ComboPicker>
+      {/* La key reinicia la pregunta al cambiar la selección (sin setState en efectos). */}
+      <BuilderQuestion key={`${selection.situationKey}@${selection.stack}`} situations={situations} selection={selection}
+        allSpots={allSpots} selectionSpots={selectionSpots} toSpot={toSpot} pickedBrush={pickedBrush} onPickBrush={setPickedBrush} />
     </div>
   );
 }
 
-function BuilderCombo({ situation, stack, pickedBrush, onPickBrush }) {
-  const effective = useEffectiveRange(situation.key, stack);
-  // Pincel derivado: se conserva entre situaciones si sigue siendo válido (la goma siempre lo es).
-  const brush = pickedBrush === ERASE || situation.actions.includes(pickedBrush) ? pickedBrush : situation.actions[0];
+function BuilderQuestion({ situations, selection, allSpots, selectionSpots, toSpot, pickedBrush, onPickBrush }) {
+  // Pregunta elegida con "Nueva pregunta"; null = la selección concreta. Con "Any" se empieza con una al azar.
+  const [question, setQuestion] = useState(() => (selection.isAny ? pickCombo(selectionSpots) : null));
+  const combo = question ?? (selection.isAny ? null : selection.combos[0]);
+  const spot = combo && toSpot(combo);
+  const pool = selection.isAny ? selectionSpots : allSpots;
+  const canPickAnother = pool.some(s => !combo || comboKey(s) !== comboKey(combo));
+  const newQuestion = () => setQuestion(pickCombo(pool, Math.random, combo));
 
-  if (effective.isLoading) return <Loading />;
-  if (!effective.range && effective.error) return <ErrorBox error={effective.error} />;
-  const target = effective.range?.hands ?? {};
-  if (explicitHands(target, situation.actions).length === 0) {
-    return <Empty>Rango sin cargar para esta situación / stack: no hay nada con qué comparar.</Empty>;
-  }
+  const situation = combo && situations.find(s => s.key === combo.situation);
+  // Pincel derivado: se conserva entre preguntas si sigue siendo válido (la goma siempre lo es).
+  const brush = spot && (pickedBrush === ERASE || spot.actions.includes(pickedBrush) ? pickedBrush : spot.actions[0]);
 
   return (
     <>
-      {effective.userRange && (
-        <small style={{ color: theme.colors.accent }} data-testid="builder-custom-target">
-          Se verifica contra tu rango personalizado (guardado en el Explorer).
-        </small>
+      <div style={{ ...layout.row, gap: theme.space.md }}>
+        {combo && (
+          <strong style={{ fontFamily: theme.font.display, fontSize: 22, letterSpacing: 1 }} data-testid="builder-question">
+            {situation.label} · {combo.stack} BB
+          </strong>
+        )}
+        <button type="button" style={layout.secondary} onClick={newQuestion} disabled={!canPickAnother}
+          data-testid="builder-new-question">Nueva pregunta</button>
+        {question && !selection.isAny && (
+          <button type="button" style={layout.secondary} onClick={() => setQuestion(null)} data-testid="builder-back-to-selection">
+            Volver a la selección
+          </button>
+        )}
+        {spot?.source === 'user' && (
+          <small style={{ color: theme.colors.accent }} data-testid="builder-custom-target">Se verifica contra tu rango personalizado</small>
+        )}
+      </div>
+      {!spot ? (
+        <Empty>
+          {pool.length ? 'Esta combinación no tiene rango con el que comparar: pulsa "Nueva pregunta".' : 'Todavía no hay rangos cargados con los que practicar.'}
+        </Empty>
+      ) : (
+        <>
+          <ActionPalette actions={spot.actions} selected={brush} onSelect={onPickBrush} eraser />
+          {/* La key reinicia el borrador al cambiar de pregunta. */}
+          <BuilderExercise key={comboKey(spot)} spot={spot} brush={brush} onNewQuestion={canPickAnother ? newQuestion : null} />
+        </>
       )}
-      <ActionPalette actions={situation.actions} selected={brush} onSelect={onPickBrush} eraser />
-      <BuilderExercise situation={situation} target={target} brush={brush} />
     </>
   );
 }
 
-function BuilderExercise({ situation, target, brush }) {
+function BuilderExercise({ spot, brush, onNewQuestion }) {
   const [draft, setDraft] = useState({});
   const [evaluation, setEvaluation] = useState(null);
-  const actions = situation.actions;
+  const [showSolution, setShowSolution] = useState(false);
+  const actions = spot.actions;
   const summary = useMemo(() => summarize(draft, actions), [draft, actions]);
 
   const paint = hand => {
     setDraft(d => paintHand(d, hand, brush, actions));
     setEvaluation(null);
   };
+  const verify = () => { setEvaluation(evaluateRange(spot.hands, draft, actions)); setShowSolution(false); };
+  const retry = () => { setDraft({}); setEvaluation(null); setShowSolution(false); };
 
   return (
-    <>
-      <HandGrid assignments={draft} actions={actions} onPaint={paint} verdicts={evaluation?.verdicts} label="Tu rango" />
-      <div style={layout.mono} data-testid="builder-summary">
-        {Object.entries(summary).map(([a, s]) => `${ACTION_LABELS[a] ?? a}: ${s.hands}`).join(' · ')}
-      </div>
-      <div style={layout.row}>
-        <button type="button" style={layout.primary} onClick={() => setEvaluation(evaluateRange(target, draft, actions))}
-          data-testid="builder-evaluate">Verificar</button>
-        <button type="button" style={layout.secondary} onClick={() => { setDraft({}); setEvaluation(null); }}
-          data-testid="builder-clear">Limpiar</button>
-      </div>
-      {evaluation && (
-        <div data-testid="builder-evaluation" style={{ padding: theme.space.md, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.sm }}>
-          <strong>{evaluation.correct} / {evaluation.total}</strong> manos correctas ({Math.round(evaluation.accuracy * 100)}%)
-          <div style={layout.mono}>
-            {Object.entries(evaluation.byAction).map(([a, s]) => `${ACTION_LABELS[a] ?? a}: ${s.correct}/${s.total}`).join(' · ')}
-          </div>
+    <div style={{ display: 'flex', gap: theme.space.xl, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+      <div style={{ ...layout.page, gap: theme.space.md, flex: '1 1 480px', minWidth: 0 }}>
+        <HandGrid assignments={showSolution ? spot.hands : draft} actions={actions} onPaint={showSolution ? undefined : paint}
+          verdicts={evaluation?.verdicts} label={showSolution ? 'Solución' : 'Tu rango'} />
+        <div style={layout.mono} data-testid="builder-summary">
+          {Object.entries(summary).map(([a, s]) => `${ACTION_LABELS[a] ?? a}: ${s.hands}`).join(' · ')}
         </div>
-      )}
-    </>
+        <div style={layout.row}>
+          <button type="button" style={layout.primary} onClick={verify} data-testid="builder-evaluate">Verificar</button>
+          {evaluation && (
+            <button type="button" style={layout.secondary} onClick={() => setShowSolution(v => !v)} aria-pressed={showSolution}
+              data-testid="builder-toggle-solution">{showSolution ? 'Ver mi rango' : 'Ver solución'}</button>
+          )}
+          <button type="button" style={layout.secondary} onClick={retry} data-testid="builder-clear">
+            {evaluation ? 'Reintentar' : 'Limpiar'}
+          </button>
+          {onNewQuestion && evaluation && (
+            <button type="button" style={layout.secondary} onClick={onNewQuestion} data-testid="builder-next">Nueva pregunta</button>
+          )}
+        </div>
+      </div>
+      {evaluation && <EvaluationPanel evaluation={evaluation} actions={actions} />}
+    </div>
+  );
+}
+
+/** Puntuación sobre las manos jugadas, leyenda de veredictos y desglose por acción esperada. */
+function EvaluationPanel({ evaluation, actions }) {
+  const { score, byKind, byAction } = evaluation;
+  const implicit = fallbackAction(actions);
+  const row = { display: 'grid', gridTemplateColumns: '12px 1fr auto auto', gap: theme.space.sm, alignItems: 'center', fontSize: theme.font.sizeSm };
+
+  return (
+    <aside aria-label="Resultado" data-testid="builder-evaluation"
+      style={{ display: 'flex', flexDirection: 'column', gap: theme.space.md, flex: '0 1 320px', minWidth: 260, padding: theme.space.md,
+        border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md, background: theme.colors.bgElevated }}>
+      <div>
+        <div style={{ fontFamily: theme.font.display, letterSpacing: 1, color: theme.colors.textMuted }}>Puntuación</div>
+        <div style={{ fontFamily: theme.font.mono, fontSize: theme.font.sizeXl, fontWeight: 700, color: theme.colors.accentStrong }}
+          data-testid="builder-score">{score.correct} / {score.total} · {pct(score.accuracy)}</div>
+        <small style={{ color: theme.colors.textMuted }} data-testid="builder-accuracy-169">
+          Manos jugadas en tu rango o en el correcto. Sobre las 169: {evaluation.correct}/169 ({pct(evaluation.accuracy)}).
+        </small>
+      </div>
+      <VerdictLegend byKind={byKind} />
+      <div role="table" aria-label="Desglose por acción" style={{ display: 'flex', flexDirection: 'column', gap: theme.space.xs }}>
+        {actions.filter(a => byAction[a]).map(a => (
+          <div role="row" key={a} style={{ ...row, opacity: a === implicit ? 0.7 : 1 }} data-testid={`builder-action-${a}`}>
+            <span role="cell" aria-hidden="true" style={{ width: 12, height: 12, borderRadius: 3, background: colorFor(a) }} />
+            <span role="cell">{ACTION_LABELS[a] ?? a}</span>
+            <span role="cell" style={{ fontFamily: theme.font.mono }}>{byAction[a].correct}/{byAction[a].total}</span>
+            <strong role="cell" style={{ fontFamily: theme.font.mono }}>{pct(byAction[a].correct / byAction[a].total)}</strong>
+          </div>
+        ))}
+      </div>
+    </aside>
   );
 }

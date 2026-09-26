@@ -43,7 +43,8 @@ Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 ## Convenciones
 - Router en *data mode* (`createBrowserRouter`, rutas lazy en `src/App.jsx`).
 - `features/shell/AppShell` da a las páginas `{ situations, selection }` vía `useOutletContext()`; las páginas no tienen selector propio.
-  La selección vive en la URL (`?s=<key|any>&stack=<bb|any>`) y se normaliza con `domain/selection.js`. Con "Any", usar `ComboPicker`.
+  La selección vive en la URL (`?s=<key|any>&stack=<bb|any>`) y se normaliza con `domain/selection.js`. Con "Any", Quiz y Builder trabajan sobre los *spots* de la selección con rango
+  (`useEffectiveRanges` + `domain/quiz.js#playableSpots`).
 - Sesión de estudio (`shared/session`): marcador local de respuestas del Quiz. El progreso histórico son los intentos de la API.
 - Estado que depende de (situación, stack): reiniciar con `key` en un componente hijo, no con `setState` dentro de efectos.
 - Accesibilidad: controles con rol y nombre accesible (Playwright `getByRole`/`getByLabel` primero).
@@ -53,5 +54,6 @@ Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 - Quiz: preguntas con `domain/quiz.js#nextQuestion` (spots de la selección, modo normal/difíciles); mesa con `domain/table.js` + `PokerTable`.
   Atajos de teclado con `useEffectEvent` + listener en `window`; los `<kbd>` visibles van `aria-hidden` y el atajo en `aria-keyshortcuts`.
 - Selectores de test: `data-testid` en kebab-case `<feature>-<elemento>`; atributos `data-hand`, `data-action` (acción efectiva),
-  `data-implicit`, `data-verdict`, `data-stack`.
+  `data-implicit`, `data-verdict` (`correct|wrong|extra|missing`), `data-played`, `data-stack`.
+- Veredictos del Builder: `domain/range.js#evaluateRange` (tipos y puntuación) + `shared/theme/verdictStyles.js` (contorno y glifo, no solo color).
 - El contrato definitivo vive en `spin-trainer-api/openapi.yaml`; `docs/openapi-draft.yaml` es solo borrador.

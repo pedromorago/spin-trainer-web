@@ -4,6 +4,7 @@ import { ACTION_LABELS, fallbackAction } from '../../domain/actions';
 import { actionFor } from '../../domain/range';
 import { colorFor } from '../theme/actionColors';
 import { readableText } from '../theme/contrast';
+import { VERDICT_STYLES } from '../theme/verdictStyles';
 import { theme } from '../theme/theme';
 import { CELL_GAP, cellFontSize, gridCellSize } from './gridSize';
 
@@ -15,7 +16,8 @@ import { CELL_GAP, cellFontSize, gridCellSize } from './gridSize';
  *  - assignments ({[hand]: action}), actions (acciones de la situación)
  *  - onPaint(hand): si se pasa, el grid es editable: click, arrastre (ratón o táctil) y teclado (Enter/Espacio)
  *  - cellSize: número de px o 'auto' (se ajusta al ancho disponible, 20–70 px)
- *  - showLabels, highlight (mano resaltada), verdicts ({[hand]: {expected, correct}}), label (nombre accesible)
+ *  - showLabels, highlight (mano resaltada), label (nombre accesible)
+ *  - verdicts ({[hand]: {expected, kind, played}} de domain/range#evaluateRange): contorno y glifo por tipo en las manos jugadas
  */
 export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto', showLabels = true,
   highlight = null, verdicts = null, label = 'Rango 13×13' }) {
@@ -38,7 +40,8 @@ export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto'
   const describe = (hand, action, verdict) => {
     const text = `${hand}: ${ACTION_LABELS[action] ?? action}`;
     if (!verdict) return text;
-    return verdict.correct ? `${text}, correcta` : `${text}, incorrecta (correcta: ${ACTION_LABELS[verdict.expected] ?? verdict.expected})`;
+    const kind = VERDICT_STYLES[verdict.kind].label.toLowerCase();
+    return verdict.correct ? `${text}, ${kind}` : `${text}, ${kind} (correcta: ${ACTION_LABELS[verdict.expected] ?? verdict.expected})`;
   };
 
   return (
@@ -52,18 +55,24 @@ export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto'
               const isImplicit = action === implicit;
               const color = colorFor(action);
               const verdict = verdicts?.[hand];
-              const outline = verdict
-                ? `2px solid ${verdict.correct ? theme.colors.success : theme.colors.danger}`
+              // Solo se marcan las manos jugadas: acertar los folds de las 169 no aporta información.
+              const marked = verdict?.played ? VERDICT_STYLES[verdict.kind] : null;
+              const outline = marked
+                ? `${size >= 28 ? 3 : 2}px ${marked.line} ${marked.color}`
                 : highlight === hand ? `3px solid ${theme.colors.accentStrong}` : 'none';
               const style = {
                 ...base,
                 background: isImplicit ? `color-mix(in srgb, ${color} 35%, ${theme.colors.bgElevated})` : color,
                 color: isImplicit ? theme.colors.textMuted : readableText(color),
-                outline, outlineOffset: -2
+                outline, outlineOffset: -2, position: 'relative'
               };
+              const glyph = marked?.glyph && showLabels && (
+                <span aria-hidden="true" style={{ position: 'absolute', top: 1, right: 3, fontSize: Math.max(9, cellFontSize(size) - 3),
+                  fontWeight: 800, lineHeight: 1, color: marked.color, textShadow: '0 0 2px #000, 0 0 2px #000' }}>{marked.glyph}</span>
+              );
               const data = {
                 'data-hand': hand, 'data-action': action, 'data-implicit': isImplicit ? 'true' : undefined,
-                'data-verdict': verdict ? (verdict.correct ? 'ok' : 'ko') : undefined,
+                'data-verdict': verdict?.kind, 'data-played': verdict ? String(verdict.played) : undefined,
                 'data-highlight': highlight === hand ? 'true' : undefined
               };
               const text = showLabels ? hand : null;
@@ -72,10 +81,10 @@ export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto'
                   {onPaint ? (
                     <button type="button" style={style} {...data} aria-label={describe(hand, action, verdict)}
                       onClick={e => { if (e.detail === 0) onPaint(hand); /* teclado; el ratón pinta en pointerdown */ }}>
-                      {text}
+                      {text}{glyph}
                     </button>
                   ) : (
-                    <div style={style} {...data} title={describe(hand, action, verdict)}>{text}</div>
+                    <div style={style} {...data} title={describe(hand, action, verdict)}>{text}{glyph}</div>
                   )}
                 </div>
               );
