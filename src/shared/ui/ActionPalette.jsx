@@ -4,7 +4,8 @@ import { theme } from '../theme/theme';
 
 export function ActionPalette({ actions, selected, onSelect, disabled = false }) {
   return (
-    <div style={{ display: 'flex', gap: theme.space.sm, flexWrap: 'wrap' }} data-testid="action-palette">
+    <div style={{ display: 'flex', gap: theme.space.sm, flexWrap: 'wrap' }} data-testid="action-palette"
+      role="group" aria-label="Acciones">
       {actions.map(action => {
         const color = colorFor(action);
         const active = selected === action;
@@ -17,8 +18,9 @@ export function ActionPalette({ actions, selected, onSelect, disabled = false })
           cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.6 : 1
         };
         return (
-          <button key={action} style={btn} disabled={disabled} onClick={() => onSelect?.(action)} data-action={action}>
-            <span style={{ width: 12, height: 12, borderRadius: 3, background: color, flexShrink: 0 }} />
+          <button key={action} type="button" style={btn} disabled={disabled} onClick={() => onSelect?.(action)} data-action={action}
+            aria-pressed={onSelect ? active : undefined}>
+            <span aria-hidden="true" style={{ width: 12, height: 12, borderRadius: 3, background: color, flexShrink: 0 }} />
             <span>{ACTION_LABELS[action] ?? action}</span>
           </button>
         );

@@ -37,7 +37,7 @@ export function ExplorerPage() {
         <Empty>Rango sin cargar para esta situación / stack. Se cargan del PDF en la Fase 3.</Empty>
       ) : (
         <>
-          <HandGrid assignments={hands} />
+          <HandGrid assignments={hands} actions={sel.situation.actions} />
           <div style={layout.mono} data-testid="explorer-summary">
             {Object.entries(summary).map(([a, s]) => `${ACTION_LABELS[a] ?? a}: ${s.hands} manos / ${s.combos} combos`).join(' · ')}
             {user.data && ' · Tienes un rango custom para esta situación (Builder)'}

@@ -13,7 +13,8 @@ export function SituationSelector({ situations, value, onChange }) {
   for (const s of situations) (byFormat[s.format] ??= []).push(s);
 
   return (
-    <select style={select} value={value} onChange={e => onChange(e.target.value)} data-testid="situation-select">
+    <select style={select} value={value} onChange={e => onChange(e.target.value)} data-testid="situation-select"
+      aria-label="Situación">
       {Object.entries(byFormat).map(([format, items]) => (
         <optgroup key={format} label={FORMATS[format] ?? format}>
           {items.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
@@ -31,8 +32,12 @@ export function StackSelector({ stacks, value, onChange }) {
     fontFamily: theme.font.mono, fontSize: theme.font.sizeSm, fontWeight: active ? 700 : 500, cursor: 'pointer'
   });
   return (
-    <div style={{ display: 'flex', gap: theme.space.sm, flexWrap: 'wrap' }} data-testid="stack-selector">
-      {stacks.map(s => <button key={s} style={btn(s === value)} onClick={() => onChange(s)} data-stack={s}>{s} BB</button>)}
+    <div style={{ display: 'flex', gap: theme.space.sm, flexWrap: 'wrap' }} data-testid="stack-selector" role="group" aria-label="Stack">
+      {stacks.map(s => (
+        <button key={s} type="button" style={btn(s === value)} onClick={() => onChange(s)} data-stack={s} aria-pressed={s === value}>
+          {s} BB
+        </button>
+      ))}
     </div>
   );
 }
