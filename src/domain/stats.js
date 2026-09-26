@@ -1,31 +1,66 @@
-// stats.js — agregación de intentos de Quiz. Un intento: { situation, stack, hand, expected, given, correct, at }.
+// stats.js — estadísticas de estudio sobre filas agregadas por (situación, stack, mano), como las de GET /stats/hands:
+//   { situation, stack, hand, attempts, correct, lastAnsweredAt }
+// La API agrega (GROUP BY); aquí vive la política de estudio (rankings, manos difíciles). ADR-0013.
 
-export function accuracy(attempts) {
-  if (!attempts.length) return 0;
-  return attempts.filter(a => a.correct).length / attempts.length;
-}
+const handKey = r => `${r.situation}@${r.stack}@${r.hand}`;
 
-export function groupBy(attempts, keyFn) {
-  const out = {};
+/** Agrega intentos individuales en filas por (situación, stack, mano). Lo usa el mock para emular /stats/hands. */
+export function aggregateAttempts(attempts) {
+  const rows = new Map();
   for (const a of attempts) {
-    const k = keyFn(a);
-    out[k] ??= { total: 0, correct: 0 };
-    out[k].total += 1;
-    if (a.correct) out[k].correct += 1;
+    const k = handKey(a);
+    const row = rows.get(k) ?? { situation: a.situation, stack: a.stack, hand: a.hand, attempts: 0, correct: 0, lastAnsweredAt: a.answeredAt };
+    row.attempts += 1;
+    if (a.correct) row.correct += 1;
+    if (a.answeredAt > row.lastAnsweredAt) row.lastAnsweredAt = a.answeredAt;
+    rows.set(k, row);
   }
-  for (const v of Object.values(out)) v.accuracy = v.correct / v.total;
-  return out;
+  return [...rows.values()];
 }
 
-export const bySituation = attempts => groupBy(attempts, a => a.situation);
-export const bySituationStack = attempts => groupBy(attempts, a => `${a.situation}@${a.stack}`);
-export const byHand = attempts => groupBy(attempts, a => a.hand);
+/** Totales de un conjunto de filas: { attempts, correct, accuracy } (accuracy null sin intentos). */
+export function totals(rows) {
+  const attempts = rows.reduce((n, r) => n + r.attempts, 0);
+  const correct = rows.reduce((n, r) => n + r.correct, 0);
+  return { attempts, correct, accuracy: attempts ? correct / attempts : null };
+}
 
-/** Manos con más fallos (mínimo n intentos), ordenadas por peor accuracy. */
-export function weakestHands(attempts, { min = 2, limit = 10 } = {}) {
-  return Object.entries(byHand(attempts))
-    .filter(([, v]) => v.total >= min)
-    .sort((a, b) => a[1].accuracy - b[1].accuracy)
-    .slice(0, limit)
-    .map(([hand, v]) => ({ hand, ...v }));
+/** Agrupa filas por una clave y devuelve { [clave]: totales }, conservando el orden de aparición. */
+export function groupRows(rows, keyFn) {
+  const groups = {};
+  for (const r of rows) (groups[keyFn(r)] ??= []).push(r);
+  return Object.fromEntries(Object.entries(groups).map(([k, g]) => [k, totals(g)]));
+}
+
+export const bySituation = rows => groupRows(rows, r => r.situation);
+export const bySituationStack = rows => groupRows(rows, r => `${r.situation}@${r.stack}`);
+
+/** Manos más falladas (por situación, stack y mano): más fallos primero; a igualdad, peor precisión. */
+export function mostFailed(rows, limit = 10) {
+  return rows
+    .map(r => ({ ...r, fails: r.attempts - r.correct, accuracy: r.correct / r.attempts }))
+    .filter(r => r.fails > 0)
+    .sort((a, b) => b.fails - a.fails || a.accuracy - b.accuracy || handKey(a).localeCompare(handKey(b)))
+    .slice(0, limit);
+}
+
+/**
+ * Intentos y aciertos por día en una zona horaria IANA (emula GET /stats/progress). Solo días con actividad,
+ * del más antiguo al más reciente, dentro de los últimos `days` días contando hoy.
+ * @throws {RangeError} si la zona horaria no es válida
+ */
+export function progressByDay(attempts, { days = 30, tz = 'UTC', now = new Date() } = {}) {
+  const dayOf = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
+  const today = dayOf.format(now);
+  const first = dayOf.format(new Date(now.getTime() - (days - 1) * 86_400_000));
+  const byDay = new Map();
+  for (const a of attempts) {
+    const date = dayOf.format(new Date(a.answeredAt));
+    if (date < first || date > today) continue;
+    const d = byDay.get(date) ?? { date, attempts: 0, correct: 0 };
+    d.attempts += 1;
+    if (a.correct) d.correct += 1;
+    byDay.set(date, d);
+  }
+  return [...byDay.values()].sort((a, b) => a.date.localeCompare(b.date));
 }

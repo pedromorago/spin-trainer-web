@@ -17,13 +17,23 @@ async function request(method, path, body) {
   return data;
 }
 
-/** Adaptador HTTP: implementa el mismo contrato que mock/mockApi.js. */
+const spot = (situation, stack) => `${encodeURIComponent(situation)}/${encodeURIComponent(stack)}`;
+const query = params => {
+  const entries = Object.entries(params ?? {}).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)]);
+  return entries.length ? `?${new URLSearchParams(entries)}` : '';
+};
+
+/** Adaptador HTTP del contrato v0.2 (docs/openapi-draft.yaml). Mismo contrato que mock/mockApi.js. */
 export const httpApi = {
   listSituations: () => request('GET', '/situations'),
-  getDefaultRange: (situation, stack) => request('GET', `/ranges/default/${situation}/${stack}`),
-  getUserRange: (situation, stack) => request('GET', `/ranges/user/${situation}/${stack}`),
-  putUserRange: (situation, stack, payload) => request('PUT', `/ranges/user/${situation}/${stack}`, payload),
-  deleteUserRange: (situation, stack) => request('DELETE', `/ranges/user/${situation}/${stack}`),
+  listDefaultRanges: () => request('GET', '/ranges/default'),
+  getDefaultRange: (situation, stack) => request('GET', `/ranges/default/${spot(situation, stack)}`),
+  listUserRanges: () => request('GET', '/ranges/user'),
+  getUserRange: (situation, stack) => request('GET', `/ranges/user/${spot(situation, stack)}`),
+  putUserRange: (situation, stack, payload) => request('PUT', `/ranges/user/${spot(situation, stack)}`, payload),
+  deleteUserRange: (situation, stack) => request('DELETE', `/ranges/user/${spot(situation, stack)}`),
   recordAttempt: attempt => request('POST', '/quiz/attempts', attempt),
-  listAttempts: () => request('GET', '/quiz/attempts')
+  listAttempts: params => request('GET', `/quiz/attempts${query(params)}`),
+  getHandStats: params => request('GET', `/stats/hands${query(params)}`),
+  getProgress: params => request('GET', `/stats/progress${query(params)}`)
 };

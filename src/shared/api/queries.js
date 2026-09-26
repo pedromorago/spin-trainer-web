@@ -1,38 +1,57 @@
-// Hooks de estado de servidor (TanStack Query). Un hook por operación del contrato.
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+// Hooks de estado de servidor (TanStack Query). Un hook por operación del contrato v0.2 (docs/openapi-draft.yaml).
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from './index';
 
 export const keys = {
   situations: ['situations'],
+  defaultRanges: ['range', 'default'],
   defaultRange: (s, st) => ['range', 'default', s, st],
+  userRanges: ['range', 'user'],
   userRange: (s, st) => ['range', 'user', s, st],
-  attempts: ['attempts']
+  attempts: ['attempts'],
+  stats: ['stats'],
+  handStats: filters => ['stats', 'hands', filters],
+  progress: params => ['stats', 'progress', params]
 };
+
+/** 404 significa "no existe" (sin rango de referencia o personalizado): null, no error. */
+const nullIfNotFound = e => (e instanceof ApiError && e.isNotFound ? null : Promise.reject(e));
 
 export function useSituations() {
   return useQuery({ queryKey: keys.situations, queryFn: api.listSituations, staleTime: Infinity });
 }
 
+/** Todos los rangos de referencia (cambian solo con una migración de seed). */
+export function useDefaultRanges() {
+  return useQuery({ queryKey: keys.defaultRanges, queryFn: api.listDefaultRanges, staleTime: Infinity });
+}
+
+/** Rango de referencia; null si la combinación aún no tiene seed. */
 export function useDefaultRange(situation, stack) {
   return useQuery({
     queryKey: keys.defaultRange(situation, stack),
-    queryFn: () => api.getDefaultRange(situation, stack),
+    queryFn: () => api.getDefaultRange(situation, stack).catch(nullIfNotFound),
     enabled: !!situation && stack != null,
     staleTime: Infinity
   });
 }
 
-/** Rango custom del usuario; null si no existe (404 no es error aquí). */
+/** Todos los rangos personalizados del usuario. */
+export function useUserRanges() {
+  return useQuery({ queryKey: keys.userRanges, queryFn: api.listUserRanges });
+}
+
+/** Rango personalizado del usuario; null si no existe. */
 export function useUserRange(situation, stack) {
   return useQuery({
     queryKey: keys.userRange(situation, stack),
-    queryFn: () => api.getUserRange(situation, stack).catch(e => (e instanceof ApiError && e.isNotFound ? null : Promise.reject(e))),
+    queryFn: () => api.getUserRange(situation, stack).catch(nullIfNotFound),
     enabled: !!situation && stack != null
   });
 }
 
 /**
- * Rango con el que se entrena (ADR-0012): el custom del usuario si existe; si no, el default del PDF.
+ * Rango con el que se entrena (ADR-0012): el personalizado si existe; si no, el de referencia (PDF).
  * Expone ambos para quien necesite distinguirlos (badges y Reset del Explorer).
  */
 export function useEffectiveRange(situation, stack) {
@@ -48,11 +67,15 @@ export function useEffectiveRange(situation, stack) {
   };
 }
 
+/** PUT con `version` obligatoria: 0 crea, N reemplaza la versión N (409 si cambió). */
 export function useSaveUserRange(situation, stack) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: payload => api.putUserRange(situation, stack, payload),
-    onSuccess: data => qc.setQueryData(keys.userRange(situation, stack), data)
+    onSuccess: data => {
+      qc.setQueryData(keys.userRange(situation, stack), data);
+      qc.invalidateQueries({ queryKey: keys.userRanges, exact: true });
+    }
   });
 }
 
@@ -60,18 +83,41 @@ export function useDeleteUserRange(situation, stack) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api.deleteUserRange(situation, stack),
-    onSuccess: () => qc.setQueryData(keys.userRange(situation, stack), null)
+    onSuccess: () => {
+      qc.setQueryData(keys.userRange(situation, stack), null);
+      qc.invalidateQueries({ queryKey: keys.userRanges, exact: true });
+    }
   });
 }
 
+/** Registra una respuesta ({ situation, stack, hand, given }); el servidor corrige y devuelve el intento. */
 export function useRecordAttempt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: api.recordAttempt,
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.attempts })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.attempts });
+      qc.invalidateQueries({ queryKey: keys.stats });
+    }
   });
 }
 
-export function useAttempts() {
-  return useQuery({ queryKey: keys.attempts, queryFn: api.listAttempts });
+/** Historial de intentos paginado por cursor (del más reciente al más antiguo). */
+export function useAttempts(filters = {}) {
+  return useInfiniteQuery({
+    queryKey: [...keys.attempts, filters],
+    queryFn: ({ pageParam }) => api.listAttempts({ ...filters, cursor: pageParam }),
+    initialPageParam: undefined,
+    getNextPageParam: page => page.nextCursor ?? undefined
+  });
+}
+
+/** Filas agregadas por (situación, stack, mano) para la política de estudio de domain/stats.js. */
+export function useHandStats(filters = {}) {
+  return useQuery({ queryKey: keys.handStats(filters), queryFn: () => api.getHandStats(filters) });
+}
+
+/** Intentos y aciertos por día (solo días con actividad). */
+export function useProgress({ days = 30, tz = 'UTC' } = {}) {
+  return useQuery({ queryKey: keys.progress({ days, tz }), queryFn: () => api.getProgress({ days, tz }) });
 }

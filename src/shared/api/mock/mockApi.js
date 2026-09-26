@@ -1,77 +1,108 @@
-// Adaptador en memoria (persistido en localStorage) con el mismo contrato que httpApi (docs/openapi-draft.yaml).
-// Permite desarrollar y ejecutar E2E sin backend. Valida como lo haría la API y es dueño de los campos de servidor
-// (id, at, correct, version, updatedAt): el cliente no puede fijarlos.
+// Adaptador en memoria (persistido en localStorage) con el mismo contrato que httpApi: docs/openapi-draft.yaml v0.2.
+// Permite desarrollar y ejecutar E2E sin backend. Valida como la API y es dueño de los campos de servidor
+// (id, answeredAt, expected, correct, rangeSource, rangeVersion, version, updatedAt). Un test valida sus respuestas
+// contra los schemas de la spec (mock/__tests__/contract.test.js).
 import { ApiError } from '../errors';
 import { isValidHand } from '../../../domain/hand';
 import { isValidAction } from '../../../domain/actions';
-import { normalizeRange } from '../../../domain/range';
+import { actionFor, normalizeRange } from '../../../domain/range';
+import { aggregateAttempts, progressByDay } from '../../../domain/stats';
 import { SITUATIONS } from './situations';
 import { DEFAULT_RANGES } from './defaultRanges';
 
-const LS_KEY = 'spin-trainer.mock.v1';
-const key = (s, st) => `${s}@${st}`;
+// v2: forma de datos del contrato v0.2 (los intentos de v1 no son compatibles).
+const LS_KEY = 'spin-trainer.mock.v2';
+const SEED_VERSION = 1;
+const ATTEMPT_FIELDS = ['situation', 'stack', 'hand', 'given'];
+const key = (s, st) => `${s}@${Number(st)}`;
+const empty = () => ({ userRanges: {}, attempts: [] });
 
-const problem = (status, kind, title, detail) =>
-  new ApiError({ type: `urn:spin-trainer:${kind}`, title, status, detail }, status);
+const problem = (status, kind, title, detail, errors) =>
+  new ApiError({ type: `urn:spin-trainer:${kind}`, title, status, detail, ...(errors ? { errors } : {}) }, status);
 const notFound = detail => problem(404, 'not-found', 'Not found', detail);
-const invalid = detail => problem(400, 'validation', 'Validation failed', detail);
+const invalid = (detail, errors = [{ field: 'body', message: detail }]) => problem(400, 'validation', 'Validation failed', detail, errors);
 const conflict = detail => problem(409, 'conflict', 'Conflict', detail);
+const noRange = detail => problem(422, 'no-range', 'No range', detail);
 
 export function memoryStorage() {
   const data = new Map();
   return { getItem: k => data.get(k) ?? null, setItem: (k, v) => data.set(k, String(v)) };
 }
 
+const defaultRange = (situation, stack) => {
+  const hands = DEFAULT_RANGES[key(situation, stack)];
+  return hands ? { situation, stack: Number(stack), hands: { ...hands }, source: 'default', version: SEED_VERSION } : null;
+};
+
 /**
  * @param {object} [opts]
  * @param {{getItem, setItem}} [opts.storage] por defecto localStorage (memoria si no existe)
  * @param {number} [opts.latency] ms de latencia simulada
+ * @param {() => Date} [opts.clock] reloj inyectable (tests)
  */
-export function createMockApi({ storage = globalThis.localStorage ?? memoryStorage(), latency = 50 } = {}) {
+export function createMockApi({ storage = globalThis.localStorage ?? memoryStorage(), latency = 50, clock = () => new Date() } = {}) {
   const delay = () => (latency ? new Promise(r => setTimeout(r, latency)) : Promise.resolve());
   const load = () => {
-    try { return JSON.parse(storage.getItem(LS_KEY)) ?? { userRanges: {}, attempts: [] }; }
-    catch { return { userRanges: {}, attempts: [] }; }
+    try { return JSON.parse(storage.getItem(LS_KEY)) ?? empty(); }
+    catch { return empty(); }
   };
   const save = state => storage.setItem(LS_KEY, JSON.stringify(state));
-  const findSituation = (situation, stack) => {
+  const spot = (situation, stack) => {
     const s = SITUATIONS.find(x => x.key === situation);
-    return s && s.stacks.includes(Number(stack)) ? s : null;
+    if (!s || !s.stacks.includes(Number(stack))) throw notFound(`Situación/stack desconocido: ${situation}@${stack}`);
+    return s;
+  };
+  const validateHands = (hands, s) => {
+    if (!hands || typeof hands !== 'object' || Array.isArray(hands)) throw invalid('hands es obligatorio', [{ field: 'hands', message: 'obligatorio' }]);
+    const errors = Object.entries(hands).flatMap(([h, a]) => [
+      ...(isValidHand(h) ? [] : [{ field: `hands.${h}`, message: 'mano inválida' }]),
+      ...(isValidAction(a, s.actions) ? [] : [{ field: `hands.${h}`, message: `acción ${a} no permitida en ${s.key}` }])
+    ]);
+    if (errors.length) throw invalid(`${errors.length} entradas inválidas en hands`, errors);
   };
 
   return {
     async listSituations() { await delay(); return structuredClone(SITUATIONS); },
 
+    async listDefaultRanges() {
+      await delay();
+      return SITUATIONS.flatMap(s => s.stacks.map(st => defaultRange(s.key, st))).filter(Boolean);
+    },
+
     async getDefaultRange(situation, stack) {
       await delay();
-      if (!findSituation(situation, stack)) throw notFound('Situación/stack desconocido');
-      return { situation, stack: Number(stack), hands: { ...DEFAULT_RANGES[key(situation, stack)] }, source: 'default', version: 1 };
+      spot(situation, stack);
+      const range = defaultRange(situation, stack);
+      if (!range) throw notFound(`Sin rango de referencia para ${situation}@${stack}`);
+      return range;
     },
+
+    async listUserRanges() { await delay(); return Object.values(load().userRanges); },
 
     async getUserRange(situation, stack) {
       await delay();
-      const r = load().userRanges[key(situation, stack)];
-      if (!r) throw notFound('Sin rango custom');
-      return r;
+      spot(situation, stack);
+      const range = load().userRanges[key(situation, stack)];
+      if (!range) throw notFound('Sin rango personalizado');
+      return range;
     },
 
+    /** v0.2: version obligatoria. 0 = crear (409 si existe); N = reemplazar la versión N (409 si cambió o se borró). */
     async putUserRange(situation, stack, { hands, version } = {}) {
       await delay();
-      const s = findSituation(situation, stack);
-      if (!s) throw invalid('Situación/stack desconocido');
-      if (!hands || typeof hands !== 'object' || Array.isArray(hands)) throw invalid('hands es obligatorio');
-      const badHands = Object.keys(hands).filter(h => !isValidHand(h));
-      if (badHands.length) throw invalid(`Manos inválidas: ${badHands.join(', ')}`);
-      const badActions = Object.entries(hands).filter(([, a]) => !isValidAction(a, s.actions)).map(([h, a]) => `${h}=${a}`);
-      if (badActions.length) throw invalid(`Acciones no permitidas en ${situation}: ${badActions.join(', ')}`);
+      const s = spot(situation, stack);
+      if (!Number.isInteger(version) || version < 0) throw invalid('version es obligatoria (entero ≥ 0)', [{ field: 'version', message: 'entero ≥ 0' }]);
+      validateHands(hands, s);
 
       const state = load();
       const k = key(situation, stack);
       const current = state.userRanges[k];
-      if (current && version !== undefined && version !== current.version) throw conflict('El rango cambió; recarga');
+      if ((current?.version ?? 0) !== version) {
+        throw conflict(current ? `El rango está en la versión ${current.version}; recarga` : 'El rango personalizado ya no existe; recarga');
+      }
       const next = {
         situation, stack: Number(stack), hands: normalizeRange(hands, s.actions), source: 'user',
-        version: (current?.version ?? 0) + 1, updatedAt: new Date().toISOString()
+        version: version + 1, updatedAt: clock().toISOString()
       };
       state.userRanges[k] = next;
       save(state);
@@ -80,29 +111,69 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
 
     async deleteUserRange(situation, stack) {
       await delay();
+      spot(situation, stack);
       const state = load();
       delete state.userRanges[key(situation, stack)];
       save(state);
       return null;
     },
 
-    async recordAttempt({ situation, stack, hand, expected, given } = {}) {
+    /** v0.2: el servidor calcula expected (rango efectivo, ADR-0012) y correct; el cliente solo envía lo que hizo. */
+    async recordAttempt(body = {}) {
       await delay();
-      const s = findSituation(situation, stack);
-      if (!s) throw invalid('Situación/stack desconocido');
-      if (!isValidHand(hand)) throw invalid(`Mano inválida: ${hand}`);
-      for (const a of [expected, given]) if (!isValidAction(a, s.actions)) throw invalid(`Acción no permitida en ${situation}: ${a}`);
+      const extra = Object.keys(body).filter(f => !ATTEMPT_FIELDS.includes(f));
+      if (extra.length) throw invalid(`Campos no permitidos: ${extra.join(', ')}`, extra.map(field => ({ field, message: 'no permitido' })));
+      const { situation, stack, hand, given } = body;
+      const s = spot(situation, stack);
+      if (!isValidHand(hand)) throw invalid(`Mano inválida: ${hand}`, [{ field: 'hand', message: 'mano inválida' }]);
+      if (!isValidAction(given, s.actions)) throw invalid(`Acción no permitida en ${situation}: ${given}`, [{ field: 'given', message: 'acción no permitida' }]);
+
       const state = load();
+      const range = state.userRanges[key(situation, stack)] ?? defaultRange(situation, stack);
+      if (!range) throw noRange(`Sin rango para ${situation}@${stack}: no se puede corregir`);
+      const expected = actionFor(range.hands, hand, s.actions);
       const stored = {
-        situation, stack: Number(stack), hand, expected, given,
-        id: crypto.randomUUID(), correct: expected === given, at: new Date().toISOString()
+        id: crypto.randomUUID(), situation, stack: Number(stack), hand, given, expected, correct: expected === given,
+        rangeSource: range.source, rangeVersion: range.version, answeredAt: clock().toISOString()
       };
       state.attempts.push(stored);
       save(state);
       return stored;
     },
 
-    async listAttempts() { await delay(); return load().attempts; }
+    /** Del más reciente al más antiguo; cursor opaco (desplazamiento codificado). */
+    async listAttempts({ limit = 50, cursor, situation, stack } = {}) {
+      await delay();
+      if (!Number.isInteger(limit) || limit < 1 || limit > 200) throw invalid('limit debe estar entre 1 y 200', [{ field: 'limit', message: '1..200' }]);
+      let offset = 0;
+      if (cursor != null) {
+        offset = Number.parseInt(atob(cursor), 10);
+        if (!Number.isInteger(offset) || offset < 0) throw invalid('cursor inválido', [{ field: 'cursor', message: 'inválido' }]);
+      }
+      const items = load().attempts
+        .filter(a => (situation == null || a.situation === situation) && (stack == null || a.stack === Number(stack)))
+        .reverse();
+      const page = items.slice(offset, offset + limit);
+      const end = offset + page.length;
+      return { items: page, nextCursor: end < items.length ? btoa(String(end)) : null };
+    },
+
+    async getHandStats({ situation, stack } = {}) {
+      await delay();
+      const attempts = load().attempts
+        .filter(a => (situation == null || a.situation === situation) && (stack == null || a.stack === Number(stack)));
+      return aggregateAttempts(attempts);
+    },
+
+    async getProgress({ days = 30, tz = 'UTC' } = {}) {
+      await delay();
+      if (!Number.isInteger(days) || days < 1 || days > 365) throw invalid('days debe estar entre 1 y 365', [{ field: 'days', message: '1..365' }]);
+      try { return progressByDay(load().attempts, { days, tz, now: clock() }); }
+      catch (e) {
+        if (e instanceof RangeError) throw invalid(`Zona horaria desconocida: ${tz}`, [{ field: 'tz', message: 'zona IANA desconocida' }]);
+        throw e;
+      }
+    }
   };
 }
 

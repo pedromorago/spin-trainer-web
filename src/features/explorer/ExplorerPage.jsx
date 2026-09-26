@@ -70,7 +70,8 @@ function RangeEditor({ situation, stack, saved, reference, onReload }) {
     setPending(p => {
       const current = p?.hands ?? base;
       const next = paintHand(current, hand, brush, actions);
-      return next === current ? p : { hands: next, baseVersion: p ? p.baseVersion : saved?.version };
+      // version 0 = crear; N = reemplazar la versión N (contrato v0.2).
+      return next === current ? p : { hands: next, baseVersion: p ? p.baseVersion : saved?.version ?? 0 };
     });
   };
   const persist = () => save.mutate(

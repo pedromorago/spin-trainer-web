@@ -75,7 +75,8 @@ function QuizSession({ situation, stack, range, scope }) {
     setResult(r);
     setRound(s => ({ correct: s.correct + (r.correct ? 1 : 0), total: s.total + 1 }));
     recordInSession(r.correct);
-    record.mutate({ situation: situation.key, stack, hand, expected: r.expected, given });
+    // El servidor corrige contra el rango efectivo (contrato v0.2); el feedback local es inmediato.
+    record.mutate({ situation: situation.key, stack, hand, given });
   };
 
   const next = () => { setResult(null); setHand(engine.nextHand()); };
