@@ -14,8 +14,8 @@ const BLINDS = { SB: 0.5, BB: 1 };
  */
 export function tableSeats(situation, stack) {
   const order = SEAT_ORDER[situation.format];
-  if (!order) throw new Error(`Formato desconocido: ${situation.format}`);
-  if (!order.includes(situation.hero)) throw new Error(`Héroe ${situation.hero} no juega en ${situation.format}`);
+  if (!order) throw new Error(`Unknown format: ${situation.format}`);
+  if (!order.includes(situation.hero)) throw new Error(`Hero ${situation.hero} does not play in ${situation.format}`);
 
   const seats = order.map(position => ({
     position, isHero: position === situation.hero, isDealer: position === DEALER[situation.format],
@@ -24,7 +24,7 @@ export function tableSeats(situation, stack) {
   let toCall = BLINDS.BB;
   for (const { position, action } of situation.priorActions) {
     const seat = seats.find(s => s.position === position);
-    if (!seat || seat.isHero) throw new Error(`Acción previa inválida: ${position} ${action}`);
+    if (!seat || seat.isHero) throw new Error(`Invalid prior action: ${position} ${action}`);
     seat.action = action;
     if (action === 'FOLD') seat.folded = true; // the blind already posted stays in the pot
     else if (action === 'LIMP') seat.bet = BLINDS.BB;

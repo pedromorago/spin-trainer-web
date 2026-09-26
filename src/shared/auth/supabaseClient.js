@@ -5,7 +5,7 @@ export function getSupabase() {
   clientPromise ??= import('@supabase/supabase-js').then(({ createClient }) => {
     const url = import.meta.env.VITE_SUPABASE_URL;
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if (!url || !anonKey) console.warn('Faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY');
+    if (!url || !anonKey) console.warn('Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY');
     return createClient(url ?? 'http://localhost', anonKey ?? 'anon');
   });
   return clientPromise;

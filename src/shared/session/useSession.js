@@ -3,6 +3,6 @@ import { SessionContext } from './sessionContext';
 
 export function useSession() {
   const session = useContext(SessionContext);
-  if (!session) throw new Error('useSession requiere <SessionProvider>');
+  if (!session) throw new Error('useSession requires <SessionProvider>');
   return session;
 }

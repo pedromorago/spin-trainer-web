@@ -9,7 +9,7 @@ Spin Trainer frontend. Rules shared by the three repos, summarized here so this 
 - Effective range = the custom one if it exists, otherwise the PDF one (`useEffectiveRange`). Only the Explorer writes ranges; the Builder does not persist (ADR-0012).
 - Supabase only issues the JWT; all data goes through the API. Default ranges in the DB (Flyway). Quiz attempts = immutable events.
 - No TypeScript in this repo. Discarded: OWASP ZAP, load testing, Pact, pgTAP.
-- Code comments and documentation in English (README, ADRs, CONTRIBUTING.md, docs/, OpenAPI descriptions). In Spanish: app UI text, API error messages, test titles and Gherkin features.
+- In English: code comments, documentation (README, ADRs, CONTRIBUTING.md, docs/, OpenAPI descriptions) and developer-facing messages (logs, internal exceptions, tooling output). In Spanish: app UI text, API error messages, the test report (test titles, Allure names, assertion descriptions) and Gherkin features.
 - Commits **always in Pedro's name** (author and committer: `Pedro Morago López-Vázquez <pedromoragolv@gmail.com>`; check `git config user.name/user.email` before committing). Conventional Commits, no co-author or attribution trailer.
 - Be concise, propose before generating a lot of code, iterate in blocks with confirmation.
 

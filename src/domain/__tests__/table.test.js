@@ -41,8 +41,8 @@ describe('tableSeats', () => {
   });
 
   it('rechaza formatos, héroes o acciones previas incoherentes', () => {
-    expect(() => tableSeats(sit('6max', 'BTN'), 25)).toThrow('Formato');
-    expect(() => tableSeats(sit('hu', 'BTN'), 25)).toThrow('Héroe');
-    expect(() => tableSeats(sit('hu', 'BB', [{ position: 'BB', action: 'LIMP' }]), 25)).toThrow('Acción previa');
+    expect(() => tableSeats(sit('6max', 'BTN'), 25)).toThrow('Unknown format');
+    expect(() => tableSeats(sit('hu', 'BTN'), 25)).toThrow('does not play');
+    expect(() => tableSeats(sit('hu', 'BB', [{ position: 'BB', action: 'LIMP' }]), 25)).toThrow('Invalid prior action');
   });
 });

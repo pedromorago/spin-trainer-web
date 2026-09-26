@@ -34,6 +34,6 @@ describe('dealCards', () => {
   });
 
   it('rechaza manos inválidas', () => {
-    expect(() => dealCards('AAs')).toThrow('Mano inválida');
+    expect(() => dealCards('AAs')).toThrow('Invalid hand');
   });
 });

@@ -3,6 +3,6 @@ import { AuthContext } from './authContext';
 
 export function useAuth() {
   const auth = useContext(AuthContext);
-  if (!auth) throw new Error('useAuth requiere <AuthProvider>');
+  if (!auth) throw new Error('useAuth requires <AuthProvider>');
   return auth;
 }

@@ -8,7 +8,7 @@ export const SUITS = ['s', 'h', 'd', 'c'];
  * @returns {[{rank, suit}, {rank, suit}]} high card first. Pair and offsuit: different suits; suited: the same suit.
  */
 export function dealCards(hand, rng = Math.random) {
-  if (!isValidHand(hand)) throw new Error(`Mano inválida: ${hand}`);
+  if (!isValidHand(hand)) throw new Error(`Invalid hand: ${hand}`);
   const first = SUITS[Math.floor(rng() * 4)];
   const others = SUITS.filter(s => s !== first);
   const second = hand[2] === 's' ? first : others[Math.floor(rng() * 3)];

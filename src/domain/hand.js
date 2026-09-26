@@ -14,7 +14,7 @@ export function getHand(rowIdx, colIdx) {
 }
 
 export function getCell(hand) {
-  if (!isValidHand(hand)) throw new Error(`Mano inválida: ${hand}`);
+  if (!isValidHand(hand)) throw new Error(`Invalid hand: ${hand}`);
   const a = RANKS.indexOf(hand[0]);
   const b = RANKS.indexOf(hand[1]);
   if (hand.length === 2) return [a, b];
