@@ -4,7 +4,7 @@ Frontend de Spin Trainer. Reglas comunes a los tres repos, resumidas aquí para 
 
 ## Reglas globales (resumen)
 - Calidad de portfolio > velocidad. Fuente de verdad: `docs/SPIN_TRAINER_PROJECT_CONTEXT.md`, `docs/ARCHITECTURE.md`, `docs/adr/*`, `docs/openapi-draft.yaml`.
-- ADRs cerrados (0001..0012); solo se reabren con fallo concreto y justificado.
+- ADRs cerrados (0001..0013); solo se reabren con fallo concreto y justificado.
 - Solo Spin & Go (3-max y HU, 16 situaciones). Del prototipo MTT 6-max se toman UI y flujos, no código ni rangos (ADR-0011).
 - Rango efectivo = personalizado si existe, si no el del PDF (`useEffectiveRange`). Solo el Explorer escribe rangos; el Builder no persiste (ADR-0012).
 - Supabase solo emite el JWT; todos los datos van por la API. Rangos default en BD (Flyway). Intentos de Quiz = eventos inmutables.
@@ -36,7 +36,9 @@ Antes de commitear: `npm run lint && npm test && npm run build` en verde.
 - La acción efectiva de una mano se calcula solo con `domain/range.js#actionFor`.
 - Colores de acción solo en `shared/theme/actionColors.js`; el dominio no conoce colores. Dentro de una situación no se repiten (test).
 - Las reglas de capas las verifica `eslint.config.js`; si cambian, se cambian ahí y en `docs/ARCHITECTURE.md`.
-- El mock (`shared/api/mock`) valida como la API y es dueño de los campos de servidor; mantenerlo alineado con la spec y con sus tests.
+- El mock (`shared/api/mock`) valida como la API y es dueño de los campos de servidor. Contrato v0.2 (ADR-0013): el servidor corrige los intentos,
+  `PUT` exige `version`, stats agregadas por API y política en `domain/stats.js`. Cambiar el contrato = cambiar primero `docs/openapi-draft.yaml`;
+  `mock/__tests__/contract.test.js` valida el mock contra ese YAML.
 
 ## Convenciones
 - Router en *data mode* (`createBrowserRouter`, rutas lazy en `src/App.jsx`).

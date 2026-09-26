@@ -35,7 +35,7 @@ En modo mock no hace falta login ni API: los datos viven en memoria/localStorage
 src/domain/    reglas de negocio en JS puro, con tests
 src/shared/    api (http | mock), auth, ui, theme
 src/features/  explorer · quiz · builder · stats · auth
-docs/          contexto, arquitectura, ADRs, contrato v0, prompt
+docs/          contexto, arquitectura, ADRs, contrato v0.2 (OpenAPI), prompt
 ```
 
 Ver `docs/ARCHITECTURE.md`.

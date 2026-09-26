@@ -81,32 +81,38 @@ com.pedromorago.spintrainer
 ```
 
 - `openapi-generator` genera interfaces `*Api` desde `openapi.yaml`; los controllers las implementan → el código no puede desviarse del contrato.
-- Errores en RFC 7807. Tipos: `urn:spin-trainer:validation`, `not-found`, `conflict`, `unauthorized`.
-- `PUT /ranges/user/{situation}/{stack}` reemplaza el rango completo (idempotente); `version` para concurrencia optimista → 409.
+- Errores en RFC 9457 (Problem Details, sustituye a la 7807). Tipos: `urn:spin-trainer:validation`, `unauthorized`, `not-found`, `conflict`, `no-range`.
+- `PUT /ranges/user/{situation}/{stack}` reemplaza el rango completo; `version` obligatoria (0 = crear, N = reemplazar la N) → 409 si no coincide.
+- El servidor corrige los intentos (`expected`, `correct`) contra el rango efectivo; `stats` agrega con SQL y el cliente aplica la política de estudio (ADR-0013).
 - Actuator `/actuator/health`, logs JSON con `correlationId`.
 
-## Contrato v0 (a validar antes de generar la API)
+## Contrato v0.2 (ADR-0013; borrador en `docs/openapi-draft.yaml`, pasará a spin-trainer-api)
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | /situations | Catálogo de 16 situaciones (stacks, acciones, notas) |
-| GET | /ranges/default/{situation}/{stack} | Rango de referencia (PDF) |
-| GET | /ranges/user/{situation}/{stack} | Rango custom del usuario (404 si no existe) |
-| PUT | /ranges/user/{situation}/{stack} | Crea/reemplaza rango custom (`hands`, `version`) |
-| DELETE | /ranges/user/{situation}/{stack} | Borra rango custom |
-| POST | /quiz/attempts | Registra un intento |
-| GET | /quiz/attempts | Intentos del usuario (paginable en v1) |
+| GET | /situations | Catálogo de 16 situaciones: stacks, acciones, héroe, acciones previas, notas |
+| GET | /ranges/default | Todos los rangos de referencia con seed |
+| GET | /ranges/default/{situation}/{stack} | Rango de referencia (404 si no hay seed) |
+| GET | /ranges/user | Todos los rangos personalizados del usuario |
+| GET | /ranges/user/{situation}/{stack} | Rango personalizado (404 si no existe) |
+| PUT | /ranges/user/{situation}/{stack} | Crea (201) o reemplaza (200) con `version` obligatoria → 409 |
+| DELETE | /ranges/user/{situation}/{stack} | Borra el personalizado (204, idempotente) |
+| POST | /quiz/attempts | Registra `{situation, stack, hand, given}`; el servidor corrige (422 si no hay rango) |
+| GET | /quiz/attempts | Intentos, del más reciente al más antiguo, paginados por cursor |
+| GET | /stats/hands | Intentos/aciertos por situación, stack y mano |
+| GET | /stats/progress | Intentos/aciertos por día (zona horaria IANA) |
 
-El mock (`shared/api/mock`) implementa exactamente este contrato; `docs/openapi-draft.yaml` es el borrador.
+El mock (`shared/api/mock`) implementa este contrato y `mock/__tests__/contract.test.js` valida sus respuestas y errores
+contra los schemas del YAML (Ajv, JSON Schema 2020-12): si mock y spec divergen, falla un test.
 
 ## Testing
 
 | Nivel | Web | API | QA repo |
 |---|---|---|---|
-| Unit | Vitest sobre `domain/` y el adaptador mock (cobertura ≥90%) | JUnit 5 sobre domain/application | — |
+| Unit | Vitest sobre `domain/`, adaptadores mock y http (cobertura ≥90%) | JUnit 5 sobre domain/application | — |
 | Arquitectura | ESLint: reglas de capas en `eslint.config.js` | ArchUnit | — |
 | Integración | — | Testcontainers Postgres + Flyway | — |
-| Contrato | — | — | Validación de respuestas contra `openapi.yaml` |
+| Contrato | Mock validado contra `openapi-draft.yaml` (Ajv) | — | Validación de respuestas contra `openapi.yaml` |
 | API funcional | — | — | REST Assured + Cucumber; Newman en regresión |
 | E2E | — | — | Playwright (TS), contra API real y contra mock |
 | Reporting | — | — | Allure; SonarCloud en los tres repos; GitHub Actions |
