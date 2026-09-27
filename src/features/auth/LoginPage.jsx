@@ -24,14 +24,13 @@ function GoogleMark() {
 }
 
 /**
- * New accounts only come from Google (ADR-0019): the account is created the first time. The email form signs in the
- * accounts that already have a password; there is no email sign-up.
+ * Google is the only way in (ADR-0020): the account is created the first time. In mock mode, where `signIn` exists, a
+ * test-player field lets the E2E suite play as different players on the same tab.
  */
 export function LoginPage() {
   const { user, signIn, signInWithGoogle } = useAuth();
   const location = useLocation();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -42,11 +41,10 @@ export function LoginPage() {
   const run = async action => {
     setError(null); setSubmitting(true);
     const { error } = await action();
-    // On success Google takes over the page (or, with a password, the session change redirects): only errors stay.
+    // On success Google takes over the page (or, in the mock, the session change redirects): only errors stay.
     setSubmitting(false);
     if (error) setError(authErrorMessage(error));
   };
-  const submit = e => { e.preventDefault(); run(() => signIn(email, password)); };
 
   const box = { maxWidth: 360, margin: '10vh auto', padding: theme.space.xl, background: theme.colors.bgElevated,
     border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md, display: 'flex', flexDirection: 'column', gap: theme.space.md };
@@ -54,7 +52,6 @@ export function LoginPage() {
   const input = { padding: theme.space.sm, background: theme.colors.bg, color: theme.colors.text,
     border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.sm };
   const muted = { margin: 0, fontSize: theme.font.sizeSm, color: theme.colors.textMuted };
-  const rule = { flex: 1, borderTop: `1px solid ${theme.colors.border}` };
 
   return (
     <main style={box} aria-labelledby="login-title">
@@ -67,23 +64,18 @@ export function LoginPage() {
       </button>
       <p style={muted}>¿Primera vez? Tu cuenta se crea al entrar con Google.</p>
 
-      <div aria-hidden="true" style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, ...muted }}>
-        <span style={rule} />o con tu contraseña<span style={rule} />
-      </div>
-
-      <form onSubmit={submit} aria-label="Entrar" style={{ display: 'flex', flexDirection: 'column', gap: theme.space.md }}>
-        <label style={field}>
-          Email
-          <input style={input} type="email" autoComplete="email" required value={email}
-            onChange={e => setEmail(e.target.value)} data-testid="login-email" />
-        </label>
-        <label style={field}>
-          Contraseña
-          <input style={input} type="password" autoComplete="current-password" required minLength={6} value={password}
-            onChange={e => setPassword(e.target.value)} data-testid="login-password" />
-        </label>
-        <button type="submit" style={layout.primary} disabled={submitting} data-testid="login-submit">Entrar</button>
-      </form>
+      {signIn && (
+        <form onSubmit={e => { e.preventDefault(); run(() => signIn(email)); }} aria-label="Jugador de prueba"
+          style={{ display: 'flex', flexDirection: 'column', gap: theme.space.sm, paddingTop: theme.space.md,
+            borderTop: `1px dashed ${theme.colors.border}` }}>
+          <label style={field}>
+            Email del jugador de prueba (modo mock)
+            <input style={input} type="email" required value={email} onChange={e => setEmail(e.target.value)}
+              data-testid="login-email" />
+          </label>
+          <button type="submit" style={layout.secondary} disabled={submitting} data-testid="login-submit">Entrar como este jugador</button>
+        </form>
+      )}
 
       <div role="status" aria-live="polite">
         {error && <small style={{ color: theme.colors.danger }} data-testid="login-error">{error}</small>}

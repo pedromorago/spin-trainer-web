@@ -48,12 +48,10 @@ export function parseOAuthCallback(search) {
   return code ? { code } : { error: OAUTH_ERRORS.invalid };
 }
 
-/** Supabase Auth answers in English: the messages a user can meet, in Spanish; anything else, a generic one. */
+/** Supabase Auth answers in English: the messages a user can meet when leaving for Google, in Spanish. */
 export function authErrorMessage(error) {
   if (!error) return null;
   const message = String(error.message ?? '');
-  if (/invalid login credentials/i.test(message)) return 'Email o contraseña incorrectos.';
-  if (/email not confirmed/i.test(message)) return 'Tienes que confirmar tu email antes de entrar.';
   if (/rate limit|too many requests/i.test(message)) return 'Demasiados intentos. Espera un momento y vuelve a probar.';
   if (/failed to fetch|network/i.test(message)) return 'No hay conexión con el servidor de acceso. Vuelve a intentarlo.';
   return 'No se ha podido entrar. Vuelve a intentarlo.';

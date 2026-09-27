@@ -83,8 +83,6 @@ describe('parseOAuthCallback', () => {
 
 describe('authErrorMessage', () => {
   it.each([
-    ['Invalid login credentials', 'Email o contraseña incorrectos.'],
-    ['Email not confirmed', 'Tienes que confirmar tu email antes de entrar.'],
     ['Request rate limit reached', 'Demasiados intentos. Espera un momento y vuelve a probar.'],
     ['Failed to fetch', 'No hay conexión con el servidor de acceso. Vuelve a intentarlo.'],
     ['Something unexpected', 'No se ha podido entrar. Vuelve a intentarlo.']

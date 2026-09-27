@@ -13,8 +13,9 @@ const exchanges = new Map();
 
 /**
  * A single source of truth for the session across the whole app (a single Supabase subscription).
- * In mock mode there is no Supabase: it starts signed in, the login accepts any credentials and "Continuar con Google"
- * signs in straight away. New accounts only come from Google (ADR-0019): there is no email sign-up.
+ * Google is the only way in (ADR-0020). In mock mode there is no Supabase: it starts signed in, "Continuar con Google"
+ * signs in straight away, and `signIn(email)` plays as another player (the E2E suite's way to have several players on
+ * one tab); outside the mock `signIn` does not exist.
  */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(MOCK ? mockUser() : null);
@@ -38,9 +39,7 @@ export function AuthProvider({ children }) {
   const value = useMemo(() => ({
     user,
     loading,
-    signIn: MOCK
-      ? async email => { setUser(mockUser(email || undefined)); return { error: null }; }
-      : async (email, password) => (await getSupabase()).auth.signInWithPassword({ email, password }),
+    signIn: MOCK ? async email => { setUser(mockUser(email || undefined)); return { error: null }; } : undefined,
     // Leaves for Google and comes back to /auth/callback; returnPath is where the user was going.
     signInWithGoogle: MOCK
       ? async () => { setUser(mockUser()); return { error: null }; }
