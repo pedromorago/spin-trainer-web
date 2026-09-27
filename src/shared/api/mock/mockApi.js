@@ -36,11 +36,11 @@ const noRange = detail => problem(422, 'no-range', 'No range', detail);
 // The same 400s as the API, by where it detects them:
 // - JSON that does not map (unknown field, wrong type or action): the first one, "<message>: <field>";
 const unreadable = (field, message) => invalid(`${message}: ${field}`, [{ field, message }]);
-// - rules of the spec (required, pattern, minimum...): all of them, "<field>: <message>" or "N campos no válidos: ...";
+// - rules of the spec (required, pattern, minimum...): all of them, "<field>: <message>" or "N invalid fields: ...";
 const specErrors = errors => {
   if (!errors.length) return;
   const detail = errors.length === 1 ? `${errors[0].field}: ${errors[0].message}`
-    : `${errors.length} campos no válidos: ${[...new Set(errors.map(e => e.field))].join(', ')}`;
+    : `${errors.length} invalid fields: ${[...new Set(errors.map(e => e.field))].join(', ')}`;
   throw invalid(detail, errors);
 };
 // - business rules (canonical hand, action of the situation...): the rule's message.
@@ -48,16 +48,16 @@ const ruleError = (field, message) => invalid(message, [{ field, message }]);
 
 /** A stack of the spec (number, 1..100, multiple of 0.5): the spec's errors, or the rule's for the multiple. */
 function stackErrors(stack, field = 'stack') {
-  if (typeof stack !== 'number' || !Number.isFinite(stack)) return [{ field, message: 'valor no válido' }];
+  if (typeof stack !== 'number' || !Number.isFinite(stack)) return [{ field, message: 'invalid value' }];
   if (stack < 1) return [{ field, message: 'debe ser ≥ 1' }];
   if (stack > 100) return [{ field, message: 'debe ser ≤ 100' }];
   return [];
 }
 function checkStackRule(stack) {
-  if (!Number.isInteger(stack * 2)) throw ruleError('stack', 'el stack debe ser múltiplo de 0,5 BB');
+  if (!Number.isInteger(stack * 2)) throw ruleError('stack', 'the stack must be a multiple of 0.5 BB');
 }
 const situationErrors = (situation, field = 'situation') =>
-  (typeof situation === 'string' && SITUATION_KEY.test(situation) ? [] : [{ field, message: 'formato no válido' }]);
+  (typeof situation === 'string' && SITUATION_KEY.test(situation) ? [] : [{ field, message: 'invalid format' }]);
 
 /** Optional filters ?situation=&stack= (path and query values arrive as numbers or strings of the URL). */
 function checkFilters({ situation, stack }) {
@@ -90,7 +90,7 @@ function decodeCursor(cursor) {
     if (rest.length || !id || Number.isNaN(Date.parse(answeredAt))) throw new Error('format');
     return { answeredAt, id };
   } catch {
-    throw ruleError('cursor', 'cursor no válido');
+    throw ruleError('cursor', 'invalid cursor');
   }
 }
 const newestFirst = (a, b) => b.answeredAt.localeCompare(a.answeredAt) || b.id.localeCompare(a.id);
@@ -128,16 +128,16 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
     specErrors([...situationErrors(situation), ...stackErrors(st)]);
     checkStackRule(st);
     const s = SITUATIONS.find(x => x.key === situation);
-    if (!s || !s.stacks.includes(st)) throw notFound(`Situación/stack desconocido: ${situation}@${st}`);
+    if (!s || !s.stacks.includes(st)) throw notFound(`Unknown situation/stack: ${situation}@${st}`);
     return s;
   };
   // One error per hand, as the API: a hand that is not canonical, or an action the situation does not have.
   const validateHands = (hands, s) => {
     const errors = Object.entries(hands).flatMap(([h, a]) => {
-      if (!isValidHand(h)) return [{ field: `hands.${h}`, message: 'mano no válida' }];
-      return isValidAction(a, s.actions) ? [] : [{ field: `hands.${h}`, message: `acción ${a ?? 'vacía'} no permitida en ${s.key}` }];
+      if (!isValidHand(h)) return [{ field: `hands.${h}`, message: 'invalid hand' }];
+      return isValidAction(a, s.actions) ? [] : [{ field: `hands.${h}`, message: `${a == null ? 'empty action' : `action ${a}`} not allowed in ${s.key}` }];
     });
-    if (errors.length) throw invalid(`${errors.length} entradas no válidas en hands`, errors);
+    if (errors.length) throw invalid(`${errors.length} invalid entries in hands`, errors);
   };
 
   return {
@@ -153,7 +153,7 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
       await delay();
       spot(situation, stack);
       const range = defaultRange(await referenceRanges(), situation, stack);
-      if (!range) throw notFound(`Sin rango de referencia para ${situation}@${stack}`);
+      if (!range) throw notFound(`No reference range for ${situation}@${stack}`);
       return range;
     },
 
@@ -163,7 +163,7 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
       await delay();
       spot(situation, stack);
       const range = load().userRanges[key(situation, stack)];
-      if (!range) throw notFound('Sin rango personalizado');
+      if (!range) throw notFound(`No custom range for ${situation}@${stack}`);
       return range;
     },
 
@@ -175,15 +175,15 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
       await delay();
       const s = spot(situation, stack);
       const unknown = Object.keys(body).find(f => !RANGE_FIELDS.includes(f));
-      if (unknown) throw unreadable(unknown, 'campo no permitido');
+      if (unknown) throw unreadable(unknown, 'field not allowed');
       const { hands, version } = body;
-      if (hands != null && (typeof hands !== 'object' || Array.isArray(hands))) throw unreadable('hands', 'valor no válido');
+      if (hands != null && (typeof hands !== 'object' || Array.isArray(hands))) throw unreadable('hands', 'invalid value');
       const unknownAction = Object.entries(hands ?? {}).find(([, a]) => a != null && !ACTIONS.includes(a));
-      if (unknownAction) throw unreadable(`hands.${unknownAction[0]}`, 'valor no válido');
-      if (version != null && !Number.isInteger(version)) throw unreadable('version', 'valor no válido');
+      if (unknownAction) throw unreadable(`hands.${unknownAction[0]}`, 'invalid value');
+      if (version != null && !Number.isInteger(version)) throw unreadable('version', 'invalid value');
       specErrors([
         ...(hands == null ? [{ field: 'hands', message: 'obligatorio' }]
-          : Object.keys(hands).length > MAX_HANDS ? [{ field: 'hands', message: `tamaño máximo ${MAX_HANDS}` }] : []),
+          : Object.keys(hands).length > MAX_HANDS ? [{ field: 'hands', message: `size must be at most ${MAX_HANDS}` }] : []),
         ...(version == null ? [{ field: 'version', message: 'obligatorio' }] : version < 0 ? [{ field: 'version', message: 'debe ser ≥ 0' }] : [])
       ]);
       validateHands(hands, s);
@@ -192,7 +192,7 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
       const k = key(situation, stack);
       const current = state.userRanges[k];
       if ((current?.version ?? 0) !== version) {
-        throw conflict(current ? `El rango está en la versión ${current.version}; recarga` : 'El rango personalizado ya no existe; recarga');
+        throw conflict(current ? `The range is at version ${current.version}; reload` : 'The custom range no longer exists; reload');
       }
       const next = {
         situation, stack: Number(stack), hands: normalizeRange(hands, s.actions), source: 'user',
@@ -220,28 +220,28 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
     async recordAttempt(body = {}) {
       await delay();
       const unknown = Object.keys(body).find(f => !ATTEMPT_FIELDS.includes(f));
-      if (unknown) throw unreadable(unknown, 'campo no permitido');
+      if (unknown) throw unreadable(unknown, 'field not allowed');
       const { situation, stack, hand, given } = body;
       // Strict JSON, as the API: no number where a text goes, or a text where a number goes.
       const wrongType = [['situation', situation, 'string'], ['stack', stack, 'number'], ['hand', hand, 'string']]
         .find(([, value, type]) => value != null && typeof value !== type);
-      if (wrongType) throw unreadable(wrongType[0], 'valor no válido');
-      if (given != null && !ACTIONS.includes(given)) throw unreadable('given', 'valor no válido');
+      if (wrongType) throw unreadable(wrongType[0], 'invalid value');
+      if (given != null && !ACTIONS.includes(given)) throw unreadable('given', 'invalid value');
       const required = (field, value, errors) => (value == null ? [{ field, message: 'obligatorio' }] : errors());
       specErrors([
         ...required('situation', situation, () => situationErrors(situation)),
         ...required('stack', stack, () => stackErrors(stack)),
-        ...required('hand', hand, () => (HAND_FORMAT.test(hand) ? [] : [{ field: 'hand', message: 'formato no válido' }])),
+        ...required('hand', hand, () => (HAND_FORMAT.test(hand) ? [] : [{ field: 'hand', message: 'invalid format' }])),
         ...required('given', given, () => [])
       ]);
       const s = spot(situation, stack);
-      if (!isValidHand(hand)) throw ruleError('hand', 'mano no válida');
-      if (!isValidAction(given, s.actions)) throw ruleError('given', `acción ${given} no permitida en ${situation}`);
+      if (!isValidHand(hand)) throw ruleError('hand', 'invalid hand');
+      if (!isValidAction(given, s.actions)) throw ruleError('given', `action ${given} not allowed in ${situation}`);
 
       const ranges = await referenceRanges();
       const state = load();
       const range = state.userRanges[key(situation, stack)] ?? defaultRange(ranges, situation, stack);
-      if (!range) throw noRange(`Sin rango para ${situation}@${stack}: no se puede corregir`);
+      if (!range) throw noRange(`No range for ${situation}@${stack}: the answer cannot be graded`);
       const expected = actionFor(range.hands, hand, s.actions);
       const stored = {
         id: crypto.randomUUID(), situation, stack: Number(stack), hand, given, expected, correct: expected === given,
@@ -259,7 +259,7 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
     async listAttempts({ limit = 50, cursor, situation, stack } = {}) {
       await delay();
       const st = checkFilters({ situation, stack });
-      specErrors(!Number.isInteger(limit) ? [{ field: 'limit', message: 'valor no válido' }]
+      specErrors(!Number.isInteger(limit) ? [{ field: 'limit', message: 'invalid value' }]
         : limit < 1 ? [{ field: 'limit', message: 'debe ser ≥ 1' }] : limit > 200 ? [{ field: 'limit', message: 'debe ser ≤ 200' }] : []);
       const after = cursor == null ? null : decodeCursor(cursor);
       const items = load().attempts
@@ -280,9 +280,9 @@ export function createMockApi({ storage = globalThis.localStorage ?? memoryStora
 
     async getProgress({ days = 30, tz = 'UTC' } = {}) {
       await delay();
-      specErrors(!Number.isInteger(days) ? [{ field: 'days', message: 'valor no válido' }]
+      specErrors(!Number.isInteger(days) ? [{ field: 'days', message: 'invalid value' }]
         : days < 1 ? [{ field: 'days', message: 'debe ser ≥ 1' }] : days > 365 ? [{ field: 'days', message: 'debe ser ≤ 365' }] : []);
-      if (!isIanaZone(tz)) throw ruleError('tz', 'zona IANA desconocida');
+      if (!isIanaZone(tz)) throw ruleError('tz', 'unknown IANA time zone');
       return progressByDay(load().attempts, { days, tz, now: clock() });
     }
   };

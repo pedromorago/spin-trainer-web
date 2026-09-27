@@ -137,7 +137,7 @@ describe('user ranges', () => {
 
   it.each([
     ['mano inválida', { hands: { AAs: 'ALLIN' }, version: 0 }],
-    ['acción no permitida en la situación', { hands: { AA: 'CHECK' }, version: 0 }],
+    ['action not allowed in la situación', { hands: { AA: 'CHECK' }, version: 0 }],
     ['sin hands', { version: 0 }],
     ['sin version', { hands: {} }],
     ['version negativa', { hands: {}, version: -1 }]
@@ -147,17 +147,17 @@ describe('user ranges', () => {
 
   it('el 400 detalla cada mano inválida, un error por mano y con los mensajes de la API', async () => {
     const err = await api.putUserRange('btn_open', 25, { hands: { AAs: 'CHECK', KK: 'CHECK' }, version: 0 }).catch(e => e);
-    expect(err.problem.detail).toBe('2 entradas no válidas en hands');
+    expect(err.problem.detail).toBe('2 invalid entries in hands');
     expect(err.problem.errors).toEqual([
-      { field: 'hands.AAs', message: 'mano no válida' },
-      { field: 'hands.KK', message: 'acción CHECK no permitida en btn_open' }
+      { field: 'hands.AAs', message: 'invalid hand' },
+      { field: 'hands.KK', message: 'action CHECK not allowed in btn_open' }
     ]);
   });
 
   it.each([
-    ['un campo que no es del contrato', { hands: {}, version: 0, source: 'user' }, [{ field: 'source', message: 'campo no permitido' }]],
-    ['una acción que no existe', { hands: { AA: 'SHOVE' }, version: 0 }, [{ field: 'hands.AA', message: 'valor no válido' }]],
-    ['version como texto', { hands: {}, version: '0' }, [{ field: 'version', message: 'valor no válido' }]],
+    ['un campo que no es del contrato', { hands: {}, version: 0, source: 'user' }, [{ field: 'source', message: 'field not allowed' }]],
+    ['una acción que no existe', { hands: { AA: 'SHOVE' }, version: 0 }, [{ field: 'hands.AA', message: 'invalid value' }]],
+    ['version como texto', { hands: {}, version: '0' }, [{ field: 'version', message: 'invalid value' }]],
     ['sin hands ni version', {}, [{ field: 'hands', message: 'obligatorio' }, { field: 'version', message: 'obligatorio' }]]
   ])('PUT con %s da 400 como la API', async (_case, body, errors) => {
     expect(await errorsOf(api.putUserRange('btn_open', 25, body))).toEqual(errors);
@@ -204,20 +204,20 @@ describe('quiz attempts', () => {
 
   it.each([
     ['mano inválida', { hand: 'AAs' }, P(400, 'validation')],
-    ['acción no permitida', { given: 'CHECK' }, P(400, 'validation')],
+    ['action not allowed', { given: 'CHECK' }, P(400, 'validation')],
     ['combinación desconocida', { stack: 99 }, P(404, 'not-found')]
   ])('POST con %s', async (_case, patch, expected) => {
     expect(await problemOf(api.recordAttempt({ ...answer, ...patch }))).toEqual(expected);
   });
 
   it.each([
-    ['stack como texto', { stack: '25' }, [{ field: 'stack', message: 'valor no válido' }]],
-    ['situación como número', { situation: 5 }, [{ field: 'situation', message: 'valor no válido' }]],
-    ['acción que no existe', { given: 'SHOVE' }, [{ field: 'given', message: 'valor no válido' }]],
-    ['situación mal formada', { situation: 'BTN_OPEN' }, [{ field: 'situation', message: 'formato no válido' }]],
-    ['mano fuera del formato', { hand: 'AK' }, [{ field: 'hand', message: 'formato no válido' }]],
-    ['mano no canónica', { hand: 'KAs' }, [{ field: 'hand', message: 'mano no válida' }]],
-    ['acción de otra situación', { given: 'CHECK' }, [{ field: 'given', message: 'acción CHECK no permitida en btn_open' }]],
+    ['stack como texto', { stack: '25' }, [{ field: 'stack', message: 'invalid value' }]],
+    ['situación como número', { situation: 5 }, [{ field: 'situation', message: 'invalid value' }]],
+    ['action que no existe', { given: 'SHOVE' }, [{ field: 'given', message: 'invalid value' }]],
+    ['situación mal formada', { situation: 'BTN_OPEN' }, [{ field: 'situation', message: 'invalid format' }]],
+    ['mano fuera del formato', { hand: 'AK' }, [{ field: 'hand', message: 'invalid format' }]],
+    ['mano no canónica', { hand: 'KAs' }, [{ field: 'hand', message: 'invalid hand' }]],
+    ['action de otra situación', { given: 'CHECK' }, [{ field: 'given', message: 'action CHECK not allowed in btn_open' }]],
     ['sin mano', { hand: undefined }, [{ field: 'hand', message: 'obligatorio' }]]
   ])('POST con %s da 400 como la API', async (_case, patch, errors) => {
     expect(await errorsOf(api.recordAttempt({ ...answer, ...patch }))).toEqual(errors);
@@ -289,7 +289,7 @@ describe('stats', () => {
   });
 
   it.each(['+01:00', 'europe/madrid', 'utc', 'EST', 'GMT+1', 'Nope/Zone', ''])('getProgress con tz=%s da 400, como la API', async tz => {
-    expect(await errorsOf(api.getProgress({ tz }))).toEqual([{ field: 'tz', message: 'zona IANA desconocida' }]);
+    expect(await errorsOf(api.getProgress({ tz }))).toEqual([{ field: 'tz', message: 'unknown IANA time zone' }]);
   });
 
   it.each(['UTC', 'Europe/Madrid', 'America/Argentina/Buenos_Aires', 'Etc/GMT+1'])('getProgress acepta tz=%s', async tz => {
