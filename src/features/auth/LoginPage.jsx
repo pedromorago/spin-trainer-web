@@ -1,62 +1,94 @@
 import { useState } from 'react';
-import { Navigate, useLocation } from 'react-router';
+import { Link, Navigate, useLocation } from 'react-router';
+import { authErrorMessage } from '../../shared/auth/oauth';
 import { useAuth } from '../../shared/auth/useAuth';
 import { theme } from '../../shared/theme/theme';
 import { layout } from '../../shared/ui/styles';
 
+// Google's sign-in button, dark theme (its branding guidelines): the multicolour "G" on a near-black surface.
+const googleButton = {
+  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: theme.space.md,
+  padding: `${theme.space.sm} ${theme.space.lg}`, minHeight: 40, background: '#131314', color: '#e3e3e3',
+  border: '1px solid #8e918f', borderRadius: theme.radius.sm, cursor: 'pointer', fontWeight: 600, fontSize: theme.font.sizeMd
+};
+
+function GoogleMark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
+  );
+}
+
+/**
+ * New accounts only come from Google (ADR-0019): the account is created the first time. The email form signs in the
+ * accounts that already have a password; there is no email sign-up.
+ */
 export function LoginPage() {
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signInWithGoogle } = useAuth();
   const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState('signin');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [info, setInfo] = useState(null);
 
-  if (user) {
-    const from = location.state?.from;
-    return <Navigate to={from ? `${from.pathname}${from.search}` : '/'} replace />;
-  }
+  const from = location.state?.from;
+  const returnPath = from ? `${from.pathname}${from.search}` : '/';
+  if (user) return <Navigate to={returnPath} replace />;
 
-  const submit = async e => {
-    e.preventDefault();
-    setError(null); setInfo(null); setSubmitting(true);
-    const { error } = await (mode === 'signin' ? signIn : signUp)(email, password);
+  const run = async action => {
+    setError(null); setSubmitting(true);
+    const { error } = await action();
+    // On success Google takes over the page (or, with a password, the session change redirects): only errors stay.
     setSubmitting(false);
-    if (error) setError(error.message);
-    else if (mode === 'signup') setInfo('Cuenta creada. Revisa tu email para confirmarla.');
+    if (error) setError(authErrorMessage(error));
   };
+  const submit = e => { e.preventDefault(); run(() => signIn(email, password)); };
 
   const box = { maxWidth: 360, margin: '10vh auto', padding: theme.space.xl, background: theme.colors.bgElevated,
     border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md, display: 'flex', flexDirection: 'column', gap: theme.space.md };
   const field = { display: 'flex', flexDirection: 'column', gap: theme.space.xs, fontSize: theme.font.sizeSm, color: theme.colors.textMuted };
   const input = { padding: theme.space.sm, background: theme.colors.bg, color: theme.colors.text,
     border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.sm };
-  const title = mode === 'signin' ? 'Entrar' : 'Crear cuenta';
+  const muted = { margin: 0, fontSize: theme.font.sizeSm, color: theme.colors.textMuted };
+  const rule = { flex: 1, borderTop: `1px solid ${theme.colors.border}` };
 
   return (
-    <form style={box} onSubmit={submit} aria-label={title}>
-      <h1 style={{ margin: 0, fontFamily: theme.font.display, fontWeight: 400, fontSize: 40, letterSpacing: 2, color: theme.colors.accent }}>Spin Trainer</h1>
-      <label style={field}>
-        Email
-        <input style={input} type="email" autoComplete="email" required value={email}
-          onChange={e => setEmail(e.target.value)} data-testid="login-email" />
-      </label>
-      <label style={field}>
-        Contraseña
-        <input style={input} type="password" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} required
-          minLength={6} value={password} onChange={e => setPassword(e.target.value)} data-testid="login-password" />
-      </label>
+    <main style={box} aria-labelledby="login-title">
+      <h1 id="login-title" style={{ margin: 0, fontFamily: theme.font.display, fontWeight: 400, fontSize: 40, letterSpacing: 2, color: theme.colors.accent }}>Spin Trainer</h1>
+      <p style={muted}>Rangos preflop de Spin &amp; Go: explóralos, entrénalos y mide tu progreso.</p>
+
+      <button type="button" style={googleButton} disabled={submitting} onClick={() => run(() => signInWithGoogle(returnPath))}
+        data-testid="login-google">
+        <GoogleMark />Continuar con Google
+      </button>
+      <p style={muted}>¿Primera vez? Tu cuenta se crea al entrar con Google.</p>
+
+      <div aria-hidden="true" style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, ...muted }}>
+        <span style={rule} />o con tu contraseña<span style={rule} />
+      </div>
+
+      <form onSubmit={submit} aria-label="Entrar" style={{ display: 'flex', flexDirection: 'column', gap: theme.space.md }}>
+        <label style={field}>
+          Email
+          <input style={input} type="email" autoComplete="email" required value={email}
+            onChange={e => setEmail(e.target.value)} data-testid="login-email" />
+        </label>
+        <label style={field}>
+          Contraseña
+          <input style={input} type="password" autoComplete="current-password" required minLength={6} value={password}
+            onChange={e => setPassword(e.target.value)} data-testid="login-password" />
+        </label>
+        <button type="submit" style={layout.primary} disabled={submitting} data-testid="login-submit">Entrar</button>
+      </form>
+
       <div role="status" aria-live="polite">
         {error && <small style={{ color: theme.colors.danger }} data-testid="login-error">{error}</small>}
-        {info && <small style={{ color: theme.colors.success }} data-testid="login-info">{info}</small>}
       </div>
-      <button type="submit" style={layout.primary} disabled={submitting} data-testid="login-submit">{title}</button>
-      <button type="button" style={{ background: 'none', border: 'none', color: theme.colors.textMuted, cursor: 'pointer' }}
-        onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')} data-testid="login-toggle-mode">
-        {mode === 'signin' ? '¿No tienes cuenta? Crear una' : 'Ya tengo cuenta'}
-      </button>
-    </form>
+      <Link to="/privacidad" style={{ ...muted, color: theme.colors.accent, alignSelf: 'center' }} data-testid="login-privacy">Privacidad</Link>
+    </main>
   );
 }

@@ -1,4 +1,5 @@
 import { RequireAuth } from './shared/auth/RequireAuth';
+import { AuthCallbackPage } from './features/auth/AuthCallbackPage';
 import { LoginPage } from './features/auth/LoginPage';
 import { LogoutPage } from './features/auth/LogoutPage';
 import { AppShell } from './features/shell/AppShell';
@@ -12,6 +13,13 @@ const page = (load, name) => () => load().then(m => ({ Component: m[name] }));
 export const routes = [
   { path: '/login', element: <LoginPage />, errorElement: <RouteErrorPage standalone /> },
   { path: '/logout', element: <LogoutPage />, errorElement: <RouteErrorPage standalone /> },
+  // Public: Google's return (ADR-0019) and the privacy notice, which must be readable before having an account.
+  { path: '/auth/callback', element: <AuthCallbackPage />, errorElement: <RouteErrorPage standalone /> },
+  {
+    path: '/privacidad',
+    lazy: page(() => import('./features/legal/PrivacyPage'), 'PrivacyPage'),
+    errorElement: <RouteErrorPage standalone />
+  },
   {
     element: <RequireAuth><AppShell /></RequireAuth>,
     errorElement: <RouteErrorPage standalone />,
