@@ -22,7 +22,7 @@ Accounts on Supabase, Render and Vercel (all free, sign in with GitHub), and Git
 4. **SQL Editor**: run `spin-trainer-api/src/main/resources/db/bootstrap/bootstrap.sql`, replacing the two passwords
    as the file explains. It creates `spin_migrator` (Flyway) and `spin_app` (the API) with least privilege (ADR-0015).
 5. **Connect → Session pooler**: copy the host. The API uses
-   `DB_URL=jdbc:postgresql://<pooler host>:5432/postgres`, and behind the pooler the users are `spin_app.<ref>` and
+   `DB_URL=jdbc:postgresql://<pooler host>:5432/postgres?sslmode=require`, and behind the pooler the users are `spin_app.<ref>` and
    `spin_migrator.<ref>` (`<ref>` is the project reference, the subdomain of its URL).
 6. Note the project URL (`https://<ref>.supabase.co`) and the publishable (anon) key for the web app. The `app` schema
    must not be exposed to the Data API: by default only `public` is, so leave it as it is.
@@ -36,27 +36,26 @@ In spin-trainer-api, **Actions → deploy → Run workflow**. Without Render set
 (about four minutes) and pushes it to `ghcr.io/pedromorago/spin-trainer-api`. From then on, every green CI on `main`
 does it again.
 
-Render needs to read that private image: create a GitHub token (**Settings → Developer settings → Personal access
-tokens → Tokens (classic)**) with only the `read:packages` scope.
+The package inherits the repo's public visibility, so Render pulls it without credentials. If the repo ever goes
+private, add a registry credential in Render (a GitHub token with only `read:packages`) and reference it from
+`render.yaml` (`image.creds.fromRegistryCreds`).
 
 ## 3. API on Render
 
-1. **Settings → Registry Credentials → Add**: name `ghcr`, registry GitHub, your GitHub user and the token from step 2.
-   The name must be `ghcr`: `render.yaml` refers to it.
-2. **New → Blueprint**, pick the spin-trainer-api repo. Render reads `render.yaml` (free web service in Frankfurt, image
+1. **New → Blueprint**, pick the spin-trainer-api repo. Render reads `render.yaml` (free web service in Frankfurt, image
    from GHCR, readiness health check) and asks for the secrets:
 
    | Variable | Value |
    |---|---|
    | `SUPABASE_URL` | `https://<ref>.supabase.co` |
-   | `DB_URL` | `jdbc:postgresql://<pooler host>:5432/postgres` |
+   | `DB_URL` | `jdbc:postgresql://<pooler host>:5432/postgres?sslmode=require` |
    | `DB_APP_USER` / `DB_MIGRATOR_USER` | `spin_app.<ref>` / `spin_migrator.<ref>` |
    | `DB_APP_PASSWORD` / `DB_MIGRATOR_PASSWORD` | the passwords from `bootstrap.sql` |
    | `CORS_ALLOWED_ORIGINS` | the web domain; until step 4, a provisional `https://spin-trainer.vercel.app` |
 
-3. The first start runs Flyway as `spin_migrator`: schema, catalog and the 80 reference ranges (V1..V7). Check
+2. The first start runs Flyway as `spin_migrator`: schema, catalog and the 80 reference ranges (V1..V7). Check
    `https://spin-trainer-api.onrender.com/actuator/health/readiness` → `{"status":"UP"}`.
-4. **Service → Settings → Deploy Hook**: copy the URL and save it as the `RENDER_DEPLOY_HOOK_URL` secret in the
+3. **Service → Settings → Deploy Hook**: copy the URL and save it as the `RENDER_DEPLOY_HOOK_URL` secret in the
    spin-trainer-api repo (**Settings → Secrets and variables → Actions**). From then on, every green CI on `main` builds
    the image, deploys it, waits until `/actuator/info` reports that commit (Render keeps the previous version serving
    while a new one fails, so a green readiness alone would prove nothing) and checks that the JWT issuer answers.
