@@ -12,7 +12,7 @@ export function ActionPalette({ actions, selected, onSelect, disabled = false, e
   const items = eraser ? [...actions, ERASE] : actions;
   return (
     <div style={{ display: 'flex', gap: theme.space.sm, flexWrap: 'wrap' }} data-testid="action-palette"
-      role="group" aria-label={eraser ? 'Pincel' : 'Acciones'}>
+      role="group" aria-label={eraser ? 'Brush' : 'Actions'}>
       {items.map((action, i) => {
         const isEraser = action === ERASE;
         const color = isEraser ? theme.colors.textMuted : colorFor(action);
@@ -35,7 +35,7 @@ export function ActionPalette({ actions, selected, onSelect, disabled = false, e
             {/* The shortcut is announced with aria-keyshortcuts; the kbd must not be part of the accessible name. */}
             {shortcut && <kbd aria-hidden="true" style={{ fontFamily: theme.font.mono, fontSize: theme.font.sizeXs, color: theme.colors.textMuted }}>{shortcut}</kbd>}
             <span aria-hidden="true" style={swatch} />
-            <span>{isEraser ? 'Goma' : ACTION_LABELS[action] ?? action}</span>
+            <span>{isEraser ? 'Eraser' : ACTION_LABELS[action] ?? action}</span>
           </button>
         );
       })}

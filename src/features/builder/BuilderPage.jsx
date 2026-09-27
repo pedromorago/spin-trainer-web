@@ -18,7 +18,7 @@ const pct = x => `${Math.round(x * 100)}%`;
 /**
  * Builder: self-assessment exercise. You build the range of a situation and stack from memory and check it against
  * the effective range (custom if it exists, otherwise the PDF one; ADR-0012). Nothing is persisted.
- * The question is the current selection or a random combination ("Nueva pregunta").
+ * The question is the current selection or a random combination ("New question").
  */
 export function BuilderPage() {
   const { situations, selection } = useOutletContext();
@@ -47,7 +47,7 @@ export function BuilderPage() {
 }
 
 function BuilderQuestion({ situations, selection, allSpots, selectionSpots, toSpot, pickedBrush, onPickBrush }) {
-  // Question picked with "Nueva pregunta"; null = the concrete selection. With "Any" it starts with a random one.
+  // Question picked with "New question"; null = the concrete selection. With "Any" it starts with a random one.
   const [question, setQuestion] = useState(() => (selection.isAny ? pickCombo(selectionSpots) : null));
   const combo = question ?? (selection.isAny ? null : selection.combos[0]);
   const spot = combo && toSpot(combo);
@@ -68,19 +68,19 @@ function BuilderQuestion({ situations, selection, allSpots, selectionSpots, toSp
           </strong>
         )}
         <button type="button" style={layout.secondary} onClick={newQuestion} disabled={!canPickAnother}
-          data-testid="builder-new-question">Nueva pregunta</button>
+          data-testid="builder-new-question">New question</button>
         {question && !selection.isAny && (
           <button type="button" style={layout.secondary} onClick={() => setQuestion(null)} data-testid="builder-back-to-selection">
-            Volver a la selección
+            Back to the selection
           </button>
         )}
         {spot?.source === 'user' && (
-          <small style={{ color: theme.colors.accent }} data-testid="builder-custom-target">Se verifica contra tu rango personalizado</small>
+          <small style={{ color: theme.colors.accent }} data-testid="builder-custom-target">Checked against your custom range</small>
         )}
       </div>
       {!spot ? (
         <Empty>
-          {pool.length ? 'Esta combinación no tiene rango con el que comparar: pulsa "Nueva pregunta".' : 'Todavía no hay rangos cargados con los que practicar.'}
+          {pool.length ? 'This spot has no range to compare against: press "New question".' : 'There are no ranges loaded to practice with yet.'}
         </Empty>
       ) : (
         <>
@@ -111,21 +111,21 @@ function BuilderExercise({ spot, brush, onNewQuestion }) {
     <div style={{ display: 'flex', gap: theme.space.xl, flexWrap: 'wrap', alignItems: 'flex-start' }}>
       <div style={{ ...layout.page, gap: theme.space.md, flex: '1 1 480px', minWidth: 0 }}>
         <HandGrid assignments={showSolution ? spot.hands : draft} actions={actions} onPaint={showSolution ? undefined : paint}
-          verdicts={evaluation?.verdicts} label={showSolution ? 'Solución' : 'Tu rango'} />
+          verdicts={evaluation?.verdicts} label={showSolution ? 'Solution' : 'Your range'} />
         <div style={layout.mono} data-testid="builder-summary">
           {Object.entries(summary).map(([a, s]) => `${ACTION_LABELS[a] ?? a}: ${s.hands}`).join(' · ')}
         </div>
         <div style={layout.row}>
-          <button type="button" style={layout.primary} onClick={verify} data-testid="builder-evaluate">Verificar</button>
+          <button type="button" style={layout.primary} onClick={verify} data-testid="builder-evaluate">Check</button>
           {evaluation && (
             <button type="button" style={layout.secondary} onClick={() => setShowSolution(v => !v)} aria-pressed={showSolution}
-              data-testid="builder-toggle-solution">{showSolution ? 'Ver mi rango' : 'Ver solución'}</button>
+              data-testid="builder-toggle-solution">{showSolution ? 'Show my range' : 'Show solution'}</button>
           )}
           <button type="button" style={layout.secondary} onClick={retry} data-testid="builder-clear">
-            {evaluation ? 'Reintentar' : 'Limpiar'}
+            {evaluation ? 'Try again' : 'Clear'}
           </button>
           {onNewQuestion && evaluation && (
-            <button type="button" style={layout.secondary} onClick={onNewQuestion} data-testid="builder-next">Nueva pregunta</button>
+            <button type="button" style={layout.secondary} onClick={onNewQuestion} data-testid="builder-next">New question</button>
           )}
         </div>
       </div>
@@ -141,19 +141,19 @@ function EvaluationPanel({ evaluation, actions }) {
   const row = { display: 'grid', gridTemplateColumns: '12px 1fr auto auto', gap: theme.space.sm, alignItems: 'center', fontSize: theme.font.sizeSm };
 
   return (
-    <aside aria-label="Resultado" data-testid="builder-evaluation"
+    <aside aria-label="Result" data-testid="builder-evaluation"
       style={{ display: 'flex', flexDirection: 'column', gap: theme.space.md, flex: '0 1 320px', minWidth: 260, padding: theme.space.md,
         border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.md, background: theme.colors.bgElevated }}>
       <div>
-        <div style={{ fontFamily: theme.font.display, letterSpacing: 1, color: theme.colors.textMuted }}>Puntuación</div>
+        <div style={{ fontFamily: theme.font.display, letterSpacing: 1, color: theme.colors.textMuted }}>Score</div>
         <div style={{ fontFamily: theme.font.mono, fontSize: theme.font.sizeXl, fontWeight: 700, color: theme.colors.accentStrong }}
           data-testid="builder-score">{score.correct} / {score.total} · {pct(score.accuracy)}</div>
         <small style={{ color: theme.colors.textMuted }} data-testid="builder-accuracy-169">
-          Manos jugadas en tu rango o en el correcto. Sobre las 169: {evaluation.correct}/169 ({pct(evaluation.accuracy)}).
+          Hands played in your range or in the correct one. Out of all 169: {evaluation.correct}/169 ({pct(evaluation.accuracy)}).
         </small>
       </div>
       <VerdictLegend byKind={byKind} />
-      <div role="table" aria-label="Desglose por acción" style={{ display: 'flex', flexDirection: 'column', gap: theme.space.xs }}>
+      <div role="table" aria-label="Breakdown by action" style={{ display: 'flex', flexDirection: 'column', gap: theme.space.xs }}>
         {actions.filter(a => byAction[a]).map(a => (
           <div role="row" key={a} style={{ ...row, opacity: a === implicit ? 0.7 : 1 }} data-testid={`builder-action-${a}`}>
             <span role="cell" aria-hidden="true" style={{ width: 12, height: 12, borderRadius: 3, background: colorFor(a) }} />

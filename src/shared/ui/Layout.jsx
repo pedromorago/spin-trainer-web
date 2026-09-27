@@ -29,7 +29,7 @@ export function Layout({ user, onSignOut, score, toolbar, children }) {
       <header className="app-header" style={header}>
         <span style={{ fontFamily: theme.font.display, fontSize: 28, letterSpacing: 2, color: theme.colors.accent }}>Spin Trainer</span>
         {/* Navigation keeps the selection (?s=&stack=) when switching tabs. */}
-        <nav style={{ display: 'flex', gap: theme.space.lg }} aria-label="Secciones">
+        <nav style={{ display: 'flex', gap: theme.space.lg }} aria-label="Sections">
           {TABS.map(([path, label]) => <NavLink key={path} to={{ pathname: path, search }} style={link}>{label}</NavLink>)}
         </nav>
         <SessionScore {...score} />
@@ -37,7 +37,7 @@ export function Layout({ user, onSignOut, score, toolbar, children }) {
           <small style={{ color: theme.colors.textMuted }}>{user?.email}</small>
           <button type="button" onClick={onSignOut} style={{ background: 'transparent', color: theme.colors.textMuted,
             border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.sm,
-            padding: `${theme.space.xs} ${theme.space.md}`, cursor: 'pointer' }}>Salir</button>
+            padding: `${theme.space.xs} ${theme.space.md}`, cursor: 'pointer' }}>Sign out</button>
         </div>
       </header>
       {toolbar && (

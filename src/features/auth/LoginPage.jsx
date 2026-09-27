@@ -56,31 +56,31 @@ export function LoginPage() {
   return (
     <main style={box} aria-labelledby="login-title">
       <h1 id="login-title" style={{ margin: 0, fontFamily: theme.font.display, fontWeight: 400, fontSize: 40, letterSpacing: 2, color: theme.colors.accent }}>Spin Trainer</h1>
-      <p style={muted}>Rangos preflop de Spin &amp; Go: explóralos, entrénalos y mide tu progreso.</p>
+      <p style={muted}>Spin &amp; Go preflop ranges: explore them, train them and track your progress.</p>
 
       <button type="button" style={googleButton} disabled={submitting} onClick={() => run(() => signInWithGoogle(returnPath))}
         data-testid="login-google">
-        <GoogleMark />Continuar con Google
+        <GoogleMark />Continue with Google
       </button>
-      <p style={muted}>¿Primera vez? Tu cuenta se crea al entrar con Google.</p>
+      <p style={muted}>First time here? Your account is created when you continue with Google.</p>
 
       {signIn && (
-        <form onSubmit={e => { e.preventDefault(); run(() => signIn(email)); }} aria-label="Jugador de prueba"
+        <form onSubmit={e => { e.preventDefault(); run(() => signIn(email)); }} aria-label="Test player"
           style={{ display: 'flex', flexDirection: 'column', gap: theme.space.sm, paddingTop: theme.space.md,
             borderTop: `1px dashed ${theme.colors.border}` }}>
           <label style={field}>
-            Email del jugador de prueba (modo mock)
+            Test player's email (mock mode)
             <input style={input} type="email" required value={email} onChange={e => setEmail(e.target.value)}
               data-testid="login-email" />
           </label>
-          <button type="submit" style={layout.secondary} disabled={submitting} data-testid="login-submit">Entrar como este jugador</button>
+          <button type="submit" style={layout.secondary} disabled={submitting} data-testid="login-submit">Sign in as this player</button>
         </form>
       )}
 
       <div role="status" aria-live="polite">
         {error && <small style={{ color: theme.colors.danger }} data-testid="login-error">{error}</small>}
       </div>
-      <Link to="/privacidad" style={{ ...muted, color: theme.colors.accent, alignSelf: 'center' }} data-testid="login-privacy">Privacidad</Link>
+      <Link to="/privacy" style={{ ...muted, color: theme.colors.accent, alignSelf: 'center' }} data-testid="login-privacy">Privacy</Link>
     </main>
   );
 }

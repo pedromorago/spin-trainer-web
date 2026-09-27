@@ -16,7 +16,7 @@ export function PlayingCard({ card = null, size = 'lg' }) {
   };
   if (!card) {
     return (
-      <span role="img" aria-label="Carta tapada" data-card="hidden" style={{
+      <span role="img" aria-label="Face-down card" data-card="hidden" style={{
         ...base, border: `1px solid ${theme.colors.accent}`,
         background: `repeating-linear-gradient(45deg, #5a1f2a 0 4px, #43161f 4px 8px)`
       }} />

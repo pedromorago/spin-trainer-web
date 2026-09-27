@@ -1,6 +1,6 @@
 /**
  * Pure pieces of the Google sign-in (ADR-0019): where to come back after the round trip through Google, how to read
- * the callback URL and how to word Supabase's errors in Spanish. Tested in __tests__/oauth.test.js.
+ * the callback URL and how to word Supabase's errors. Tested in __tests__/oauth.test.js.
  */
 
 const RETURN_KEY = 'spin-trainer.returnTo';
@@ -31,14 +31,14 @@ export function forgetReturnPath(storage = globalThis.sessionStorage) {
 }
 
 export const OAUTH_ERRORS = {
-  cancelled: 'Has cancelado el acceso con Google.',
-  failed: 'Google no ha podido completar el acceso. Vuelve a intentarlo.',
-  invalid: 'El enlace de acceso no es válido o ya se ha usado. Vuelve a entrar.'
+  cancelled: 'You cancelled the sign-in with Google.',
+  failed: 'Google could not complete the sign-in. Please try again.',
+  invalid: 'This sign-in link is not valid or has already been used. Please sign in again.'
 };
 
 /**
  * The query string Supabase sends back to /auth/callback: `?code=…` (PKCE) on success, `?error=…` when the user
- * cancels or the provider fails. Returns `{ code }` or `{ error }` with a Spanish message.
+ * cancels or the provider fails. Returns `{ code }` or `{ error }` with a message for the user.
  */
 export function parseOAuthCallback(search) {
   const params = new URLSearchParams(search);
@@ -48,11 +48,11 @@ export function parseOAuthCallback(search) {
   return code ? { code } : { error: OAUTH_ERRORS.invalid };
 }
 
-/** Supabase Auth answers in English: the messages a user can meet when leaving for Google, in Spanish. */
+/** Supabase Auth's raw messages, worded for the user when leaving for Google fails. */
 export function authErrorMessage(error) {
   if (!error) return null;
   const message = String(error.message ?? '');
-  if (/rate limit|too many requests/i.test(message)) return 'Demasiados intentos. Espera un momento y vuelve a probar.';
-  if (/failed to fetch|network/i.test(message)) return 'No hay conexión con el servidor de acceso. Vuelve a intentarlo.';
-  return 'No se ha podido entrar. Vuelve a intentarlo.';
+  if (/rate limit|too many requests/i.test(message)) return 'Too many attempts. Wait a moment and try again.';
+  if (/failed to fetch|network/i.test(message)) return 'Could not reach the sign-in server. Please try again.';
+  return 'Could not sign in. Please try again.';
 }

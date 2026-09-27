@@ -18,8 +18,8 @@ import { colorFor } from '../../shared/theme/actionColors';
 import { readableText } from '../../shared/theme/contrast';
 import { theme } from '../../shared/theme/theme';
 
-const MODES = { normal: 'Todas las manos', hard: 'Solo difíciles' };
-const SCOPES = { range: 'Rango + frontera', all: 'Las 169 manos' };
+const MODES = { normal: 'All hands', hard: 'Hard only' };
+const SCOPES = { range: 'Range + boundary', all: 'All 169 hands' };
 const EMPTY_ROWS = [];
 
 /**
@@ -58,7 +58,7 @@ export function QuizPage() {
       <div style={{ ...layout.row, justifyContent: 'space-between' }}>
         <h2 style={layout.title}>Quiz</h2>
         <div style={{ ...layout.row, gap: theme.space.sm }}>
-          <div role="group" aria-label="Modo" style={{ display: 'flex', gap: theme.space.xs }}>
+          <div role="group" aria-label="Mode" style={{ display: 'flex', gap: theme.space.xs }}>
             {Object.entries(MODES).map(([k, label]) => (
               <button key={k} type="button" style={control(mode === k)} aria-pressed={mode === k} onClick={() => setMode(k)}
                 data-testid={`quiz-mode-${k}`}>
@@ -67,7 +67,7 @@ export function QuizPage() {
             ))}
           </div>
           <select style={select} value={scope} onChange={e => setScope(e.target.value)} disabled={mode === 'hard'}
-            aria-label="Manos a preguntar" data-testid="quiz-scope">
+            aria-label="Hands to ask" data-testid="quiz-scope">
             {Object.entries(SCOPES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
           </select>
         </div>
@@ -110,7 +110,7 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
     setQuestion(deal(nextQuestion({ spots, mode, scope, hard, previous: question })));
     focusAnswers.current = true;
   };
-  // "Siguiente mano" disappears with the feedback: the focus goes back to the answers instead of the page body.
+  // "Next hand" disappears with the feedback: the focus goes back to the answers instead of the page body.
   useEffect(() => {
     if (!focusAnswers.current) return;
     focusAnswers.current = false;
@@ -118,7 +118,7 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
   }, [question]);
 
   // Shortcuts: 1..9 and 0 answer; Enter or → moves to the next one. Ignored with focus on fields or with modifiers,
-  // and Enter is left to the focused link or button (the "Siguiente mano" button handles it itself).
+  // and Enter is left to the focused link or button (the "Next hand" button handles it itself).
   const onKey = useEffectEvent(e => {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || isTextField(e.target)) return;
     const index = spot ? actionIndexForKey(e.key, spot.actions.length) : -1;
@@ -140,19 +140,19 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
     return (
       <Empty>
         {mode === 'hard'
-          ? 'Sin manos difíciles pendientes en esta selección: falla una mano 2 veces para que aparezca aquí; al acertarla sale del pool.'
-          : 'Rango sin cargar para esta selección: no hay nada que preguntar.'}
+          ? 'No hard hands left in this selection: miss a hand twice and it shows up here; get it right and it leaves the pool.'
+          : 'No range loaded for this selection: there is nothing to ask.'}
       </Empty>
     );
   }
 
   const { seats, pot } = tableSeats(situation, spot.stack);
   const pct = round.total ? Math.round((round.correct / round.total) * 100) : 0;
-  const poolInfo = mode === 'hard' ? `${hard.length} manos difíciles` : `${playableSpots(spots).length} combinaciones`;
+  const poolInfo = mode === 'hard' ? `${hard.length} hard hands` : `${playableSpots(spots).length} spots`;
   const label = action => ACTION_LABELS[action] ?? action;
   // Short announcement for screen readers; the feedback box (with a 169-cell grid) is not a live region.
   const announcement = !result ? ''
-    : `${result.correct ? 'Correcto' : 'Incorrecto'}. ${question.hand}: ${label(result.expected)}${result.correct ? '' : `; respondiste ${label(result.given)}`}.`;
+    : `${result.correct ? 'Correct' : 'Wrong'}. ${question.hand}: ${label(result.expected)}${result.correct ? '' : `; you answered ${label(result.given)}`}.`;
 
   return (
     <>
@@ -161,10 +161,10 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
           {situation.label} · {spot.stack} BB
         </strong>
         <span style={{ fontFamily: theme.font.mono, color: theme.colors.textMuted }}>
-          Tu mano: <strong style={{ color: theme.colors.text }} data-testid="quiz-hand">{question.hand}</strong>
+          Your hand: <strong style={{ color: theme.colors.text }} data-testid="quiz-hand">{question.hand}</strong>
         </span>
         {spot.source === 'user' && (
-          <small style={{ color: theme.colors.accent }} data-testid="quiz-custom-range">Rango personalizado</small>
+          <small style={{ color: theme.colors.accent }} data-testid="quiz-custom-range">Custom range</small>
         )}
       </div>
       <PokerTable seats={seats} pot={pot} heroCards={question.cards} stack={spot.stack} caption={situation.label} />
@@ -179,7 +179,7 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
           border: `1px solid ${result.correct ? theme.colors.success : theme.colors.danger}` }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: theme.space.sm, flex: '1 1 220px' }}>
             <strong style={{ color: result.correct ? theme.colors.success : theme.colors.danger, fontSize: theme.font.sizeLg }}>
-              {result.correct ? 'Correcto' : 'Incorrecto'}
+              {result.correct ? 'Correct' : 'Wrong'}
             </strong>
             <span>
               {question.hand}:{' '}
@@ -187,19 +187,19 @@ function QuizRound({ situations, spots, hard, mode, scope }) {
                 background: colorFor(result.expected), color: readableText(colorFor(result.expected)) }}>
                 {label(result.expected)}
               </span>
-              {!result.correct && <> (respondiste {label(result.given)})</>}
+              {!result.correct && <> (you answered {label(result.given)})</>}
             </span>
             <button type="button" style={{ ...layout.primary, alignSelf: 'flex-start' }} onClick={next} autoFocus
               aria-keyshortcuts="Enter ArrowRight" data-testid="quiz-next">
-              Siguiente mano <kbd aria-hidden="true" style={{ fontFamily: theme.font.mono, opacity: 0.7 }}>↵</kbd>
+              Next hand <kbd aria-hidden="true" style={{ fontFamily: theme.font.mono, opacity: 0.7 }}>↵</kbd>
             </button>
           </div>
           <HandGrid assignments={spot.hands} actions={spot.actions} cellSize={16} showLabels={false} highlight={question.hand}
-            label={`Rango correcto de ${situation.label} · ${spot.stack} BB`} />
+            label={`Correct range for ${situation.label} · ${spot.stack} BB`} />
         </div>
       )}
       <small style={layout.mono} data-testid="quiz-stats">
-        Ronda: {round.correct} / {round.total} ({pct}%) · {poolInfo}
+        Round: {round.correct} / {round.total} ({pct}%) · {poolInfo}
       </small>
     </>
   );

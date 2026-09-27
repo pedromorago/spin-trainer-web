@@ -17,14 +17,14 @@ export function ErrorBox({ error, onRetry }) {
       {onRetry && (
         <button type="button" onClick={() => onRetry()} data-testid="error-retry"
           style={{ padding: `${theme.space.xs} ${theme.space.md}`, borderRadius: theme.radius.sm, cursor: 'pointer',
-            border: `1px solid ${theme.colors.border}`, background: 'transparent', color: theme.colors.text }}>Reintentar</button>
+            border: `1px solid ${theme.colors.border}`, background: 'transparent', color: theme.colors.text }}>Retry</button>
       )}
     </div>
   );
 }
 
 /** Inline confirmation (no window.confirm): accessible and easy to automate. */
-export function ConfirmBar({ message, confirmLabel, cancelLabel = 'Cancelar', onConfirm, onCancel, testId = 'confirm' }) {
+export function ConfirmBar({ message, confirmLabel, cancelLabel = 'Cancel', onConfirm, onCancel, testId = 'confirm' }) {
   const btn = {
     padding: `${theme.space.xs} ${theme.space.md}`, borderRadius: theme.radius.sm, cursor: 'pointer',
     border: `1px solid ${theme.colors.border}`, background: 'transparent', color: theme.colors.text
@@ -42,5 +42,5 @@ export function ConfirmBar({ message, confirmLabel, cancelLabel = 'Cancelar', on
 }
 
 export function Loading() {
-  return <small style={{ color: theme.colors.textMuted }} data-testid="loading">Cargando…</small>;
+  return <small style={{ color: theme.colors.textMuted }} data-testid="loading">Loading…</small>;
 }

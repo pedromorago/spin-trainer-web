@@ -5,7 +5,7 @@ import { theme } from '../theme/theme';
 /** Verdict legend with counts. Props: byKind ({ correct, wrong, extra, missing }) from domain/range#evaluateRange */
 export function VerdictLegend({ byKind }) {
   return (
-    <ul aria-label="Leyenda" data-testid="verdict-legend"
+    <ul aria-label="Legend" data-testid="verdict-legend"
       style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', gap: theme.space.md, flexWrap: 'wrap' }}>
       {VERDICT_KINDS.map(kind => {
         const v = VERDICT_STYLES[kind];

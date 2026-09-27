@@ -7,8 +7,8 @@ import { theme } from '../../shared/theme/theme';
 
 /**
  * Where Google sends the user back (through Supabase) with a one-time code (ADR-0019). Exchanges it for a session and
- * goes on to the route the user was heading to; if Google reports an error or the code is not valid, says so in
- * Spanish with a way back to the login.
+ * goes on to the route the user was heading to; if Google reports an error or the code is not valid, says so with a
+ * way back to the login.
  */
 export function AuthCallbackPage() {
   const { user, completeOAuth } = useAuth();
@@ -29,8 +29,8 @@ export function AuthCallbackPage() {
   if (result?.error) {
     return (
       <main style={{ maxWidth: 480, margin: '10vh auto', display: 'flex', flexDirection: 'column', gap: theme.space.md }}>
-        <div role="alert"><ErrorBox error={{ title: 'No se ha podido entrar', message: result.error }} /></div>
-        <Link to="/login" replace style={{ color: theme.colors.accent }} data-testid="oauth-back">Volver a entrar</Link>
+        <div role="alert"><ErrorBox error={{ title: 'Could not sign in', message: result.error }} /></div>
+        <Link to="/login" replace style={{ color: theme.colors.accent }} data-testid="oauth-back">Back to sign-in</Link>
       </main>
     );
   }

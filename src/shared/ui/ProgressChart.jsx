@@ -11,8 +11,10 @@ const GAP = 34;
 const H_VOL = 64;
 const X_BAND = 22;
 const C = theme.colors;
-const pct = x => `${Math.round(x * 100)} %`;
-const dayLabel = date => `${date.slice(8, 10)}/${date.slice(5, 7)}`;
+const pct = x => `${Math.round(x * 100)}%`;
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// "27 Sep": unambiguous for any English reader (27/09 and 09/27 are not).
+const dayLabel = date => `${Number(date.slice(8, 10))} ${MONTHS[Number(date.slice(5, 7)) - 1]}`;
 
 /** Column with 4 px rounding at the top and a flat base. */
 function columnPath(x0, x1, yTop, yBase) {
@@ -53,9 +55,9 @@ export function ProgressChart({ series, stale = false }) {
   const lastIndex = withData.at(-1);
   const total = series.reduce((acc, d) => ({ attempts: acc.attempts + d.attempts, correct: acc.correct + d.correct }), { attempts: 0, correct: 0 });
   const summary = total.attempts
-    ? `Precisión diaria de los últimos ${n} días: ${pct(total.correct / total.attempts)} de media en ${total.attempts} manos; `
-      + `último día con intentos ${series[lastIndex].date}, ${pct(series[lastIndex].accuracy)}.`
-    : `Sin intentos en los últimos ${n} días.`;
+    ? `Daily accuracy over the last ${n} days: ${pct(total.correct / total.attempts)} on average over ${total.attempts} hands; `
+      + `last day with attempts ${series[lastIndex].date}, ${pct(series[lastIndex].accuracy)}.`
+    : `No attempts in the last ${n} days.`;
 
   const pick = e => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -75,7 +77,7 @@ export function ProgressChart({ series, stale = false }) {
     <button type="button" onClick={() => setAsTable(v => !v)} aria-pressed={asTable} data-testid="progress-table-toggle"
       style={{ alignSelf: 'flex-end', background: 'transparent', color: C.textMuted, border: `1px solid ${C.border}`,
         borderRadius: theme.radius.sm, padding: `2px ${theme.space.sm}`, cursor: 'pointer', fontSize: theme.font.sizeSm }}>
-      {asTable ? 'Ver gráfico' : 'Ver tabla'}
+      {asTable ? 'Show chart' : 'Show table'}
     </button>
   );
 
@@ -93,7 +95,7 @@ export function ProgressChart({ series, stale = false }) {
       {asTable ? (
         <table style={{ borderCollapse: 'collapse', fontSize: theme.font.sizeSm, fontVariantNumeric: 'tabular-nums' }} data-testid="progress-table">
           <caption style={{ textAlign: 'left', color: C.textMuted, paddingBottom: theme.space.xs }}>{summary}</caption>
-          <thead><tr>{['Día', 'Manos', 'Aciertos', 'Precisión'].map(h => <th key={h} style={{ textAlign: 'left', padding: '4px 12px 4px 0' }}>{h}</th>)}</tr></thead>
+          <thead><tr>{['Day', 'Hands', 'Correct', 'Accuracy'].map(h => <th key={h} style={{ textAlign: 'left', padding: '4px 12px 4px 0' }}>{h}</th>)}</tr></thead>
           <tbody>
             {withData.map(i => (
               <tr key={series[i].date}>
@@ -109,14 +111,14 @@ export function ProgressChart({ series, stale = false }) {
             onFocus={() => setActive(a => a ?? lastIndex)} onBlur={() => setActive(null)}
             onPointerMove={e => setActive(pick(e))} onPointerLeave={() => setActive(null)}
             style={{ display: 'block', touchAction: 'pan-y', outlineOffset: 4 }} data-testid="progress-svg">
-            <text x={M.left} y={M.top - 8} style={{ ...text, fill: C.textMuted }}>Precisión</text>
+            <text x={M.left} y={M.top - 8} style={{ ...text, fill: C.textMuted }}>Accuracy</text>
             {[0, 0.5, 1].map(v => (
               <g key={v}>
                 <line x1={M.left} x2={W - M.right} y1={yAcc(v)} y2={yAcc(v)} stroke={v === 0 ? C.chartAxis : C.chartGrid} strokeWidth={1} />
                 <text x={M.left - 8} y={yAcc(v) + 4} textAnchor="end" style={text}>{pct(v)}</text>
               </g>
             ))}
-            <text x={M.left} y={volTop - 8} style={text}>Manos jugadas</text>
+            <text x={M.left} y={volTop - 8} style={text}>Hands played</text>
             {[0, volMax].map(v => (
               <g key={v}>
                 <line x1={M.left} x2={W - M.right} y1={yVol(v)} y2={yVol(v)} stroke={v === 0 ? C.chartAxis : C.chartGrid} strokeWidth={1} />
@@ -159,11 +161,11 @@ export function ProgressChart({ series, stale = false }) {
               boxShadow: '0 4px 12px rgba(0,0,0,0.4)', minWidth: 120
             }}>
               <div style={{ fontFamily: theme.font.mono, fontSize: 16, fontWeight: 700, color: C.text }}>
-                {d.accuracy === null ? 'Sin intentos' : pct(d.accuracy)}
+                {d.accuracy === null ? 'No attempts' : pct(d.accuracy)}
               </div>
               <div style={{ fontSize: 12, color: C.textMuted }}>
                 <span aria-hidden="true" style={{ display: 'inline-block', width: 10, height: 2, background: C.chartAccent, verticalAlign: 'middle', marginRight: 6 }} />
-                {dayLabel(d.date)} · {d.correct}/{d.attempts} manos
+                {dayLabel(d.date)} · {d.correct}/{d.attempts} hands
               </div>
             </div>
           )}

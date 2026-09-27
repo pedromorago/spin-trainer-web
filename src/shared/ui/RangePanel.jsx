@@ -18,9 +18,9 @@ export function RangePanel({ stats, notes }) {
 
   return (
     <aside style={{ display: 'flex', flexDirection: 'column', gap: theme.space.md, minWidth: 240, flex: '0 1 300px' }}
-      aria-label="Resumen del rango" data-testid="range-panel">
+      aria-label="Range summary" data-testid="range-panel">
       <div style={{ display: 'flex', gap: theme.space.lg }}>
-        {[['Manos', stats.hands, 'range-hands'], ['Combos', stats.combos, 'range-combos'], ['Rango', pct(stats.pct), 'range-pct']].map(([k, v, id]) => (
+        {[['Hands', stats.hands, 'range-hands'], ['Combos', stats.combos, 'range-combos'], ['Range', pct(stats.pct), 'range-pct']].map(([k, v, id]) => (
           <div key={k}>
             <div style={{ fontFamily: theme.font.display, letterSpacing: 1, color: theme.colors.textMuted }}>{k}</div>
             <div style={{ fontFamily: theme.font.mono, fontSize: theme.font.sizeXl, fontWeight: 700, color: theme.colors.accentStrong }}
@@ -29,7 +29,7 @@ export function RangePanel({ stats, notes }) {
         ))}
       </div>
 
-      <div role="img" aria-label={`Reparto de combos: ${summary}`} data-testid="range-bar"
+      <div role="img" aria-label={`Combos by action: ${summary}`} data-testid="range-bar"
         style={{ display: 'flex', height: 14, borderRadius: theme.radius.pill, overflow: 'hidden', background: theme.colors.bgSunken }}>
         {stats.byAction.filter(a => a.combos > 0).map(a => (
           <div key={a.action} data-action={a.action} title={`${ACTION_LABELS[a.action] ?? a.action}: ${pct(a.pct)}`}

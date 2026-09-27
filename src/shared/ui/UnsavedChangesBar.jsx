@@ -4,7 +4,7 @@ import { ConfirmBar } from './Feedback';
 export function UnsavedChangesBar({ blocker, testId = 'unsaved' }) {
   if (blocker.state !== 'blocked') return null;
   return (
-    <ConfirmBar testId={testId} message="Tienes cambios sin guardar." confirmLabel="Descartar cambios"
-      cancelLabel="Seguir editando" onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
+    <ConfirmBar testId={testId} message="You have unsaved changes." confirmLabel="Discard changes"
+      cancelLabel="Keep editing" onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
   );
 }

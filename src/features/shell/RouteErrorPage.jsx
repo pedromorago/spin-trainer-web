@@ -21,15 +21,15 @@ export function RouteErrorPage({ standalone = false }) {
   const Title = standalone ? 'h1' : 'h2';
   const content = (
     <section aria-labelledby="route-error-title" data-testid="route-error" style={layout.page}>
-      <Title id="route-error-title" style={layout.title}>No se ha podido mostrar esta pantalla</Title>
+      <Title id="route-error-title" style={layout.title}>This screen could not be shown</Title>
       <p role="alert" style={{ margin: 0, color: theme.colors.textMuted }}>
         {chunkFailed
-          ? 'No se pudo descargar: puede que haya una versión nueva de la aplicación o que se haya perdido la conexión.'
-          : 'Se ha producido un error inesperado.'} Recarga la página para intentarlo de nuevo.
+          ? 'It could not be downloaded: there may be a new version of the app, or the connection was lost.'
+          : 'Something unexpected went wrong.'} Reload the page to try again.
       </p>
       <div style={layout.row}>
-        <button type="button" style={layout.primary} onClick={() => window.location.reload()}>Recargar</button>
-        <a href="/" style={{ ...layout.secondary, textDecoration: 'none' }}>Ir al inicio</a>
+        <button type="button" style={layout.primary} onClick={() => window.location.reload()}>Reload</button>
+        <a href="/" style={{ ...layout.secondary, textDecoration: 'none' }}>Go to start</a>
       </div>
     </section>
   );

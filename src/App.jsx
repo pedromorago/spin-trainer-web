@@ -1,3 +1,4 @@
+import { Navigate } from 'react-router';
 import { RequireAuth } from './shared/auth/RequireAuth';
 import { AuthCallbackPage } from './features/auth/AuthCallbackPage';
 import { LoginPage } from './features/auth/LoginPage';
@@ -16,10 +17,12 @@ export const routes = [
   // Public: Google's return (ADR-0019) and the privacy notice, which must be readable before having an account.
   { path: '/auth/callback', element: <AuthCallbackPage />, errorElement: <RouteErrorPage standalone /> },
   {
-    path: '/privacidad',
+    path: '/privacy',
     lazy: page(() => import('./features/legal/PrivacyPage'), 'PrivacyPage'),
     errorElement: <RouteErrorPage standalone />
   },
+  // The notice's first URL, still registered in Google's consent screen and in links already shared.
+  { path: '/privacidad', element: <Navigate to="/privacy" replace /> },
   {
     element: <RequireAuth><AppShell /></RequireAuth>,
     errorElement: <RouteErrorPage standalone />,

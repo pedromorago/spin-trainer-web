@@ -10,7 +10,7 @@ import { StatTile } from '../../shared/ui/StatTile';
 import { layout } from '../../shared/ui/styles';
 import { theme } from '../../shared/theme/theme';
 
-const pct = x => (x === null ? '—' : `${Math.round(x * 100)} %`);
+const pct = x => (x === null ? '—' : `${Math.round(x * 100)}%`);
 const RANGES = [7, 30, 90];
 // Browser time zone: progress days are cut where the user lives.
 const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -44,42 +44,42 @@ export function StatsPage() {
 
       <section aria-labelledby="stats-session" style={section}>
         <div style={{ ...layout.row, justifyContent: 'space-between' }}>
-          <h3 id="stats-session" style={h3}>Sesión</h3>
+          <h3 id="stats-session" style={h3}>Session</h3>
           <button type="button" style={layout.secondary} onClick={() => setConfirmReset(true)} disabled={session.total === 0}
-            data-testid="stats-reset-session">Reiniciar sesión</button>
+            data-testid="stats-reset-session">Reset session</button>
         </div>
         {confirmReset && (
-          <ConfirmBar testId="stats-reset-confirm" confirmLabel="Reiniciar"
-            message="¿Reiniciar el marcador de la sesión? Tus intentos guardados no se borran."
+          <ConfirmBar testId="stats-reset-confirm" confirmLabel="Reset"
+            message="Reset the session scoreboard? Your saved attempts are kept."
             onConfirm={() => { reset(); setConfirmReset(false); }} onCancel={() => setConfirmReset(false)} />
         )}
         <div style={kpis}>
-          <StatTile label="Precisión de la sesión" value={pct(accuracy)} testId="stats-session-accuracy" />
-          <StatTile label="Mejor racha" value={session.bestStreak} hint={`Racha actual: ${session.streak}`} testId="stats-best-streak" />
-          <StatTile label="Manos en la sesión" value={session.total} testId="stats-session-total" />
+          <StatTile label="Session accuracy" value={pct(accuracy)} testId="stats-session-accuracy" />
+          <StatTile label="Best streak" value={session.bestStreak} hint={`Current streak: ${session.streak}`} testId="stats-best-streak" />
+          <StatTile label="Hands this session" value={session.total} testId="stats-session-total" />
         </div>
       </section>
 
       <section aria-labelledby="stats-history" style={section}>
-        <h3 id="stats-history" style={h3}>Histórico</h3>
+        <h3 id="stats-history" style={h3}>All time</h3>
         {handStats.isLoading ? <Loading /> : handStats.error ? <ErrorBox error={handStats.error} /> : (
           <>
             <div style={kpis}>
-              <StatTile label="Precisión global" value={pct(global.accuracy)} testId="stats-global-accuracy" />
-              <StatTile label="Manos jugadas" value={global.attempts} testId="stats-global-total" />
-              <StatTile label="Manos difíciles" value={hard.length} hint="≥ 2 fallos y aún sin aprender" testId="stats-hard-count" />
+              <StatTile label="Overall accuracy" value={pct(global.accuracy)} testId="stats-global-accuracy" />
+              <StatTile label="Hands played" value={global.attempts} testId="stats-global-total" />
+              <StatTile label="Hard hands" value={hard.length} hint="≥ 2 misses and not learned yet" testId="stats-hard-count" />
             </div>
 
             <div style={{ ...section, gap: theme.space.sm }}>
               {/* Period filter: a row above what it narrows down (only the progress chart). */}
               <div style={{ ...layout.row, gap: theme.space.sm }}>
-                <strong>Progreso</strong>
-                <div role="group" aria-label="Periodo" style={{ display: 'flex', gap: theme.space.xs }}>
+                <strong>Progress</strong>
+                <div role="group" aria-label="Period" style={{ display: 'flex', gap: theme.space.xs }}>
                   {RANGES.map(r => (
                     <button key={r} type="button" aria-pressed={days === r} onClick={() => setDays(r)} data-testid={`progress-range-${r}`}
                       style={{ ...layout.secondary, padding: `2px ${theme.space.md}`,
                         background: days === r ? theme.colors.accentSoft : 'transparent', borderColor: days === r ? theme.colors.accent : theme.colors.border }}>
-                      {r} días
+                      {r} days
                     </button>
                   ))}
                 </div>
@@ -91,18 +91,18 @@ export function StatsPage() {
             </div>
 
             <div style={{ ...section, gap: theme.space.sm }}>
-              <strong>Precisión por situación</strong>
+              <strong>Accuracy by situation</strong>
               <SituationChips situations={situations} stats={bySituation(rows)} selectedKey={selection.situationKey} />
             </div>
 
             <div style={{ ...section, gap: theme.space.sm }}>
-              <strong>Manos que más fallas</strong>
+              <strong>Hands you miss most</strong>
               {failed.length === 0 ? (
-                <small style={{ color: theme.colors.textMuted }} data-testid="stats-weakest">Sin fallos todavía.</small>
+                <small style={{ color: theme.colors.textMuted }} data-testid="stats-weakest">No misses yet.</small>
               ) : (
                 <table style={{ borderCollapse: 'collapse', fontSize: theme.font.sizeSm, fontVariantNumeric: 'tabular-nums' }} data-testid="stats-weakest">
                   <thead>
-                    <tr>{['#', 'Mano', 'Situación', 'Stack', 'Fallos', 'Precisión'].map(h => <th key={h} style={td}>{h}</th>)}</tr>
+                    <tr>{['#', 'Hand', 'Situation', 'Stack', 'Misses', 'Accuracy'].map(h => <th key={h} style={td}>{h}</th>)}</tr>
                   </thead>
                   <tbody>
                     {failed.map((r, i) => (

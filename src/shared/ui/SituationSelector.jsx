@@ -15,8 +15,8 @@ export function SituationSelector({ situations, value, onChange }) {
 
   return (
     <select style={select} value={value} onChange={e => onChange(e.target.value)} data-testid="situation-select"
-      aria-label="Situación">
-      <option value={ANY}>Any · situación aleatoria</option>
+      aria-label="Situation">
+      <option value={ANY}>Any · random situation</option>
       {Object.entries(byFormat).map(([format, items]) => (
         <optgroup key={format} label={FORMATS[format] ?? format}>
           {items.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}

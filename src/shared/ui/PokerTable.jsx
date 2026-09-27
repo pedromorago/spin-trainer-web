@@ -28,9 +28,9 @@ export function PokerTable({ seats, pot, heroCards, stack, caption }) {
   const layout = LAYOUT[seats.length];
   const description = [
     caption,
-    ...seats.filter(s => !s.isHero).map(s => `${s.position}: ${s.action ? ACTION_LABELS[s.action] : 'por hablar'}${s.bet ? ` (${bb(s.bet)})` : ''}`),
-    `Tú en ${seats[0].position} con ${heroCards.map(cardName).join(' y ')}`,
-    `Stack efectivo ${bb(stack)}`
+    ...seats.filter(s => !s.isHero).map(s => `${s.position}: ${s.action ? ACTION_LABELS[s.action] : 'to act'}${s.bet ? ` (${bb(s.bet)})` : ''}`),
+    `You in ${seats[0].position} with ${heroCards.map(cardName).join(' and ')}`,
+    `Effective stack ${bb(stack)}`
   ].filter(Boolean).join('. ');
 
   const abs = ([x, y]) => ({ position: 'absolute', left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' });
@@ -51,7 +51,7 @@ export function PokerTable({ seats, pot, heroCards, stack, caption }) {
       <div aria-hidden="true" style={{ ...abs([50, 47]), textAlign: 'center', lineHeight: 1.1 }}>
         <div style={{ fontFamily: theme.font.display, fontSize: 'clamp(20px, 5vw, 34px)', letterSpacing: 1, color: theme.colors.text }}
           data-testid="table-stack">{bb(stack)}</div>
-        {pot !== null && <div style={{ fontFamily: theme.font.mono, fontSize: 12, color: theme.colors.accentStrong }}>Bote {bb(pot)}</div>}
+        {pot !== null && <div style={{ fontFamily: theme.font.mono, fontSize: 12, color: theme.colors.accentStrong }}>Pot {bb(pot)}</div>}
       </div>
 
       {seats.map((seat, i) => {
@@ -75,7 +75,7 @@ export function PokerTable({ seats, pot, heroCards, stack, caption }) {
                 color: seat.isHero ? theme.colors.onAccent : theme.colors.text,
                 border: `1px solid ${seat.isHero ? theme.colors.accentStrong : theme.colors.border}`, opacity: seat.folded ? 0.6 : 1
               }}>
-                <strong>{seat.position}</strong>{seat.isHero ? ' · Tú' : seat.action ? ` · ${ACTION_LABELS[seat.action]}` : ''}
+                <strong>{seat.position}</strong>{seat.isHero ? ' · You' : seat.action ? ` · ${ACTION_LABELS[seat.action]}` : ''}
               </div>
             </div>
             {(seat.bet !== 0) && (

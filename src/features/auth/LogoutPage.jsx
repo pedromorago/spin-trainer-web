@@ -30,8 +30,8 @@ export function LogoutPage() {
     <div style={{ maxWidth: 480, margin: '10vh auto', display: 'flex', flexDirection: 'column', gap: theme.space.md }}>
       {error ? (
         <>
-          <ErrorBox error={{ title: 'No se ha podido cerrar la sesión', message: error.message }} onRetry={run} />
-          <Link to="/" style={{ color: theme.colors.accent }}>Volver</Link>
+          <ErrorBox error={{ title: 'Could not sign out', message: error.message }} onRetry={run} />
+          <Link to="/" style={{ color: theme.colors.accent }}>Back</Link>
         </>
       ) : <Loading />}
     </div>

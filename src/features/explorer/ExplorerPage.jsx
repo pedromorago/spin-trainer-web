@@ -22,7 +22,7 @@ export function ExplorerPage() {
       {selection.isAny ? (
         <Empty>
           <span data-testid="explorer-random">
-            Modo aleatorio: el Explorer muestra una situación y un stack concretos. Quiz y Builder elegirán combinaciones al azar.
+            Random mode: the Explorer shows one situation and one stack. Quiz and Builder will pick spots at random.
           </span>
         </Empty>
       ) : (
@@ -91,9 +91,9 @@ function RangeEditor({ situation, stack, saved, reference, onReload }) {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(exportRange(hands, actions, { title: `${situation.label} · ${stack} BB` }));
-      setCopyStatus('Copiado al portapapeles');
+      setCopyStatus('Copied to the clipboard');
     } catch {
-      setCopyStatus('No se pudo copiar: el navegador no dio acceso al portapapeles');
+      setCopyStatus('Could not copy: the browser denied access to the clipboard');
     }
   };
 
@@ -108,36 +108,36 @@ function RangeEditor({ situation, stack, saved, reference, onReload }) {
         <UnsavedChangesBar blocker={blocker} testId="explorer-unsaved" />
         <div style={{ ...layout.row, gap: theme.space.sm }}>
           <button type="button" style={layout.primary} onClick={persist} disabled={!modified || busy} data-testid="explorer-save">
-            {save.isPending ? 'Guardando…' : 'Guardar'}
+            {save.isPending ? 'Saving…' : 'Save'}
           </button>
           <button type="button" style={layout.secondary} onClick={() => setConfirm('reset')} disabled={(!saved && !modified) || busy}
             data-testid="explorer-reset">Reset</button>
-          <button type="button" style={layout.secondary} onClick={copy} data-testid="explorer-copy">Copiar</button>
+          <button type="button" style={layout.secondary} onClick={copy} data-testid="explorer-copy">Copy</button>
           <span style={{ display: 'flex', gap: theme.space.xs, marginLeft: theme.space.sm }}>
-            {modified && badge('Modificado', theme.colors.accentStrong, 'badge-modified')}
-            {saved && badge('Guardado', theme.colors.success, 'badge-saved')}
+            {modified && badge('Modified', theme.colors.accentStrong, 'badge-modified')}
+            {saved && badge('Saved', theme.colors.success, 'badge-saved')}
             {!saved && hasReference && badge('PDF', theme.colors.textMuted, 'badge-reference')}
           </span>
           <small role="status" style={{ color: theme.colors.textMuted }} data-testid="explorer-copy-status">{copyStatus}</small>
         </div>
         {confirm === 'reset' && (
           <ConfirmBar testId="explorer-reset-confirm"
-            message={saved ? '¿Borrar tu rango personalizado y volver al del PDF?' : '¿Descartar los cambios sin guardar?'}
-            confirmLabel={saved ? 'Borrar y volver al PDF' : 'Descartar'} onConfirm={reset} onCancel={() => setConfirm(null)} />
+            message={saved ? 'Delete your custom range and go back to the PDF one?' : 'Discard the unsaved changes?'}
+            confirmLabel={saved ? 'Delete and go back to the PDF' : 'Discard'} onConfirm={reset} onCancel={() => setConfirm(null)} />
         )}
         <ErrorBox error={save.error ?? remove.error} />
         {save.error?.isConflict && (
           <button type="button" style={{ ...layout.secondary, alignSelf: 'flex-start' }} onClick={discardAndReload} data-testid="explorer-reload">
-            Descartar mis cambios y cargar la versión guardada
+            Discard my changes and load the saved version
           </button>
         )}
         {!saved && !hasReference && (
           <small style={{ color: theme.colors.textMuted }} data-testid="explorer-no-reference">
-            Sin rango del PDF para este spot todavía: puedes pintar y guardar el tuyo.
+            No PDF range for this spot yet: you can paint and save your own.
           </small>
         )}
         <ActionPalette actions={actions} selected={brush} onSelect={setBrush} eraser />
-        <HandGrid assignments={hands} actions={actions} onPaint={paint} label={`Rango ${situation.label} · ${stack} BB`} />
+        <HandGrid assignments={hands} actions={actions} onPaint={paint} label={`Range ${situation.label} · ${stack} BB`} />
       </div>
       <RangePanel stats={stats} notes={situation.notes} />
     </div>

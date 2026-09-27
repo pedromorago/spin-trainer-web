@@ -21,7 +21,7 @@ import { useElementWidth } from './useElementWidth';
  *  - verdicts ({[hand]: {expected, kind, played}} from domain/range#evaluateRange): outline and glyph by kind on the played hands
  */
 export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto', showLabels = true,
-  highlight = null, verdicts = null, label = 'Rango 13×13' }) {
+  highlight = null, verdicts = null, label = '13×13 range' }) {
   const [width, wrapperRef] = useElementWidth(cellSize === 'auto');
   const size = cellSize === 'auto' ? (width ? gridCellSize(width) : 42) : cellSize;
   const stroke = useStroke(onPaint);
@@ -42,7 +42,7 @@ export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto'
     const text = `${hand}: ${ACTION_LABELS[action] ?? action}`;
     if (!verdict) return text;
     const kind = VERDICT_STYLES[verdict.kind].label.toLowerCase();
-    return verdict.correct ? `${text}, ${kind}` : `${text}, ${kind} (correcta: ${ACTION_LABELS[verdict.expected] ?? verdict.expected})`;
+    return verdict.correct ? `${text}, ${kind}` : `${text}, ${kind} (correct: ${ACTION_LABELS[verdict.expected] ?? verdict.expected})`;
   };
 
   return (

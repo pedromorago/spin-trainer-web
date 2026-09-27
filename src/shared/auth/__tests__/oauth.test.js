@@ -83,9 +83,9 @@ describe('parseOAuthCallback', () => {
 
 describe('authErrorMessage', () => {
   it.each([
-    ['Request rate limit reached', 'Demasiados intentos. Espera un momento y vuelve a probar.'],
-    ['Failed to fetch', 'No hay conexión con el servidor de acceso. Vuelve a intentarlo.'],
-    ['Something unexpected', 'No se ha podido entrar. Vuelve a intentarlo.']
+    ['Request rate limit reached', 'Too many attempts. Wait a moment and try again.'],
+    ['Failed to fetch', 'Could not reach the sign-in server. Please try again.'],
+    ['Something unexpected', 'Could not sign in. Please try again.']
   ])('"%s" reads "%s"', (message, expected) => {
     expect(authErrorMessage({ message })).toBe(expected);
   });

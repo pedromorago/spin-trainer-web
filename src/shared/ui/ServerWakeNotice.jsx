@@ -8,7 +8,7 @@ export function ServerWakeNotice({ visible }) {
   return (
     <p role="status" aria-live="polite" data-testid="server-waking"
       style={{ margin: 0, color: theme.colors.textMuted, fontSize: theme.font.sizeSm }}>
-      {visible ? 'Despertando el servidor: tras un rato sin uso, la primera carga puede tardar hasta un minuto.' : ''}
+      {visible ? 'Waking up the server: after a while without use, the first load can take up to a minute.' : ''}
     </p>
   );
 }

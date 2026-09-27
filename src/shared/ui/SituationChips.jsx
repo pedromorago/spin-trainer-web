@@ -1,6 +1,6 @@
 import { theme } from '../theme/theme';
 
-const pct = x => `${Math.round(x * 100)} %`;
+const pct = x => `${Math.round(x * 100)}%`;
 
 /**
  * Accuracy per situation: one chip per catalog situation with its meter (the track is one step of the same hue).
@@ -9,7 +9,7 @@ const pct = x => `${Math.round(x * 100)} %`;
  */
 export function SituationChips({ situations, stats, selectedKey }) {
   return (
-    <ul aria-label="Precisión por situación" data-testid="stats-chips"
+    <ul aria-label="Accuracy by situation" data-testid="stats-chips"
       style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: theme.space.sm,
         gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
       {situations.map(s => {
@@ -23,16 +23,16 @@ export function SituationChips({ situations, stats, selectedKey }) {
               <span>{s.label}</span>
               <strong style={{ fontFamily: theme.font.mono }}>{st ? pct(st.accuracy) : '—'}</strong>
             </div>
-            {/* Without attempts there is no value to measure (not 0 %): the empty track is decoration. */}
+            {/* Without attempts there is no value to measure (not 0%): the empty track is decoration. */}
             <div {...(st
-              ? { role: 'meter', 'aria-label': `Precisión en ${s.label}`, 'aria-valuemin': 0, 'aria-valuemax': 100,
+              ? { role: 'meter', 'aria-label': `Accuracy in ${s.label}`, 'aria-valuemin': 0, 'aria-valuemax': 100,
                 'aria-valuenow': Math.round(st.accuracy * 100) }
               : { 'aria-hidden': true })}
               style={{ height: 6, marginTop: 6, borderRadius: theme.radius.pill, background: theme.colors.accentSoft, overflow: 'hidden' }}>
               <div style={{ width: st ? `${st.accuracy * 100}%` : 0, height: '100%', background: theme.colors.chartAccent }} />
             </div>
             <div style={{ fontSize: theme.font.sizeXs, color: theme.colors.textMuted, marginTop: 4 }}>
-              {st ? `${st.correct}/${st.attempts} manos` : 'Sin intentos'}
+              {st ? `${st.correct}/${st.attempts} hands` : 'No attempts'}
             </div>
           </li>
         );

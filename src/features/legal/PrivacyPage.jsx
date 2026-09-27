@@ -17,63 +17,62 @@ export function PrivacyPage() {
 
   return (
     <main style={page} aria-labelledby="privacy-title">
-      <Link to="/" style={link}>← Volver a Spin Trainer</Link>
-      <h1 id="privacy-title" style={{ ...h1, marginTop: theme.space.lg }}>Privacidad</h1>
-      <p style={muted}>Última actualización: 27 de septiembre de 2026</p>
+      <Link to="/" style={link}>← Back to Spin Trainer</Link>
+      <h1 id="privacy-title" style={{ ...h1, marginTop: theme.space.lg }}>Privacy</h1>
+      <p style={muted}>Last updated: 27 September 2026</p>
       <p>
-        Spin Trainer es un proyecto personal y gratuito para entrenar rangos preflop de Spin &amp; Go. Aquí se explica qué
-        datos guarda, para qué y cómo puedes pedir que se borren. Está pensado para mayores de edad.
+        Spin Trainer is a free personal project for training Spin &amp; Go preflop ranges. This page explains what data it
+        keeps, what for, and how to have it deleted. It is meant for adults.
       </p>
 
-      <h2 style={h2}>Responsable</h2>
+      <h2 style={h2}>Controller</h2>
       <p>Pedro Morago López-Vázquez · <a href={`mailto:${CONTACT}`} style={link}>{CONTACT}</a></p>
 
-      <h2 style={h2}>Qué datos se guardan</h2>
+      <h2 style={h2}>What data is kept</h2>
       <ul>
         <li>
-          <strong>Tu cuenta:</strong> el email con el que entras. Al entrar con Google, Google comparte también tu nombre y
-          tu foto de perfil; se guardan con la cuenta, pero Spin Trainer solo usa el email.
+          <strong>Your account:</strong> the email you sign in with. When you sign in with Google, Google also shares
+          your name and profile picture; they are stored with the account, but Spin Trainer only uses the email.
         </li>
         <li>
-          <strong>Tu entrenamiento:</strong> los rangos que personalizas y cada respuesta del Quiz (situación, stack, mano,
-          acción elegida, si era correcta y cuándo). Con eso se calculan tus estadísticas.
+          <strong>Your training:</strong> the ranges you customize and every Quiz answer (situation, stack, hand, the
+          action you chose, whether it was right, and when). Your stats are computed from them.
         </li>
         <li>
-          No hay analítica, publicidad ni cookies de seguimiento. El navegador guarda tu sesión solo para mantenerte
-          conectado.
+          No analytics, no advertising and no tracking cookies. Your browser keeps your session only to keep you signed in.
         </li>
       </ul>
 
-      <h2 style={h2}>Para qué</h2>
+      <h2 style={h2}>What for</h2>
       <p>
-        Solo para darte el servicio que pides: entrenar y ver tu progreso (art. 6.1.b del RGPD). Los datos no se venden,
-        no se ceden a nadie y no se usan para nada más.
+        Only to provide the service you ask for: training and seeing your progress (GDPR art. 6.1.b). The data is not
+        sold, not shared with anyone and not used for anything else.
       </p>
 
-      <h2 style={h2}>Quién los trata y dónde</h2>
+      <h2 style={h2}>Who processes it, and where</h2>
       <ul>
-        <li><strong>Supabase</strong> (acceso y base de datos), en la Unión Europea (Fráncfort).</li>
-        <li><strong>Render</strong> (el servidor de la aplicación), en Fráncfort.</li>
+        <li><strong>Supabase</strong> (sign-in and database), in the European Union (Frankfurt).</li>
+        <li><strong>Render</strong> (the application server), in Frankfurt.</li>
         <li>
-          <strong>Vercel</strong> sirve la web y <strong>Cloudflare</strong> resuelve el dominio: no guardan tu
-          entrenamiento, aunque, como cualquier servidor web, registran datos técnicos de las visitas (IP, navegador).
+          <strong>Vercel</strong> serves the website and <strong>Cloudflare</strong> resolves the domain: they do not
+          keep your training, although, like any web server, they log technical data about visits (IP, browser).
         </li>
-        <li><strong>Google</strong>, solo para identificarte cuando entras con Google.</li>
+        <li><strong>Google</strong>, only to identify you when you sign in with Google.</li>
       </ul>
       <p>
-        Vercel, Cloudflare y Google son empresas estadounidenses: cuando intervienen, se aplican sus garantías para
-        transferencias internacionales (el Marco de Privacidad de Datos UE-EE. UU. o cláusulas contractuales tipo).
+        Vercel, Cloudflare and Google are US companies: when they take part, their safeguards for international
+        transfers apply (the EU-US Data Privacy Framework or standard contractual clauses).
       </p>
 
-      <h2 style={h2}>Cuánto tiempo</h2>
-      <p>Mientras tengas la cuenta. Al borrarla se eliminan la cuenta, tus rangos y todas tus respuestas.</p>
+      <h2 style={h2}>How long</h2>
+      <p>As long as you have the account. Deleting it removes the account, your ranges and all your answers.</p>
 
-      <h2 style={h2}>Tus derechos</h2>
+      <h2 style={h2}>Your rights</h2>
       <p>
-        Puedes pedir el acceso a tus datos, corregirlos, llevártelos, oponerte a su uso o borrar tu cuenta con todo lo que
-        contiene escribiendo a <a href={`mailto:${CONTACT}`} style={link}>{CONTACT}</a>. Respondo en menos de un mes. Si
-        crees que no se han respetado tus derechos, puedes reclamar ante la{' '}
-        <a href="https://www.aepd.es" style={link} rel="noopener noreferrer" target="_blank">Agencia Española de Protección de Datos</a>.
+        You can ask for access to your data, correct it, take it with you, object to its use or delete your account with
+        everything in it by writing to <a href={`mailto:${CONTACT}`} style={link}>{CONTACT}</a>. You will get an answer
+        within a month. If you think your rights have not been respected, you can complain to the{' '}
+        <a href="https://www.aepd.es/en" style={link} rel="noopener noreferrer" target="_blank">Spanish Data Protection Agency (AEPD)</a>.
       </p>
     </main>
   );

@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
         });
         return { error };
       },
-    // Finishes Google's round trip from the callback's query string. The error, if any, is a Spanish message.
+    // Finishes Google's round trip from the callback's query string. The error, if any, is a message for the user.
     completeOAuth: async search => {
       const callback = parseOAuthCallback(search);
       if (callback.error) return { error: callback.error };

@@ -2,8 +2,8 @@ import { theme } from './theme';
 
 // Presentation of the Builder verdicts (domain/range#VERDICT_KINDS). Outline + glyph: does not rely on color alone.
 export const VERDICT_STYLES = {
-  correct: { label: 'Correcta', color: theme.colors.success, line: 'solid', glyph: null },
-  wrong: { label: 'Acción equivocada', color: theme.colors.danger, line: 'solid', glyph: '✕' },
-  extra: { label: 'De más', color: '#f5a524', line: 'dashed', glyph: '+' },
-  missing: { label: 'Faltó', color: '#38bdf8', line: 'dashed', glyph: '−' }
+  correct: { label: 'Correct', color: theme.colors.success, line: 'solid', glyph: null },
+  wrong: { label: 'Wrong action', color: theme.colors.danger, line: 'solid', glyph: '✕' },
+  extra: { label: 'Extra', color: '#f5a524', line: 'dashed', glyph: '+' },
+  missing: { label: 'Missing', color: '#38bdf8', line: 'dashed', glyph: '−' }
 };

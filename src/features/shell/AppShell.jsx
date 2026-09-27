@@ -23,7 +23,7 @@ export function AppShell() {
 
   const content = situations.isLoading ? <Loading />
     : situations.error ? <ErrorBox error={situations.error} onRetry={situations.refetch} />
-      : situations.data.length === 0 ? <Empty>No hay situaciones disponibles.</Empty>
+      : situations.data.length === 0 ? <Empty>No situations available.</Empty>
         : <Outlet context={{ situations: situations.data, selection }} />;
 
   return (

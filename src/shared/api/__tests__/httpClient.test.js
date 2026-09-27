@@ -68,7 +68,7 @@ describe('httpApi (contrato v0.2)', () => {
   it('sin conexión → ApiError transitorio (estado 0) con un mensaje para el jugador', async () => {
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
     const err = await httpApi.listSituations().catch(e => e);
-    expect(err).toMatchObject({ status: 0, isTransient: true, message: 'No se ha podido conectar con el servidor.' });
+    expect(err).toMatchObject({ status: 0, isTransient: true, message: 'Could not reach the server.' });
   });
 
   it('un 200 que no es JSON no viene de la API (p. ej. la página de espera del host): 502 transitorio', async () => {

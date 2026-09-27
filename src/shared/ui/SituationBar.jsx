@@ -16,7 +16,7 @@ export function SituationBar({ situations, selection }) {
       )}
       {selection.isAny && (
         <span style={{ fontSize: theme.font.sizeSm, color: theme.colors.accent }} data-testid="random-mode">
-          Modo aleatorio · {selection.combos.length} combinaciones
+          Random mode · {selection.combos.length} spots
         </span>
       )}
     </div>
