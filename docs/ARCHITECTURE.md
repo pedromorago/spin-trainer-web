@@ -8,7 +8,7 @@
  │    -web      │  REST /api/v1 (OpenAPI)│Spring Boot 4.1·Java 21│
  │ React 19     │ ◀───────────────────── │ Gradle · Flyway        │
  └──────┬───────┘                        └──────────┬───────────┘
-        │ login/signup                               │ JDBC (own role)
+        │ login (Google, ADR-0019)                   │ JDBC (own role)
         ▼                                            ▼
  ┌──────────────┐                        ┌──────────────────────┐
  │ Supabase Auth│  JWKS ──────────────▶  │ Postgres (Supabase)   │

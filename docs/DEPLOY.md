@@ -14,8 +14,9 @@ Accounts on Supabase, Render and Vercel (all free, sign in with GitHub), and Git
 
 1. Create the project in **Central EU (Frankfurt)**, `eu-central-1`, next to the API. Keep the database password (the
    `postgres` administrator).
-2. **Authentication → Sign In / Providers**: Email enabled (the web app signs in with email and password). It is a
-   personal tool: once your account exists, you can turn off new sign-ups.
+2. **Authentication → Sign In / Providers** (ADR-0019): *Allow new users to sign up* **on** (it also gates Google's new
+   accounts), *Confirm email* **on** (an email sign-up sent straight to the API can then never sign in), anonymous
+   sign-ins off. **Google** enabled with the client of section 7.
 3. **Project Settings → JWT Keys**: the API only accepts tokens signed with an asymmetric key (ES256) that it verifies
    against the JWKS. The current signing key must be ECC (P-256); if the project still uses the legacy shared secret,
    migrate to signing keys.
@@ -85,19 +86,30 @@ If the name `spin-trainer-api` is taken, Render adds a suffix to the URL: use th
 ## 5. Close the loop
 
 - Render: set `CORS_ALLOWED_ORIGINS` to the web domain (**Environment**; Render restarts the service).
-- Supabase: **Authentication → URL Configuration → Site URL** = the web domain, and `https://<web domain>/**` in
-  Redirect URLs (the links in Supabase's emails).
-- Supabase: **Authentication → Users → Add user** with *Auto Confirm User*, then turn off *Allow new users to sign up*
-  in **Sign In / Providers**: a personal tool, so nobody else can register.
+- Supabase: **Authentication → URL Configuration → Site URL** = the web domain; **Redirect URLs**:
+  `https://<web domain>/**` (Google's return, `/auth/callback`) and, for development, `http://localhost:5173/**`.
 
 ## 6. Check
 
-- The web app: sign in, answer in the Quiz and see it in Stats. The browser console shows no CSP errors.
+- The web app: sign in (with Google too, section 7), answer in the Quiz and see it in Stats. The browser console shows no CSP errors.
 - After 15 minutes without use the API sleeps: the next load shows "Despertando el servidor" and takes about a minute.
 - `curl -I https://<web domain>/` returns the `Content-Security-Policy`, and `/assets/*` returns
   `Cache-Control: public, max-age=31536000, immutable`.
 - The spin-trainer-qa suite does not run against production: the API only trusts Supabase's tokens, and the suite forges
   its own with the QA key. That is intended.
+
+## 7. Sign in with Google (ADR-0019)
+
+1. [Google Cloud console](https://console.cloud.google.com): a project (e.g. `spin-trainer`).
+2. **Google Auth Platform → Branding**: app name *Spin Trainer*, support email, logo optional; authorized domain
+   `pedromorago.com`; home page and privacy policy `https://<web domain>/` and `https://<web domain>/privacidad`.
+3. **Audience**: *External*, then **Publish app** (in *Testing* only listed test users can sign in). With only the
+   `openid`, `email` and `profile` scopes Google does not require verification.
+4. **Clients → Create client → Web application**: authorized JavaScript origin `https://<web domain>`; authorized
+   redirect URI `https://<ref>.supabase.co/auth/v1/callback` (Supabase shows it in its Google provider panel).
+5. Supabase, **Sign In / Providers → Google**: enable, paste the client ID and secret, save.
+6. Check by hand after each change to the login (the E2E suite cannot drive Google): sign in with a Google account
+   that has never used the app, answer in the Quiz, sign out and in again.
 
 ## Changing names or domains
 
