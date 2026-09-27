@@ -4,12 +4,12 @@ Spin Trainer frontend. Rules shared by the three repos, summarized here so this 
 
 ## Global rules (summary)
 - Portfolio quality > speed. Source of truth: `docs/SPIN_TRAINER_PROJECT_CONTEXT.md`, `docs/ARCHITECTURE.md`, `docs/adr/*`, `docs/openapi.yaml` (copy of the API contract).
-- ADRs are closed (0001..0020); they are reopened only for a concrete, justified flaw.
+- ADRs are closed (0001..0021); they are reopened only for a concrete, justified flaw.
 - Spin & Go only (3-max and HU, 17 situations). From the 6-max MTT prototype we take UI and flows, not code or ranges (ADR-0011).
 - Effective range = the custom one if it exists, otherwise the PDF one (`useEffectiveRange`). Only the Explorer writes ranges; the Builder does not persist (ADR-0012).
 - Supabase only issues the JWT; all data goes through the API. Default ranges in the DB (Flyway). Quiz attempts = immutable events.
 - No TypeScript in this repo. Discarded: OWASP ZAP, load testing, Pact, pgTAP.
-- In English: code comments, documentation (README, ADRs, CONTRIBUTING.md, docs/, OpenAPI descriptions) and developer-facing messages (logs, internal exceptions, tooling output). In Spanish: app UI text, API error messages, the test report (test titles, Allure names, assertion descriptions) and Gherkin features.
+- Everything in English (ADR-0021): code, comments, documentation (README, ADRs, CONTRIBUTING.md, docs/, OpenAPI descriptions), developer-facing messages, the app's UI and data, the API's error messages, and the test report (test titles, Allure names, assertion descriptions, Gherkin features).
 - Commits **always in Pedro's name** (author and committer: `Pedro Morago López-Vázquez <pedromoragolv@gmail.com>`; check `git config user.name/user.email` before committing). Conventional Commits, no co-author or attribution trailer.
 - Be concise, propose before generating a lot of code, iterate in blocks with confirmation.
 

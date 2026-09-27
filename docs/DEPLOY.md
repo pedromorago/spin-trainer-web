@@ -102,7 +102,7 @@ If the name `spin-trainer-api` is taken, Render adds a suffix to the URL: use th
 
 1. [Google Cloud console](https://console.cloud.google.com): a project (e.g. `spin-trainer`).
 2. **Google Auth Platform → Branding**: app name *Spin Trainer*, support email, logo optional; authorized domain
-   `pedromorago.com`; home page and privacy policy `https://<web domain>/` and `https://<web domain>/privacidad`.
+   `pedromorago.com`; home page and privacy policy `https://<web domain>/` and `https://<web domain>/privacy`.
 3. **Audience**: *External*, then **Publish app** (in *Testing* only listed test users can sign in). With only the
    `openid`, `email` and `profile` scopes Google does not require verification.
 4. **Clients → Create client → Web application**: authorized JavaScript origin `https://<web domain>`; authorized
