@@ -20,9 +20,9 @@ const errorsOf = promise => promise.then(() => { throw new Error('se esperaba un
 const P = (status, kind) => ({ status, type: `urn:spin-trainer:${kind}` });
 
 describe('situations', () => {
-  it('devuelve el catálogo de 16 situaciones como copia', async () => {
+  it('devuelve el catálogo de 17 situaciones como copia', async () => {
     const first = await api.listSituations();
-    expect(first).toHaveLength(16);
+    expect(first).toHaveLength(17);
     first[0].actions.push('HACK');
     expect((await api.listSituations())[0].actions).not.toContain('HACK');
   });

@@ -54,7 +54,7 @@ tokens → Tokens (classic)**) with only the `read:packages` scope.
    | `DB_APP_PASSWORD` / `DB_MIGRATOR_PASSWORD` | the passwords from `bootstrap.sql` |
    | `CORS_ALLOWED_ORIGINS` | the web domain; until step 4, a provisional `https://spin-trainer.vercel.app` |
 
-3. The first start runs Flyway as `spin_migrator`: schema, catalog and the 73 reference ranges (V1..V5). Check
+3. The first start runs Flyway as `spin_migrator`: schema, catalog and the 80 reference ranges (V1..V7). Check
    `https://spin-trainer-api.onrender.com/actuator/health/readiness` → `{"status":"UP"}`.
 4. **Service → Settings → Deploy Hook**: copy the URL and save it as the `RENDER_DEPLOY_HOOK_URL` secret in the
    spin-trainer-api repo (**Settings → Secrets and variables → Actions**). From then on, every green CI on `main` builds

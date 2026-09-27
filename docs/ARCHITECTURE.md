@@ -160,7 +160,7 @@ published domain are used; `shared` depends on no module; no cycles.
 
 | Method | Path | Description |
 |---|---|---|
-| GET | /situations | Catalog of the 16 situations: stacks, actions, hero, prior actions, notes |
+| GET | /situations | Catalog of the 17 situations: stacks, actions, hero, prior actions, notes |
 | GET | /ranges/default | All seeded reference ranges |
 | GET | /ranges/default/{situation}/{stack} | Reference range (404 if not seeded) |
 | GET | /ranges/user | All of the user's custom ranges |

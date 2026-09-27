@@ -1,4 +1,4 @@
-// Catalog of the 16 situations (12 3-max + 4 HU) from the reference PDF; the same one the API serves (seeds V2 and V5).
+// Catalog of the 17 situations (13 3-max + 4 HU) from the reference PDF; the same one the API serves (seeds V2, V5 and V7).
 // In production the API serves it (GET /situations); here it lives only for the mock adapter.
 // Stacks and actions come from the PDF's tables and legends; hero and priorActions (ADR-0013), from their titles.
 const OPEN = ['MR_4B_C', 'MR_C_C', 'MR_C_F', 'MR_F_F', 'L_C_C', 'L_C_F', 'ALLIN', 'FOLD'];
@@ -20,6 +20,11 @@ export const SITUATIONS = [
   { key: 'bb_vs_sb_limp', label: 'BB vs SB Limp', format: '3max', hero: 'BB',
     priorActions: [act('BTN', 'FOLD'), act('SB', 'LIMP')],
     stacks: [25, 20, 15, 10], actions: ['ALLIN', 'ISO_C', 'CHECK'] },
+  // The PDF's "3H OS call" table (V7): one threshold per hand, turned into one range per stack.
+  { key: 'bb_vs_sb_os', label: 'BB vs SB Open-Shove', format: '3max', hero: 'BB',
+    priorActions: [act('BTN', 'FOLD'), act('SB', 'SHOVE')],
+    stacks: [20, 15, 12, 10, 8, 6, 4], actions: ['CALL', 'FOLD'],
+    notes: 'Tabla «3H OS call» del PDF: cada mano paga el shove si el stack efectivo es igual o menor que su umbral en BB.' },
   { key: 'bb_vs_btn_mr_sb_fold', label: 'BB vs BTN MR (SB fold)', format: '3max', hero: 'BB',
     priorActions: [act('BTN', 'MIN_RAISE'), act('SB', 'FOLD')],
     stacks: [25, 20, 15, 10], actions: ['ALLIN', '3BET', 'CALL', 'FOLD'] },
