@@ -51,7 +51,7 @@ private, add a registry credential in Render (a GitHub token with only `read:pac
    | `DB_URL` | `jdbc:postgresql://<pooler host>:5432/postgres?sslmode=require` |
    | `DB_APP_USER` / `DB_MIGRATOR_USER` | `spin_app.<ref>` / `spin_migrator.<ref>` |
    | `DB_APP_PASSWORD` / `DB_MIGRATOR_PASSWORD` | the passwords from `bootstrap.sql` |
-   | `CORS_ALLOWED_ORIGINS` | the web domain (`https://spin-trainer-web.vercel.app`, the project name Vercel assigns) |
+   | `CORS_ALLOWED_ORIGINS` | the web domain (`https://spintrainer.pedromorago.com`, step 4) |
 
 2. The first start runs Flyway as `spin_migrator`: schema, catalog and the 80 reference ranges (V1..V7). Check
    `https://spin-trainer-api.onrender.com/actuator/health/readiness` → `{"status":"UP"}`.
@@ -76,16 +76,23 @@ If the name `spin-trainer-api` is taken, Render adds a suffix to the URL: use th
    | `VITE_SUPABASE_ANON_KEY` | publishable (anon) key | not needed |
 
    Preview deployments use the mock: they need neither the API's CORS nor real data.
-3. Deploy and note the production domain.
+3. Deploy. Vercel serves it at `https://spin-trainer-web.vercel.app` (the project name).
+4. Custom domain: **Settings → Domains → Add Existing** → `spintrainer.pedromorago.com` (Production). In Cloudflare, the
+   DNS record Vercel shows (a `CNAME` for `spintrainer`) with the proxy **off** (DNS only): proxied, Vercel cannot issue
+   its certificate. Then edit `spin-trainer-web.vercel.app` → **Redirect to Another Domain**, 308, to the custom domain:
+   one origin, so one login session (Supabase keeps it per origin) and one entry in the API's CORS.
 
 ## 5. Close the loop
 
 - Render: set `CORS_ALLOWED_ORIGINS` to the web domain (**Environment**; Render restarts the service).
-- Supabase: **Authentication → URL Configuration → Site URL** = the web domain.
+- Supabase: **Authentication → URL Configuration → Site URL** = the web domain, and `https://<web domain>/**` in
+  Redirect URLs (the links in Supabase's emails).
+- Supabase: **Authentication → Users → Add user** with *Auto Confirm User*, then turn off *Allow new users to sign up*
+  in **Sign In / Providers**: a personal tool, so nobody else can register.
 
 ## 6. Check
 
-- The web app: sign up or sign in, answer in the Quiz and see it in Stats. The browser console shows no CSP errors.
+- The web app: sign in, answer in the Quiz and see it in Stats. The browser console shows no CSP errors.
 - After 15 minutes without use the API sleeps: the next load shows "Despertando el servidor" and takes about a minute.
 - `curl -I https://<web domain>/` returns the `Content-Security-Policy`, and `/assets/*` returns
   `Cache-Control: public, max-age=31536000, immutable`.

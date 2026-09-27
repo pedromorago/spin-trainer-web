@@ -1,6 +1,7 @@
 # spin-trainer-web
 
 Spin Trainer frontend: a preflop range trainer for Spin & Go (3-max and heads-up). A study tool and QA portfolio project.
+Live at [spintrainer.pedromorago.com](https://spintrainer.pedromorago.com) (sign-ups are closed: it is a personal tool).
 API in [spin-trainer-api](https://github.com/pedromorago/spin-trainer-api); the test strategy, what the tests found and the
 black-box suites are in [spin-trainer-qa](https://github.com/pedromorago/spin-trainer-qa). Context, architecture and
 ADRs: [`docs/`](docs/).
