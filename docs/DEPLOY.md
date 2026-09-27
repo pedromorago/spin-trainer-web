@@ -51,7 +51,7 @@ private, add a registry credential in Render (a GitHub token with only `read:pac
    | `DB_URL` | `jdbc:postgresql://<pooler host>:5432/postgres?sslmode=require` |
    | `DB_APP_USER` / `DB_MIGRATOR_USER` | `spin_app.<ref>` / `spin_migrator.<ref>` |
    | `DB_APP_PASSWORD` / `DB_MIGRATOR_PASSWORD` | the passwords from `bootstrap.sql` |
-   | `CORS_ALLOWED_ORIGINS` | the web domain; until step 4, a provisional `https://spin-trainer.vercel.app` |
+   | `CORS_ALLOWED_ORIGINS` | the web domain (`https://spin-trainer-web.vercel.app`, the project name Vercel assigns) |
 
 2. The first start runs Flyway as `spin_migrator`: schema, catalog and the 80 reference ranges (V1..V7). Check
    `https://spin-trainer-api.onrender.com/actuator/health/readiness` → `{"status":"UP"}`.
