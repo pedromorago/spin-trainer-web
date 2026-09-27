@@ -14,9 +14,9 @@ Accounts on Supabase, Render and Vercel (all free, sign in with GitHub), and Git
 
 1. Create the project in **Central EU (Frankfurt)**, `eu-central-1`, next to the API. Keep the database password (the
    `postgres` administrator).
-2. **Authentication → Sign In / Providers** (ADR-0019): *Allow new users to sign up* **on** (it also gates Google's new
-   accounts), *Confirm email* **on** (an email sign-up sent straight to the API can then never sign in), anonymous
-   sign-ins off. **Google** enabled with the client of section 7.
+2. **Authentication → Sign In / Providers** (ADR-0019, ADR-0020): *Allow new users to sign up* **on** (it also gates
+   Google's new accounts), **Email** provider **off** (Google is the only way in), anonymous sign-ins off. **Google**
+   enabled with the client of section 7.
 3. **Project Settings → JWT Keys**: the API only accepts tokens signed with an asymmetric key (ES256) that it verifies
    against the JWKS. The current signing key must be ECC (P-256); if the project still uses the legacy shared secret,
    migrate to signing keys.

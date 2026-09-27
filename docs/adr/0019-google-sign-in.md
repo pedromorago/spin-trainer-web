@@ -1,6 +1,6 @@
 # ADR-0019: Open to other players, with Google as the only way to create an account
 
-Status: Accepted · Date: 2026-09-27 · Refines ADR-0003 (Supabase still only issues the JWT)
+Status: Accepted · Date: 2026-09-27 · Refines ADR-0003 (Supabase still only issues the JWT) · Password sign-in removed by ADR-0020
 
 ## Context
 Spin Trainer went live as a personal tool with sign-ups closed. Other players asked to use it. The API was already
