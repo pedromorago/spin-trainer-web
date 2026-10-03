@@ -13,23 +13,30 @@ function readStored(key) {
 
 /**
  * Scoreboard of the current study session (Quiz answers) of `userId`. The history is the API's attempts.
- * Mounted with key={userId}: a different user starts from their own stored scoreboard.
+ * Another `userId` switches to that user's own stored scoreboard (the user known once the stored session is read).
  */
 export function SessionProvider({ userId, children }) {
   const key = storageKey(userId);
-  const [session, setSession] = useState(() => readStored(key));
+  const [stored, setStored] = useState(() => ({ key, session: readStored(key) }));
+  // Adjusted while rendering, so the old user's scoreboard is never shown, nor saved under the new user's key.
+  const current = stored.key === key ? stored : { key, session: readStored(key) };
+  if (current !== stored) setStored(current);
+  const { session } = current;
 
   useEffect(() => {
     try { globalThis.sessionStorage?.setItem(key, JSON.stringify(session)); }
     catch { /* no persistence: the session stays in memory */ }
   }, [key, session]);
 
-  const value = useMemo(() => ({
-    session,
-    accuracy: sessionAccuracy(session),
-    record: correct => setSession(s => recordAnswer(s, correct)),
-    reset: () => setSession(emptySession())
-  }), [session]);
+  const value = useMemo(() => {
+    const update = change => setStored(s => ({ key: s.key, session: change(s.session) }));
+    return {
+      session,
+      accuracy: sessionAccuracy(session),
+      record: correct => update(s => recordAnswer(s, correct)),
+      reset: () => update(() => emptySession())
+    };
+  }, [session]);
 
   return <SessionContext value={value}>{children}</SessionContext>;
 }
