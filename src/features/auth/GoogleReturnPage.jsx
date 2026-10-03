@@ -6,8 +6,8 @@ import { useAuth } from '../../shared/auth/useAuth';
 import { ErrorBox, Loading } from '../../shared/ui/Feedback';
 import { theme } from '../../shared/theme/theme';
 
-// Google's answer is handled once per page load. Signing in changes the user, which creates this page again
-// (UserScope): the new one picks up the same exchange instead of reading an address already cleaned.
+// Google's answer is handled once per page load. Signing in over another account creates this page again (UserScope):
+// the new one picks up the same exchange instead of reading an address already cleaned.
 let handled = null;
 
 function handleGoogleAnswer(signInWithIdToken) {

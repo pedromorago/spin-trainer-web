@@ -8,8 +8,7 @@ import { SessionProvider } from './shared/session/SessionProvider';
 /**
  * What is cached belongs to one user: the query cache and the session scoreboard are created again when the user
  * changes (signing out and into another account on the same tab), so nobody sees the previous user's ranges or stats.
- * Reading the stored session at start-up is not a change (userScope.js): the landing does not start again under a
- * signed-in visitor.
+ * Signing in from signed out (including reading the stored session at start-up) keeps the page (userScope.js).
  */
 export function UserScope({ children }) {
   const { user, loading } = useAuth();

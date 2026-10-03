@@ -13,11 +13,17 @@ describe('nextScope', () => {
     expect(nextScope(loading, { userId: null, loading: true })).toBe(loading);
   });
 
-  it('a later change of user is a new generation of caches', () => {
+  it('signing out, or into another account, is a new generation of caches', () => {
     const signedIn = initialScope({ userId: 'u1', loading: false });
-    const signedOut = nextScope(signedIn, { userId: null, loading: false });
-    expect(signedOut).toEqual({ generation: 1, userId: null, settled: true });
-    expect(nextScope(signedOut, { userId: 'u2', loading: false })).toEqual({ generation: 2, userId: 'u2', settled: true });
+    expect(nextScope(signedIn, { userId: null, loading: false })).toEqual({ generation: 1, userId: null, settled: true });
+    expect(nextScope(signedIn, { userId: 'u2', loading: false })).toEqual({ generation: 1, userId: 'u2', settled: true });
+  });
+
+  it('signing in from signed out keeps the page: nothing of anyone\'s was cached', () => {
+    const signedOut = nextScope(initialScope({ userId: 'u1', loading: false }), { userId: null, loading: false });
+    expect(nextScope(signedOut, { userId: 'u2', loading: false })).toEqual({ generation: 1, userId: 'u2', settled: true });
+    const anonymous = initialScope({ userId: null, loading: false });
+    expect(nextScope(anonymous, { userId: 'u1', loading: false })).toEqual({ generation: 0, userId: 'u1', settled: true });
   });
 
   it('the same user keeps the same scope', () => {

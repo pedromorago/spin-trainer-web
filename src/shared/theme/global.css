@@ -14,3 +14,12 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
 @media (max-width: 720px) { .app-header { position: static; } }
 .poker-table { aspect-ratio: 16 / 10; }
 @media (max-width: 560px) { .poker-table { aspect-ratio: 5 / 4; } }
+/* Sign-in dialog (features/auth/SignInDialog): centred; a bottom sheet on phones. */
+.signin-dialog {
+  width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; overflow: auto;
+  border: 1px solid #2a313d; border-radius: 12px; background: #151a22; color: #ece8df; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+.signin-dialog::backdrop { background: rgba(5, 7, 10, 0.72); }
+@media (max-width: 640px) {
+  .signin-dialog { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 12px 12px 0 0; }
+}

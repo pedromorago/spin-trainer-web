@@ -8,13 +8,13 @@ import { useShowcase } from '../../shared/api/queries';
 import { useAuth } from '../../shared/auth/useAuth';
 import { ActionPalette } from '../../shared/ui/ActionPalette';
 import { ErrorBox, Loading } from '../../shared/ui/Feedback';
-import { HandGrid } from '../../shared/ui/HandGrid';
 import { PokerTable } from '../../shared/ui/PokerTable';
 import { layout } from '../../shared/ui/styles';
 import { theme } from '../../shared/theme/theme';
+import { SignInDialog } from '../auth/SignInDialog';
 import { RedirectTo } from '../shell/RedirectTo';
+import { ShowcaseChart } from './ShowcaseChart';
 
-const PREVIEW = { situation: 'btn_open', stack: 25 };
 const TRY = { situation: 'bb_vs_sb_os', stack: 10 };
 const REPOS = 'https://github.com/pedromorago';
 
@@ -52,8 +52,16 @@ export function LandingPage() {
 }
 
 function Landing() {
-  const { user, demo } = useAuth();
+  const { user, demo, loading } = useAuth();
   const showcase = useShowcase();
+  // Signed out, a way into the app signs in right here, in a dialog, then goes where it pointed. Only a plain click: a
+  // click that opens a new tab (Ctrl, Cmd, Shift, middle button) keeps the link.
+  const [signingInTo, setSigningInTo] = useState(null);
+  const enter = path => event => {
+    if (user || demo || loading || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    setSigningInTo(path);
+  };
   const start = user && !demo ? 'Open the trainer' : 'Start training';
   const note = demo ? 'Free, no sign-up: your progress stays in this browser.'
     : user ? `Signed in as ${user.email}.` : 'Free. Sign in with Google to keep your progress.';
@@ -66,7 +74,7 @@ function Landing() {
         <nav aria-label="Landing" style={{ display: 'flex', gap: theme.space.lg, alignItems: 'center', flexWrap: 'wrap' }}>
           <a href="#features" style={{ color: theme.colors.textMuted }}>How it works</a>
           <Link to="/privacy" style={{ color: theme.colors.textMuted }}>Privacy</Link>
-          <Link to="/explorer" style={navCta} data-testid="landing-start-top">{start}</Link>
+          <Link to="/explorer" style={navCta} onClick={enter('/explorer')} data-testid="landing-start-top">{start}</Link>
         </nav>
       </header>
 
@@ -84,13 +92,13 @@ function Landing() {
               from memory and see exactly which hands you keep missing. 3-max and heads-up, from 4 to 25 big blinds.
             </p>
             <div style={{ display: 'flex', gap: theme.space.md, flexWrap: 'wrap', alignItems: 'center' }}>
-              <Link to="/explorer" style={cta} data-testid="landing-start">{start}</Link>
+              <Link to="/explorer" style={cta} onClick={enter('/explorer')} data-testid="landing-start">{start}</Link>
               <a href="#try" style={ghost}>Try a hand</a>
             </div>
             <small style={{ color: theme.colors.textMuted }} data-testid="landing-note">{note}</small>
             {showcase.data && <Facts showcase={showcase.data} />}
           </div>
-          <Preview showcase={showcase} />
+          <ShowcaseChart testId="landing-preview" />
         </section>
 
         <section id="try" aria-labelledby="try-title" style={{ background: 'rgba(0, 0, 0, 0.25)', borderTop: `1px solid ${theme.colors.borderSubtle}`,
@@ -103,7 +111,7 @@ function Landing() {
               from the chart, as in the Quiz.
             </p>
             {showcase.isLoading ? <Loading /> : showcase.error ? <ErrorBox error={showcase.error} onRetry={showcase.refetch} />
-              : <TryAHand showcase={showcase.data} />}
+              : <TryAHand showcase={showcase.data} enter={enter} />}
           </div>
         </section>
 
@@ -120,7 +128,7 @@ function Landing() {
                 <span style={{ fontFamily: theme.font.mono, color: theme.colors.accent }}>0{i + 1}</span>
                 <h3 style={{ margin: 0, fontFamily: theme.font.display, fontWeight: 400, fontSize: 28, letterSpacing: 1 }}>{name}</h3>
                 <p style={{ margin: 0, color: theme.colors.textMuted, lineHeight: 1.55, flex: 1 }}>{text}</p>
-                <Link to={path} style={{ color: theme.colors.accent }}>Open {name} →</Link>
+                <Link to={path} style={{ color: theme.colors.accent }} onClick={enter(path)}>Open {name} →</Link>
               </li>
             ))}
           </ul>
@@ -155,6 +163,7 @@ function Landing() {
           <a href={REPOS} target="_blank" rel="noopener noreferrer" style={{ color: theme.colors.textMuted }}>GitHub</a>
         </span>
       </footer>
+      <SignInDialog returnPath={signingInTo} onClose={() => setSigningInTo(null)} />
     </div>
   );
 }
@@ -175,36 +184,13 @@ function Facts({ showcase }) {
   );
 }
 
-/** The reference chart of one spot, as the Explorer shows it (read-only). */
-function Preview({ showcase }) {
-  const situation = showcase.data?.situations.find(s => s.key === PREVIEW.situation);
-  const hands = showcase.data?.ranges[`${PREVIEW.situation}@${PREVIEW.stack}`];
-  return (
-    <figure style={{ ...card, margin: 0, padding: theme.space.lg, display: 'flex', flexDirection: 'column', gap: theme.space.md,
-      boxShadow: '0 24px 60px rgba(0, 0, 0, 0.45)', minWidth: 0 }} data-testid="landing-preview">
-      <figcaption style={{ display: 'flex', justifyContent: 'space-between', gap: theme.space.sm, flexWrap: 'wrap' }}>
-        <strong style={{ fontFamily: theme.font.display, fontSize: 24, fontWeight: 400, letterSpacing: 1 }}>
-          {situation ? `${situation.label} · ${PREVIEW.stack} BB` : 'Reference chart'}
-        </strong>
-        <small style={{ color: theme.colors.textMuted }}>Live, from the reference chart</small>
-      </figcaption>
-      {showcase.isLoading ? <Loading /> : showcase.error ? <ErrorBox error={showcase.error} onRetry={showcase.refetch} /> : (
-        <>
-          <HandGrid assignments={hands} actions={situation.actions} label={`Range ${situation.label} · ${PREVIEW.stack} BB`} />
-          <ActionPalette actions={situation.actions} />
-        </>
-      )}
-    </figure>
-  );
-}
-
 const newQuestion = (spot, previous) => {
   const question = nextQuestion({ spots: [spot], previous });
   return { ...question, cards: dealCards(question.hand) };
 };
 
 /** One Quiz question against the chart, answered on the page: the Quiz's own table, buttons and grading. */
-function TryAHand({ showcase }) {
+function TryAHand({ showcase, enter }) {
   const situation = showcase.situations.find(s => s.key === TRY.situation);
   const spot = { situation: TRY.situation, stack: TRY.stack, actions: situation.actions, hands: showcase.ranges[`${TRY.situation}@${TRY.stack}`] };
   const [question, setQuestion] = useState(() => newQuestion(spot, null));
@@ -220,6 +206,7 @@ function TryAHand({ showcase }) {
   };
   const next = () => { setQuestion(q => newQuestion(spot, q)); setResult(null); };
   const verb = action => (action === 'CALL' ? 'calls' : 'folds');
+  const quizPath = `/quiz?s=${TRY.situation}&stack=${TRY.stack}`;
 
   return (
     <div style={{ display: 'grid', gap: theme.space.xl, alignItems: 'center', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))' }}
@@ -243,7 +230,7 @@ function TryAHand({ showcase }) {
           <small style={{ fontFamily: theme.font.mono, color: theme.colors.textMuted }} data-testid="landing-score">
             {score.correct} / {score.total}
           </small>
-          <Link to={{ pathname: '/quiz', search: `?s=${TRY.situation}&stack=${TRY.stack}` }} style={{ color: theme.colors.accent }}>
+          <Link to={quizPath} style={{ color: theme.colors.accent }} onClick={enter(quizPath)}>
             Keep going in the Quiz →
           </Link>
         </div>
