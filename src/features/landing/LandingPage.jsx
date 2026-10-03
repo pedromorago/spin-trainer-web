@@ -52,13 +52,14 @@ export function LandingPage() {
 }
 
 function Landing() {
-  const { user, demo, loading } = useAuth();
+  const { user, demo } = useAuth();
   const showcase = useShowcase();
-  // Signed out, a way into the app signs in right here, in a dialog, then goes where it pointed. Only a plain click: a
-  // click that opens a new tab (Ctrl, Cmd, Shift, middle button) keeps the link.
+  // Signed out, a way into the app signs in right here, in a dialog, then goes where it pointed. Also while the stored
+  // session is still being read (a slow network): if it turns out to be signed in, the dialog goes straight on. Only a
+  // plain click: a click that opens a new tab (Ctrl, Cmd, Shift, middle button) keeps the link.
   const [signingInTo, setSigningInTo] = useState(null);
   const enter = path => event => {
-    if (user || demo || loading || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (user || demo || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     setSigningInTo(path);
   };
