@@ -82,8 +82,9 @@ sign-out, its data in the visitor's browser. `shared/mode.js` is the one place t
 
 Everything cached belongs to one user (`src/UserScope.jsx`): the TanStack Query cache and the session scoreboard are
 created again when the user changes, so another account signing in on the same tab sees none of the previous one's data
-(the scoreboard's `sessionStorage` key carries the user id). Reading the stored session at start-up is not a change of
-user (`shared/auth/userScope.js`): the landing does not start again under a signed-in visitor. "Sign out" navigates to
+(the scoreboard's `sessionStorage` key carries the user id). Signing in from signed out keeps them
+(`shared/auth/userScope.js`): nothing of anyone's is cached while nobody is signed in, so the page on screen keeps its
+state (the landing's sign-in dialog goes on to where it pointed). "Sign out" navigates to
 `/logout`, which goes through the unsaved-changes guard and signs out this browser only (Supabase's local scope).
 
 Routing in *data mode* (`createBrowserRouter`): lazy routes per feature and `useBlocker` for unsaved changes.
@@ -99,6 +100,10 @@ Sign-in (ADR-0023): "Continue with Google" sends the browser to Google's authori
 a random `state` and the SHA-256 of a random nonce kept in `sessionStorage` (`shared/auth/googleSignIn.js`, pure and
 unit-tested); Google returns to `/auth/google`, which checks the state, clears the token from the address bar and has
 Supabase exchange it (`signInWithIdToken`, with the raw nonce). Supabase still issues the only session (ADR-0003).
+Signed out, the landing page's ways into the app (Start training, the four modes, the Quiz link) open the sign-in card
+in a native modal `<dialog>` (`features/auth/SignInDialog.jsx`: Escape, close button, click outside; a bottom sheet on
+phones) and then go where they pointed; a click meant for a new tab is left to the browser. `/login`, for whoever opens a
+page of the app signed out, shows the same card (`SignInCard.jsx`) beside the landing's live chart (`ShowcaseChart`).
 
 Onboarding (ADR-0022): the first visit to the Explorer starts a guided tour (`shared/ui/Tour.jsx`, steps in
 `features/explorer/explorerTour.js`), a modal dialog with a focus trap next to a spotlighted element, or a bottom sheet
