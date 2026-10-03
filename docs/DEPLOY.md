@@ -71,12 +71,18 @@ If the name `spin-trainer-api` is taken, Render adds a suffix to the URL: use th
 
    | Variable | Production | Preview |
    |---|---|---|
-   | `VITE_API_MODE` | `http` | `mock` |
+   | `VITE_API_MODE` | `http` (or `demo`, below) | `mock` |
    | `VITE_API_BASE_URL` | `https://spin-trainer-api.onrender.com/api/v1` | not needed |
    | `VITE_SUPABASE_URL` | `https://<ref>.supabase.co` | not needed |
    | `VITE_SUPABASE_ANON_KEY` | publishable (anon) key | not needed |
 
    Preview deployments use the mock: they need neither the API's CORS nor real data.
+
+   **Switching sign-in off for a while (demo mode, ADR-0022).** Edit `VITE_API_MODE` (Production) to `demo`, save, and
+   redeploy the latest production deployment (**Deployments → ⋯ → Redeploy**): Vite reads the variable at build time,
+   so a new build is needed. The site then needs no account and keeps each visitor's progress in their browser; the
+   API and Supabase are left as they are. Set it back to `http` and redeploy to restore sign-in. The other variables can
+   stay.
 3. Deploy. Vercel serves it at `https://spin-trainer-web.vercel.app` (the project name).
 4. Custom domain: **Settings → Domains → Add Existing** → `spintrainer.pedromorago.com` (Production). In Cloudflare, the
    DNS record Vercel shows (a `CNAME` for `spintrainer`) with the proxy **off** (DNS only): proxied, Vercel cannot issue
@@ -92,7 +98,7 @@ If the name `spin-trainer-api` is taken, Render adds a suffix to the URL: use th
 ## 6. Check
 
 - The web app: sign in (with Google too, section 7), answer in the Quiz and see it in Stats. The browser console shows no CSP errors.
-- After 15 minutes without use the API sleeps: the next load shows "Despertando el servidor" and takes about a minute.
+- After 15 minutes without use the API sleeps: the next load shows "Waking up the server" and takes about a minute.
 - `curl -I https://<web domain>/` returns the `Content-Security-Policy`, and `/assets/*` returns
   `Cache-Control: public, max-age=31536000, immutable`.
 - The spin-trainer-qa suite does not run against production: the API only trusts Supabase's tokens, and the suite forges

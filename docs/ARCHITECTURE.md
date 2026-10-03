@@ -77,16 +77,30 @@ a table view as the accessible equivalent; when the period changes, the previous
 
 `VITE_API_MODE=mock` (`npm run dev:mock`, `npm run build:mock`) makes it possible to develop and run E2E without a backend, with the same contract.
 The mock validates like the API (400/404/409) and owns the server-side fields (`id`, `at`, `correct`, `version`); http builds do not include it.
+`VITE_API_MODE=demo` (`dev:demo`, `build:demo`, ADR-0022) is the public demo: the mock's adapter with no sign-in or
+sign-out, its data in the visitor's browser. `shared/mode.js` is the one place that reads the mode.
 
 Everything cached belongs to one user (`src/UserScope.jsx`): the TanStack Query cache and the session scoreboard are
 created again when the user changes, so another account signing in on the same tab sees none of the previous one's data
-(the scoreboard's `sessionStorage` key carries the user id). "Salir" navigates to `/logout`, which goes through the
-unsaved-changes guard and signs out this browser only (Supabase's local scope).
+(the scoreboard's `sessionStorage` key carries the user id). Reading the stored session at start-up is not a change of
+user (`shared/auth/userScope.js`): the landing does not start again under a signed-in visitor. "Sign out" navigates to
+`/logout`, which goes through the unsaved-changes guard and signs out this browser only (Supabase's local scope).
 
 Routing in *data mode* (`createBrowserRouter`): lazy routes per feature and `useBlocker` for unsaved changes.
+`/` is the public landing page (`features/landing`, ADR-0022): a live reference chart and one Quiz question, built from
+the reference ranges bundled with the web (`shared/api/showcase.js`), never from the API. `/login`, `/auth/callback` and
+`/privacy` are public too; the tabs (`/explorer`, `/quiz`, `/builder`, `/stats`) are behind `RequireAuth`; unknown
+paths go to `/`.
 Route errors (a page that throws while rendering, or a chunk that cannot be downloaded after a deploy) show
-`features/shell/RouteErrorPage` as `errorElement`: inside the shell, so the header still works, with *Recargar* and
-*Ir al inicio*; the technical detail goes to the console.
+`features/shell/RouteErrorPage` as `errorElement`: inside the shell, so the header still works, with *Reload* and
+*Go to start*; the technical detail goes to the console.
+
+Onboarding (ADR-0022): the first visit to the Explorer starts a guided tour (`shared/ui/Tour.jsx`, steps in
+`features/explorer/explorerTour.js`), a modal dialog with a focus trap next to a spotlighted element, or a bottom sheet
+on phones; skipping or finishing it is remembered per device (`shared/ui/onboarding.js`, `localStorage`), and the
+header's "Tour" button replays it. Actions and figures explain themselves with `shared/ui/Tooltip.jsx` (hover and
+keyboard focus, Escape, hoverable) and "?" buttons (`InfoTip`) for touch screens. Where boxes go is a pure function of
+rectangles (`shared/ui/placement.js`), unit-tested without a browser.
 
 Deployment (ADR-0016, `docs/DEPLOY.md`): the web on Vercel (`vercel.json`: SPA fallback except `/assets/`, immutable
 assets, CSP and security headers) and the API on Render's free plan as a native image (ADR-0018, `render.yaml`, the same image QA tests), with Supabase in the same
