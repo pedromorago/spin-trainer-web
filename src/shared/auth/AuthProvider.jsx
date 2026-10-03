@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AuthContext } from './authContext';
-import { OAUTH_ERRORS, parseOAuthCallback, rememberReturnPath } from './oauth';
+import { savePending, startGoogleSignIn } from './googleSignIn';
 import { getSupabase } from './supabaseClient';
 import { IS_DEMO, USES_MOCK_DATA } from '../mode';
 
@@ -9,13 +9,11 @@ const MOCK = USES_MOCK_DATA;
 // from that user's own caches, as with Supabase.
 const mockUser = (email = 'mock@local') => ({ id: `mock:${email}`, email });
 
-// One exchange per code: the code and its PKCE verifier are single-use, and React runs effects twice in development.
-const exchanges = new Map();
-
 /**
  * A single source of truth for the session across the whole app (a single Supabase subscription).
- * Google is the only way in (ADR-0020). With the in-browser adapter there is no Supabase: it starts signed in and
- * "Continue with Google" signs in straight away. In mock mode `signIn(email)` plays as another player (the E2E suite's
+ * Google is the only way in (ADR-0020): the browser goes to Google and comes back to /auth/google with an ID token,
+ * which Supabase exchanges for its session (ADR-0023). With the in-browser adapter there is no Supabase: it starts
+ * signed in, and "Continue with Google" (or any answer on /auth/google) signs in straight away. In mock mode `signIn(email)` plays as another player (the E2E suite's
  * way to have several players on one tab); in the demo (ADR-0022) there is no sign-in or sign-out, and outside the mock
  * `signIn` does not exist.
  */
@@ -44,27 +42,26 @@ export function AuthProvider({ children }) {
     // The public demo has no sign-in at all: nobody signs in or out, the player is this browser.
     demo: IS_DEMO,
     signIn: MOCK && !IS_DEMO ? async email => { setUser(mockUser(email || undefined)); return { error: null }; } : undefined,
-    // Leaves for Google and comes back to /auth/callback; returnPath is where the user was going.
+    // Leaves for Google, which comes back to /auth/google; returnPath is where the user was going.
     signInWithGoogle: MOCK
       ? async () => { setUser(mockUser()); return { error: null }; }
       : async returnPath => {
-        rememberReturnPath(returnPath);
-        const { error } = await (await getSupabase()).auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: `${window.location.origin}/auth/callback` }
-        });
+        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+        if (!clientId) return { error: { message: 'Google sign-in is not configured' } };
+        const { pending, url } = await startGoogleSignIn({ clientId, origin: window.location.origin, returnPath });
+        // Without storage this tab could not check Google's answer: better not to leave at all.
+        if (!savePending(pending)) return { error: { message: 'This browser blocks the storage the sign-in needs' } };
+        window.location.assign(url);
+        return { error: null };
+      },
+    // Google's ID token and the raw nonce whose hash it carries, exchanged for Supabase's session; the session change
+    // then signs the user in everywhere.
+    signInWithIdToken: MOCK
+      ? async () => { setUser(mockUser()); return { error: null }; }
+      : async (token, nonce) => {
+        const { error } = await (await getSupabase()).auth.signInWithIdToken({ provider: 'google', token, nonce });
         return { error };
       },
-    // Finishes Google's round trip from the callback's query string. The error, if any, is a message for the user.
-    completeOAuth: async search => {
-      const callback = parseOAuthCallback(search);
-      if (callback.error) return { error: callback.error };
-      if (MOCK) { setUser(mockUser()); return { error: null }; }
-      const supabase = await getSupabase();
-      if (!exchanges.has(callback.code)) exchanges.set(callback.code, supabase.auth.exchangeCodeForSession(callback.code));
-      const { error } = await exchanges.get(callback.code);
-      return { error: error ? OAUTH_ERRORS.invalid : null };
-    },
     // Local scope: signs out this browser only. Supabase's default (global) would also close the sessions on the user's
     // other devices.
     signOut: MOCK

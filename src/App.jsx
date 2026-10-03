@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router';
 import { RequireAuth } from './shared/auth/RequireAuth';
-import { AuthCallbackPage } from './features/auth/AuthCallbackPage';
+import { GoogleReturnPage } from './features/auth/GoogleReturnPage';
 import { LoginPage } from './features/auth/LoginPage';
 import { LandingPage } from './features/landing/LandingPage';
 import { LogoutPage } from './features/auth/LogoutPage';
@@ -17,8 +17,8 @@ export const routes = [
   { path: '/', element: <LandingPage />, errorElement: <RouteErrorPage standalone /> },
   { path: '/login', element: <LoginPage />, errorElement: <RouteErrorPage standalone /> },
   { path: '/logout', element: <LogoutPage />, errorElement: <RouteErrorPage standalone /> },
-  // Public: Google's return (ADR-0019) and the privacy notice, which must be readable before having an account.
-  { path: '/auth/callback', element: <AuthCallbackPage />, errorElement: <RouteErrorPage standalone /> },
+  // Public: Google's return (ADR-0023) and the privacy notice, which must be readable before having an account.
+  { path: '/auth/google', element: <GoogleReturnPage />, errorElement: <RouteErrorPage standalone /> },
   {
     path: '/privacy',
     lazy: page(() => import('./features/legal/PrivacyPage'), 'PrivacyPage'),

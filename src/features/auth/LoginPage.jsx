@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router';
-import { authErrorMessage } from '../../shared/auth/oauth';
+import { authErrorMessage } from '../../shared/auth/authErrors';
 import { useAuth } from '../../shared/auth/useAuth';
 import { theme } from '../../shared/theme/theme';
 import { layout } from '../../shared/ui/styles';
@@ -24,8 +24,9 @@ function GoogleMark() {
 }
 
 /**
- * Google is the only way in (ADR-0020): the account is created the first time. In mock mode, where `signIn` exists, a
- * test-player field lets the E2E suite play as different players on the same tab.
+ * Google is the only way in (ADR-0020): the account is created the first time; Google comes back to /auth/google
+ * (ADR-0023). In mock mode, where `signIn` exists, a test-player field lets the E2E suite play as different players on
+ * the same tab.
  */
 export function LoginPage() {
   const { user, signIn, signInWithGoogle } = useAuth();
