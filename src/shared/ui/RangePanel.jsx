@@ -1,6 +1,7 @@
 import { ACTION_LABELS } from '../../domain/actions';
 import { colorFor } from '../theme/actionColors';
 import { theme } from '../theme/theme';
+import { InfoTip } from './Tooltip';
 
 const pct = x => `${(x * 100).toFixed(1)}%`;
 
@@ -18,8 +19,8 @@ export function RangePanel({ stats, notes }) {
 
   return (
     <aside style={{ display: 'flex', flexDirection: 'column', gap: theme.space.md, minWidth: 240, flex: '0 1 300px' }}
-      aria-label="Range summary" data-testid="range-panel">
-      <div style={{ display: 'flex', gap: theme.space.lg }}>
+      aria-label="Range summary" data-testid="range-panel" data-tour="panel">
+      <div style={{ display: 'flex', gap: theme.space.lg, alignItems: 'flex-start' }}>
         {[['Hands', stats.hands, 'range-hands'], ['Combos', stats.combos, 'range-combos'], ['Range', pct(stats.pct), 'range-pct']].map(([k, v, id]) => (
           <div key={k}>
             <div style={{ fontFamily: theme.font.display, letterSpacing: 1, color: theme.colors.textMuted }}>{k}</div>
@@ -27,6 +28,11 @@ export function RangePanel({ stats, notes }) {
               data-testid={id}>{v}</div>
           </div>
         ))}
+        <InfoTip label="About hands, combos and range" testId="range-info">
+          <strong>Hands</strong>: how many of the 169 starting hands the range plays. <strong>Combos</strong>: the same,
+          counted as card combinations (6 per pair, 4 per suited hand, 12 per offsuit one). <strong>Range</strong>: those
+          combos as a share of all 1,326.
+        </InfoTip>
       </div>
 
       <div role="img" aria-label={`Combos by action: ${summary}`} data-testid="range-bar"

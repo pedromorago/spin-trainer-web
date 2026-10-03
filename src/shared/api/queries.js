@@ -4,6 +4,7 @@ import { keepPreviousData, useInfiniteQuery, useIsFetching, useMutation, useQuer
 import { mergeEffectiveRanges } from '../../domain/range';
 import { comboKey } from '../../domain/selection';
 import { api } from './index';
+import { loadShowcase } from './showcase';
 
 export const keys = {
   situations: ['situations'],
@@ -153,4 +154,9 @@ export function useSlowRequests(delayMs = 4000) {
     };
   }, [fetching, delayMs]);
   return fetching && elapsed;
+}
+
+/** The landing page's sample data: bundled with the web, so it needs neither an account nor the API (ADR-0022). */
+export function useShowcase() {
+  return useQuery({ queryKey: ['showcase'], queryFn: loadShowcase, staleTime: Infinity });
 }

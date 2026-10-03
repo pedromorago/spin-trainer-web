@@ -46,7 +46,7 @@ export function HandGrid({ assignments = {}, actions, onPaint, cellSize = 'auto'
   };
 
   return (
-    <div ref={wrapperRef} style={{ width: cellSize === 'auto' ? '100%' : undefined, minWidth: 0 }}>
+    <div ref={wrapperRef} data-tour="grid" style={{ width: cellSize === 'auto' ? '100%' : undefined, minWidth: 0 }}>
       <div role="table" aria-label={label} style={container} data-testid="hand-grid" {...stroke.handlers}>
         {RANKS.map((_, r) => (
           <div role="row" key={r} style={{ display: 'flex', gap: CELL_GAP }}>

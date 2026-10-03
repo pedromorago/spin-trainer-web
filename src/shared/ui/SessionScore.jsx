@@ -8,7 +8,7 @@ export function SessionScore({ accuracy = null, streak = 0, total = 0 }) {
     ['Hands', total, 'session-total']
   ];
   return (
-    <dl aria-label="Session" style={{ display: 'flex', gap: theme.space.lg, margin: 0 }}>
+    <dl aria-label="Session" data-tour="score" style={{ display: 'flex', gap: theme.space.lg, margin: 0 }}>
       {items.map(([label, value, testId]) => (
         <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1 }}>
           <dt style={{ fontFamily: theme.font.display, fontSize: 13, letterSpacing: 1, color: theme.colors.textMuted }}>{label}</dt>

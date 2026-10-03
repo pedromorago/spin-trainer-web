@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useOutletContext } from 'react-router';
+import { useLocation, useNavigate, useOutletContext } from 'react-router';
 import { exportRange, normalizeRange, paintHand, rangesEqual, rangeStats } from '../../domain/range';
 import { useDeleteUserRange, useEffectiveRange, useSaveUserRange } from '../../shared/api/queries';
 import { HandGrid } from '../../shared/ui/HandGrid';
@@ -10,14 +10,34 @@ import { UnsavedChangesBar } from '../../shared/ui/UnsavedChangesBar';
 import { useUnsavedChanges } from '../../shared/ui/useUnsavedChanges';
 import { layout } from '../../shared/ui/styles';
 import { theme } from '../../shared/theme/theme';
+import { useAuth } from '../../shared/auth/useAuth';
+import { markTourSeen, tourSeen } from '../../shared/ui/onboarding';
+import { Tour } from '../../shared/ui/Tour';
+import { explorerTour } from './explorerTour';
 
 const NO_HANDS = Object.freeze({});
 
 export function ExplorerPage() {
   const { selection } = useOutletContext();
+  const { demo } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  // The tour opens once per browser on the first visit, and again whenever the header's Tour button asks for it.
+  const [firstVisit, setFirstVisit] = useState(() => !tourSeen());
+  const replay = location.state?.tour === true;
+  const here = { pathname: location.pathname, search: location.search };
+  const endTour = outcome => {
+    markTourSeen(outcome);
+    setFirstVisit(false);
+    if (replay) navigate(here, { replace: true, state: null });
+  };
 
   return (
     <div style={layout.page}>
+      {(firstVisit || replay) && (
+        <Tour steps={explorerTour({ demo, onTryQuiz: () => navigate({ pathname: '/quiz', search: location.search }) })}
+          onClose={endTour} />
+      )}
       <h2 style={layout.title}>Explorer</h2>
       {selection.isAny ? (
         <Empty>

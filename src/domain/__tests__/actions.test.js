@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ACTIONS, ACTION_LABELS, fallbackAction, isValidAction } from '../actions';
+import { ACTIONS, ACTION_DESCRIPTIONS, ACTION_LABELS, GLOSSARY, fallbackAction, isValidAction } from '../actions';
 
 describe('fallbackAction', () => {
   it('es FOLD cuando la situación permite foldear', () => {
@@ -24,3 +24,20 @@ describe('catálogo', () => {
     for (const a of ACTIONS) expect(ACTION_LABELS[a]).toBeTruthy();
   });
 });
+
+describe('glossary', () => {
+  it('explains every action, in a sentence of its own', () => {
+    expect(Object.keys(ACTION_DESCRIPTIONS)).toEqual(ACTIONS);
+    for (const action of ACTIONS) {
+      expect(ACTION_DESCRIPTIONS[action], action).toMatch(/^[A-Z0-9].*\.$/);
+      expect(ACTION_DESCRIPTIONS[action], action).not.toBe(ACTION_LABELS[action]);
+    }
+  });
+
+  it('defines each abbreviation the labels use', () => {
+    const terms = GLOSSARY.map(([term]) => term);
+    expect(terms).toEqual(['MR', '3b / 4b', 'AI', 'Iso', 'L / C / F', 'BB']);
+    for (const [, meaning] of GLOSSARY) expect(meaning.length).toBeGreaterThan(3);
+  });
+});
+

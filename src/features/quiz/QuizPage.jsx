@@ -17,6 +17,7 @@ import { layout } from '../../shared/ui/styles';
 import { colorFor } from '../../shared/theme/actionColors';
 import { readableText } from '../../shared/theme/contrast';
 import { theme } from '../../shared/theme/theme';
+import { InfoTip } from '../../shared/ui/Tooltip';
 
 const MODES = { normal: 'All hands', hard: 'Hard only' };
 const SCOPES = { range: 'Range + boundary', all: 'All 169 hands' };
@@ -70,6 +71,11 @@ export function QuizPage() {
             aria-label="Hands to ask" data-testid="quiz-scope">
             {Object.entries(SCOPES).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
           </select>
+          <InfoTip label="About the Quiz modes" testId="quiz-info">
+            <strong>All hands</strong> asks any hand of the selection. <strong>Hard only</strong> asks the hands you have
+            missed twice, until you get them right. <strong>Range + boundary</strong> asks the hands the range plays plus
+            their neighbors that it folds (where mistakes happen); <strong>All 169 hands</strong> asks any of them.
+          </InfoTip>
         </div>
       </div>
       {/* Without the stats there is no pool of hard hands: an error, not "no hard hands left". */}

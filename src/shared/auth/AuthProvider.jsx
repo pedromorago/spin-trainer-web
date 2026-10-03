@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { AuthContext } from './authContext';
 import { OAUTH_ERRORS, parseOAuthCallback, rememberReturnPath } from './oauth';
 import { getSupabase } from './supabaseClient';
+import { IS_DEMO, USES_MOCK_DATA } from '../mode';
 
-const MOCK = import.meta.env.VITE_API_MODE === 'mock';
+const MOCK = USES_MOCK_DATA;
 // In mock mode each email is a different user (id from the email): signing in as someone else on the same tab starts
 // from that user's own caches, as with Supabase.
 const mockUser = (email = 'mock@local') => ({ id: `mock:${email}`, email });
@@ -13,9 +14,10 @@ const exchanges = new Map();
 
 /**
  * A single source of truth for the session across the whole app (a single Supabase subscription).
- * Google is the only way in (ADR-0020). In mock mode there is no Supabase: it starts signed in, "Continuar con Google"
- * signs in straight away, and `signIn(email)` plays as another player (the E2E suite's way to have several players on
- * one tab); outside the mock `signIn` does not exist.
+ * Google is the only way in (ADR-0020). With the in-browser adapter there is no Supabase: it starts signed in and
+ * "Continue with Google" signs in straight away. In mock mode `signIn(email)` plays as another player (the E2E suite's
+ * way to have several players on one tab); in the demo (ADR-0022) there is no sign-in or sign-out, and outside the mock
+ * `signIn` does not exist.
  */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(MOCK ? mockUser() : null);
@@ -39,7 +41,9 @@ export function AuthProvider({ children }) {
   const value = useMemo(() => ({
     user,
     loading,
-    signIn: MOCK ? async email => { setUser(mockUser(email || undefined)); return { error: null }; } : undefined,
+    // The public demo has no sign-in at all: nobody signs in or out, the player is this browser.
+    demo: IS_DEMO,
+    signIn: MOCK && !IS_DEMO ? async email => { setUser(mockUser(email || undefined)); return { error: null }; } : undefined,
     // Leaves for Google and comes back to /auth/callback; returnPath is where the user was going.
     signInWithGoogle: MOCK
       ? async () => { setUser(mockUser()); return { error: null }; }

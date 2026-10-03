@@ -9,6 +9,7 @@ import { SituationChips } from '../../shared/ui/SituationChips';
 import { StatTile } from '../../shared/ui/StatTile';
 import { layout } from '../../shared/ui/styles';
 import { theme } from '../../shared/theme/theme';
+import { InfoTip } from '../../shared/ui/Tooltip';
 
 const pct = x => (x === null ? '—' : `${Math.round(x * 100)}%`);
 const RANGES = [7, 30, 90];
@@ -67,7 +68,8 @@ export function StatsPage() {
             <div style={kpis}>
               <StatTile label="Overall accuracy" value={pct(global.accuracy)} testId="stats-global-accuracy" />
               <StatTile label="Hands played" value={global.attempts} testId="stats-global-total" />
-              <StatTile label="Hard hands" value={hard.length} hint="≥ 2 misses and not learned yet" testId="stats-hard-count" />
+              <StatTile label="Hard hands" value={hard.length} hint="≥ 2 misses and not learned yet" testId="stats-hard-count"
+                info="A hand you have missed at least twice and not yet answered right since. The Quiz's Hard only mode drills just these; answering one right takes it out." />
             </div>
 
             <div style={{ ...section, gap: theme.space.sm }}>
@@ -96,7 +98,12 @@ export function StatsPage() {
             </div>
 
             <div style={{ ...section, gap: theme.space.sm }}>
-              <strong>Hands you miss most</strong>
+              <span style={{ ...layout.row, gap: theme.space.xs }}>
+                <strong>Hands you miss most</strong>
+                <InfoTip label="About the hands you miss most">
+                  Your answers grouped by hand, situation and stack, with the most misses first: where to focus next.
+                </InfoTip>
+              </span>
               {failed.length === 0 ? (
                 <small style={{ color: theme.colors.textMuted }} data-testid="stats-weakest">No misses yet.</small>
               ) : (

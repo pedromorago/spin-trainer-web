@@ -76,8 +76,8 @@ jobs:
       - name: Tests
         run: npm run test:coverage
 
-      - name: Build (http and mock)
-        run: npm run build && npm run build:mock
+      - name: Build (http, mock and demo)
+        run: npm run build && npm run build:mock && npm run build:demo
 
       - name: Coverage
         if: ${{ !cancelled() }}

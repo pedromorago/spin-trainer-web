@@ -14,7 +14,7 @@ export function SituationSelector({ situations, value, onChange }) {
   for (const s of situations) (byFormat[s.format] ??= []).push(s);
 
   return (
-    <select style={select} value={value} onChange={e => onChange(e.target.value)} data-testid="situation-select"
+    <select style={select} value={value} onChange={e => onChange(e.target.value)} data-testid="situation-select" data-tour="situation"
       aria-label="Situation">
       <option value={ANY}>Any · random situation</option>
       {Object.entries(byFormat).map(([format, items]) => (
@@ -35,7 +35,7 @@ export function StackSelector({ stacks, value, onChange }) {
     fontFamily: theme.font.mono, fontSize: theme.font.sizeSm, fontWeight: active ? 700 : 500, cursor: 'pointer'
   });
   return (
-    <div style={{ display: 'flex', gap: theme.space.xs, flexWrap: 'wrap' }} data-testid="stack-selector" role="group" aria-label="Stack">
+    <div style={{ display: 'flex', gap: theme.space.xs, flexWrap: 'wrap' }} data-testid="stack-selector" data-tour="stacks" role="group" aria-label="Stack">
       {[ANY, ...stacks].map(s => (
         <button key={s} type="button" style={btn(s === value)} onClick={() => onChange(s)} data-stack={s} aria-pressed={s === value}>
           {s === ANY ? 'Any' : `${s} BB`}

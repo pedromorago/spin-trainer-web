@@ -9,8 +9,10 @@
   "scripts": {
     "dev": "vite",
     "dev:mock": "vite --mode mock",
+    "dev:demo": "vite --mode demo",
     "build": "vite build",
     "build:mock": "vite build --mode mock",
+    "build:demo": "vite build --mode demo",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

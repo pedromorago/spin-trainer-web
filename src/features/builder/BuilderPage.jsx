@@ -12,6 +12,7 @@ import { Empty, ErrorBox, Loading } from '../../shared/ui/Feedback';
 import { layout } from '../../shared/ui/styles';
 import { colorFor } from '../../shared/theme/actionColors';
 import { theme } from '../../shared/theme/theme';
+import { InfoTip, Tooltip } from '../../shared/ui/Tooltip';
 
 const pct = x => `${Math.round(x * 100)}%`;
 
@@ -116,7 +117,9 @@ function BuilderExercise({ spot, brush, onNewQuestion }) {
           {Object.entries(summary).map(([a, s]) => `${ACTION_LABELS[a] ?? a}: ${s.hands}`).join(' · ')}
         </div>
         <div style={layout.row}>
-          <button type="button" style={layout.primary} onClick={verify} data-testid="builder-evaluate">Check</button>
+          <Tooltip content="Compare your range with the correct one, hand by hand.">
+            <button type="button" style={layout.primary} onClick={verify} data-testid="builder-evaluate">Check</button>
+          </Tooltip>
           {evaluation && (
             <button type="button" style={layout.secondary} onClick={() => setShowSolution(v => !v)} aria-pressed={showSolution}
               data-testid="builder-toggle-solution">{showSolution ? 'Show my range' : 'Show solution'}</button>
@@ -152,7 +155,14 @@ function EvaluationPanel({ evaluation, actions }) {
           Hands played in your range or in the correct one. Out of all 169: {evaluation.correct}/169 ({pct(evaluation.accuracy)}).
         </small>
       </div>
-      <VerdictLegend byKind={byKind} />
+      <div style={{ display: 'flex', gap: theme.space.sm, alignItems: 'flex-start' }}>
+        <VerdictLegend byKind={byKind} />
+        <InfoTip label="About the verdicts" testId="builder-verdict-info">
+          <strong>Correct</strong>: same action as the solution. <strong>Wrong action</strong>: both play the hand, with
+          different actions. <strong>Extra</strong>: you play a hand the solution folds. <strong>Missing</strong>: the
+          solution plays a hand you left out.
+        </InfoTip>
+      </div>
       <div role="table" aria-label="Breakdown by action" style={{ display: 'flex', flexDirection: 'column', gap: theme.space.xs }}>
         {actions.filter(a => byAction[a]).map(a => (
           <div role="row" key={a} style={{ ...row, opacity: a === implicit ? 0.7 : 1 }} data-testid={`builder-action-${a}`}>

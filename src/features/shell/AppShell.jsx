@@ -13,7 +13,7 @@ import { ServerWakeNotice } from '../../shared/ui/ServerWakeNotice';
  * Pages receive { situations, selection } via useOutletContext(); none has its own selector.
  */
 export function AppShell() {
-  const { user } = useAuth();
+  const { user, demo } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { session, accuracy } = useSession();
@@ -27,7 +27,9 @@ export function AppShell() {
         : <Outlet context={{ situations: situations.data, selection }} />;
 
   return (
-    <Layout user={user} onSignOut={() => navigate('/logout', { state: { from: location } })} score={{ accuracy, streak: session.streak, total: session.total }}
+    <Layout user={user} demo={demo} onSignOut={() => navigate('/logout', { state: { from: location } })}
+      onTour={() => navigate({ pathname: '/explorer', search: location.search }, { state: { tour: true } })}
+      score={{ accuracy, streak: session.streak, total: session.total }}
       toolbar={situations.data?.length ? <SituationBar situations={situations.data} selection={selection} /> : null}>
       <ServerWakeNotice visible={waking} />
       {content}

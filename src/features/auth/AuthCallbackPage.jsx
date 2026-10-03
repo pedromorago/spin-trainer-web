@@ -34,6 +34,7 @@ export function AuthCallbackPage() {
       </main>
     );
   }
-  if (result && user) return <Navigate to={returnPath} replace />;
+  // Signing in from the landing page itself leads into the app, not back to the landing.
+  if (result && user) return <Navigate to={returnPath === '/' ? '/explorer' : returnPath} replace />;
   return <main style={{ maxWidth: 480, margin: '10vh auto' }}><Loading /></main>;
 }

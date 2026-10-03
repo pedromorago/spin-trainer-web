@@ -35,7 +35,7 @@ export function LoginPage() {
   const [error, setError] = useState(null);
 
   const from = location.state?.from;
-  const returnPath = from ? `${from.pathname}${from.search}` : '/';
+  const returnPath = from ? `${from.pathname}${from.search}` : '/explorer';
   if (user) return <Navigate to={returnPath} replace />;
 
   const run = async action => {
