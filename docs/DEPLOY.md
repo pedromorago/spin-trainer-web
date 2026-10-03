@@ -75,6 +75,7 @@ If the name `spin-trainer-api` is taken, Render adds a suffix to the URL: use th
    | `VITE_API_BASE_URL` | `https://spin-trainer-api.onrender.com/api/v1` | not needed |
    | `VITE_SUPABASE_URL` | `https://<ref>.supabase.co` | not needed |
    | `VITE_SUPABASE_ANON_KEY` | publishable (anon) key | not needed |
+   | `VITE_GOOGLE_CLIENT_ID` | the Google OAuth client ID (section 7) | not needed |
 
    Preview deployments use the mock: they need neither the API's CORS nor real data.
 
@@ -93,7 +94,8 @@ If the name `spin-trainer-api` is taken, Render adds a suffix to the URL: use th
 
 - Render: set `CORS_ALLOWED_ORIGINS` to the web domain (**Environment**; Render restarts the service).
 - Supabase: **Authentication → URL Configuration → Site URL** = the web domain; **Redirect URLs**:
-  `https://<web domain>/**` (Google's return, `/auth/callback`) and, for development, `http://localhost:5173/**`.
+  `https://<web domain>/**` and, for development, `http://localhost:5173/**` (Google itself returns to the site's
+  `/auth/google`, section 7).
 
 ## 6. Check
 
@@ -104,18 +106,28 @@ If the name `spin-trainer-api` is taken, Render adds a suffix to the URL: use th
 - The spin-trainer-qa suite does not run against production: the API only trusts Supabase's tokens, and the suite forges
   its own with the QA key. That is intended.
 
-## 7. Sign in with Google (ADR-0019)
+## 7. Sign in with Google (ADR-0019, ADR-0023)
+
+Google returns to the site itself (`/auth/google`), so its screens name the site, not the Supabase project.
 
 1. [Google Cloud console](https://console.cloud.google.com): a project (e.g. `spin-trainer`).
 2. **Google Auth Platform → Branding**: app name *Spin Trainer*, support email, logo optional; authorized domain
    `pedromorago.com`; home page and privacy policy `https://<web domain>/` and `https://<web domain>/privacy`.
 3. **Audience**: *External*, then **Publish app** (in *Testing* only listed test users can sign in). With only the
    `openid`, `email` and `profile` scopes Google does not require verification.
-4. **Clients → Create client → Web application**: authorized JavaScript origin `https://<web domain>`; authorized
-   redirect URI `https://<ref>.supabase.co/auth/v1/callback` (Supabase shows it in its Google provider panel).
-5. Supabase, **Sign In / Providers → Google**: enable, paste the client ID and secret, save.
-6. Check by hand after each change to the login (the E2E suite cannot drive Google): sign in with a Google account
-   that has never used the app, answer in the Quiz, sign out and in again.
+4. **Clients → Create client → Web application** (or edit the existing one): authorized redirect URIs
+   `https://<web domain>/auth/google` and, for development, `http://localhost:5173/auth/google`. No JavaScript origin
+   is needed: no Google script runs on the site.
+5. Supabase, **Sign In / Providers → Google**: enabled, with the client ID in *Client IDs* (Supabase checks that each
+   ID token was issued for it). The secret is not used by this flow.
+6. Vercel: `VITE_GOOGLE_CLIENT_ID` (Production) = the client ID, then redeploy.
+7. Check by hand after each change to the sign-in (the E2E suite plays Google, it cannot drive it): sign in with a
+   Google account that has never used the app, answer in the Quiz, sign out and in again. Google's screen should say
+   "continue to <web domain>".
+8. Once that works, remove the old redirect URI `https://<ref>.supabase.co/auth/v1/callback` from the client. Every
+   domain the client uses is then yours, so **brand verification** is possible: verify `pedromorago.com` in
+   [Search Console](https://search.google.com/search-console) (a DNS TXT record in Cloudflare), then
+   **Branding → Submit for verification**; afterwards Google shows the app's name and logo.
 
 ## Changing names or domains
 

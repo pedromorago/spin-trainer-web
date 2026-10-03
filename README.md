@@ -2,7 +2,7 @@
 
 Spin Trainer frontend: a preflop range trainer for Spin & Go (3-max and heads-up). A study tool and QA portfolio project.
 Live at [spintrainer.pedromorago.com](https://spintrainer.pedromorago.com): the landing page shows the product without an
-account, and anyone can sign in with Google (ADR-0019), or use it with no sign-in at all while the demo mode is on
+account, and anyone can sign in with Google (ADR-0019, ADR-0023), or use it with no sign-in at all while the demo mode is on
 (ADR-0022).
 API in [spin-trainer-api](https://github.com/pedromorago/spin-trainer-api); the test strategy, what the tests found and the
 black-box suites are in [spin-trainer-qa](https://github.com/pedromorago/spin-trainer-qa). Context, architecture and
@@ -49,7 +49,7 @@ mock. Setup steps: `docs/DEPLOY.md`.
 
 ## With the real API
 
-`cp .env.example .env.local` and set `VITE_API_MODE=http`, `VITE_API_BASE_URL` (spin-trainer-api) and the Supabase Auth credentials; then `npm run dev`.
+`cp .env.example .env.local` and set `VITE_API_MODE=http`, `VITE_API_BASE_URL` (spin-trainer-api), the Supabase Auth credentials and `VITE_GOOGLE_CLIENT_ID`; then `npm run dev`.
 
 ## Structure
 

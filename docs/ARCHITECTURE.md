@@ -8,7 +8,7 @@
  │    -web      │  REST /api/v1 (OpenAPI)│Spring Boot 4.1·Java 21│
  │ React 19     │ ◀───────────────────── │ Gradle · Flyway        │
  └──────┬───────┘                        └──────────┬───────────┘
-        │ login (Google, ADR-0019)                   │ JDBC (own role)
+        │ login (Google, ADR-0019/0023)              │ JDBC (own role)
         ▼                                            ▼
  ┌──────────────┐                        ┌──────────────────────┐
  │ Supabase Auth│  JWKS ──────────────▶  │ Postgres (Supabase)   │
@@ -88,12 +88,17 @@ user (`shared/auth/userScope.js`): the landing does not start again under a sign
 
 Routing in *data mode* (`createBrowserRouter`): lazy routes per feature and `useBlocker` for unsaved changes.
 `/` is the public landing page (`features/landing`, ADR-0022): a live reference chart and one Quiz question, built from
-the reference ranges bundled with the web (`shared/api/showcase.js`), never from the API. `/login`, `/auth/callback` and
+the reference ranges bundled with the web (`shared/api/showcase.js`), never from the API. `/login`, `/auth/google` and
 `/privacy` are public too; the tabs (`/explorer`, `/quiz`, `/builder`, `/stats`) are behind `RequireAuth`; unknown
 paths go to `/`.
 Route errors (a page that throws while rendering, or a chunk that cannot be downloaded after a deploy) show
 `features/shell/RouteErrorPage` as `errorElement`: inside the shell, so the header still works, with *Reload* and
 *Go to start*; the technical detail goes to the console.
+
+Sign-in (ADR-0023): "Continue with Google" sends the browser to Google's authorization endpoint for an ID token, with
+a random `state` and the SHA-256 of a random nonce kept in `sessionStorage` (`shared/auth/googleSignIn.js`, pure and
+unit-tested); Google returns to `/auth/google`, which checks the state, clears the token from the address bar and has
+Supabase exchange it (`signInWithIdToken`, with the raw nonce). Supabase still issues the only session (ADR-0003).
 
 Onboarding (ADR-0022): the first visit to the Explorer starts a guided tour (`shared/ui/Tour.jsx`, steps in
 `features/explorer/explorerTour.js`), a modal dialog with a focus trap next to a spotlighted element, or a bottom sheet
