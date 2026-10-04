@@ -129,6 +129,15 @@ Google returns to the site itself (`/auth/google`), so its screens name the site
    [Search Console](https://search.google.com/search-console) (a DNS TXT record in Cloudflare), then
    **Branding → Submit for verification**; afterwards Google shows the app's name and logo.
 
+## 8. Keep the API awake (optional, free)
+
+Render's free instance sleeps after 15 minutes without requests and takes up to a minute to wake (ADR-0018); meanwhile
+the web shows the bundled catalog and the PDF chart, but the player's data waits. An uptime monitor that requests
+`https://spin-trainer-api.onrender.com/actuator/health` every 5 minutes keeps it awake. That endpoint also checks the
+database, so Supabase's free project is touched too. With [UptimeRobot](https://uptimerobot.com) (free): **New monitor →
+HTTP(s)**, that URL, interval 5 minutes, alert by email. One service awake all month uses about 730 of the 750 free
+instance hours Render gives per workspace: a second free service there would run out of them.
+
 ## Changing names or domains
 
 | Change | Where |
