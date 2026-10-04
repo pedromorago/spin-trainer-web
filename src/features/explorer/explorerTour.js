@@ -29,13 +29,13 @@ export function explorerTour({ demo, onTryQuiz }) {
       target: '[data-tour="palette"]',
       title: 'Actions and colors',
       body: 'Each color is an action. Hover or focus one to read what it means, or open the ? to see them all. '
-        + 'Pick one to paint with it.'
+        + 'Press Edit to paint with them.'
     },
     {
       target: '[data-tour="grid"]',
       title: 'The 13×13 grid',
-      body: 'Pairs on the diagonal, suited hands above it, offsuit below. Paint hands to make the range your own, then '
-        + 'Save; Reset brings back the reference one.'
+      body: 'Pairs on the diagonal, suited hands above it, offsuit below. Press Edit to paint hands and make the range '
+        + 'your own, then Save; Reset brings back the reference one.'
     },
     {
       target: '[data-tour="panel"]',

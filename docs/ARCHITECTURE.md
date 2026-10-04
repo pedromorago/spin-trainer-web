@@ -50,10 +50,12 @@ the Builder evaluates by comparing the effective action hand by hand (`evaluateR
 Effective range (ADR-0012): the custom one if it exists, otherwise the PDF one, resolved in a single hook (`useEffectiveRange`),
 derived from the `GET /ranges/default` and `GET /ranges/user` lists already shared by the Quiz and "Any" mode (no
 request per combination and no 404 while there is no range yet).
-The Explorer is the only one that writes ranges: a brush per action + eraser (`paintHand`: sets, does not toggle, so you can paint
-by dragging with a mouse or finger), Guardar (`PUT` with the starting version → 409 if someone else changed it), Reset (`DELETE`) and Copiar
-(`exportRange`). The Builder is a non-persistent exercise checked against the effective range:
-the question is the current selection or a random combination with a range ("Nueva pregunta"), and "Verificar" uses
+The Explorer is the only one that writes ranges. It opens read-only (Edit, Copy with `exportRange`, the palette as a
+legend); Edit brings a brush per action + eraser (`paintHand`: sets, does not toggle, so you can paint by dragging with a
+mouse or finger), Save once something changed (`PUT` with the starting version → 409 if someone else changed it), Cancel
+(asks first when there are changes) and Reset (`DELETE` of the custom range); saving or resetting confirms it ("✓ Saved")
+and goes back to reading. The Builder is a non-persistent exercise checked against the effective range:
+the question is the current selection or a random combination with a range ("New question"), and "Check" uses
 `evaluateRange`, which classifies each hand (correct, wrong action, extra, missing) and scores only the hands played
 in either of the two ranges; with a tight range, getting the folds of all 169 right would inflate the score.
 
