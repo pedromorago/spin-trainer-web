@@ -45,7 +45,7 @@ export const ACTION_DESCRIPTIONS = {
   FOLD: 'Fold.'
 };
 
-/** The PDF's abbreviations, in the order a newcomer meets them. */
+/** The charts' abbreviations, in the order a newcomer meets them. */
 export const GLOSSARY = [
   ['MR', 'min-raise (to 2 BB)'],
   ['3b / 4b', '3-bet / 4-bet (re-raise / re-re-raise)'],

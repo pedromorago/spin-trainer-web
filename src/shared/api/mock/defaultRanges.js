@@ -1,4 +1,4 @@
-// Mock reference ranges: those of the API seed (Tablasmentov3.pdf). reference-ranges.json is a copy of
+// Reference ranges: the API seed's examples (ADR-0024). reference-ranges.json is a copy of
 // spin-trainer-api/reference-ranges.json that is not edited by hand (npm run ranges:sync / ranges:check).
 
 /** { 'btn_open@25': { AA: 'MR_4B_C', ... } }: only hands with an explicit action. */

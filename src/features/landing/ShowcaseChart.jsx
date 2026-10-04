@@ -7,10 +7,10 @@ import { theme } from '../../shared/theme/theme';
 const SPOT = { situation: 'btn_open', stack: 25 };
 
 /**
- * One reference chart as the Explorer shows it, read-only, from the ranges bundled with the web (no account, no API):
+ * One example range as the Explorer shows it, read-only, from the ranges bundled with the web (no account, no API):
  * the product at a glance, on the landing page and beside the sign-in. Props: caption, testId
  */
-export function ShowcaseChart({ caption = 'Live, from the reference chart', testId }) {
+export function ShowcaseChart({ caption = 'A live example range', testId }) {
   const showcase = useShowcase();
   const situation = showcase.data?.situations.find(s => s.key === SPOT.situation);
   const hands = showcase.data?.ranges[`${SPOT.situation}@${SPOT.stack}`];
@@ -20,7 +20,7 @@ export function ShowcaseChart({ caption = 'Live, from the reference chart', test
       boxShadow: '0 24px 60px rgba(0, 0, 0, 0.45)' }} data-testid={testId}>
       <figcaption style={{ display: 'flex', justifyContent: 'space-between', gap: theme.space.sm, flexWrap: 'wrap' }}>
         <strong style={{ fontFamily: theme.font.display, fontSize: 24, fontWeight: 400, letterSpacing: 1 }}>
-          {situation ? `${situation.label} · ${SPOT.stack} BB` : 'Reference chart'}
+          {situation ? `${situation.label} · ${SPOT.stack} BB` : 'Example range'}
         </strong>
         <small style={{ color: theme.colors.textMuted }}>{caption}</small>
       </figcaption>

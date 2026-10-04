@@ -31,8 +31,8 @@ const navCta = { ...layout.primary, textDecoration: 'none' };
 const cta = { ...layout.primary, textDecoration: 'none', display: 'inline-block', padding: `${theme.space.md} ${theme.space.xl}`, fontSize: 16 };
 
 const MODES = [
-  ['/explorer', 'Explorer', 'Every reference range on a 13×13 grid, with its combos, the split by action and the chart\'s tips. '
-    + 'Paint your own adjustments and save them.'],
+  ['/explorer', 'Explorer', 'Every range on a 13×13 grid, with its combos and the split by action. Start from the example '
+    + 'ranges and paint them into your own.'],
   ['/quiz', 'Quiz', 'A seat, two cards, a decision. Answer hand by hand against your range; the hands you miss feed a Hard only '
     + 'mode until you get them right.'],
   ['/builder', 'Builder', 'Paint a whole range from memory, then check it: every hand comes back correct, wrong, extra or missing.'],
@@ -41,7 +41,8 @@ const MODES = [
 
 /**
  * Public landing page (ADR-0022): shows the product before any sign-in. Everything on it is live, built from the app's
- * own components and the PDF ranges bundled with the web (useShowcase), so it needs neither an account nor the API.
+ * own components and the example ranges bundled with the web (useShowcase, ADR-0024), so it needs neither an account
+ * nor the API.
  * Old links with a selection (/?s=…&stack=…) still go to the Explorer.
  */
 export function LandingPage() {
@@ -89,8 +90,9 @@ function Landing() {
               Know your preflop ranges <span style={{ color: theme.colors.accent }}>cold.</span>
             </h1>
             <p style={lead}>
-              Spin Trainer turns the reference charts into practice: explore every range, answer hand by hand, rebuild ranges
-              from memory and see exactly which hands you keep missing. 3-max and heads-up, from 4 to 25 big blinds.
+              Spin Trainer turns preflop charts into practice: explore every range, answer hand by hand, rebuild ranges from
+              memory and see exactly which hands you keep missing. Start from the example ranges and make them your own.
+              3-max and heads-up, from 4 to 25 big blinds.
             </p>
             <div style={{ display: 'flex', gap: theme.space.md, flexWrap: 'wrap', alignItems: 'center' }}>
               <Link to="/explorer" style={cta} onClick={enter('/explorer')} data-testid="landing-start">{start}</Link>
@@ -109,7 +111,7 @@ function Landing() {
             <h2 id="try-title" style={h2}>Try a hand</h2>
             <p style={lead}>
               BB vs SB open-shove at 10 BB: the button folds and the small blind goes all-in. Call or fold? The answer comes
-              from the chart, as in the Quiz.
+              from the example range, as in the Quiz.
             </p>
             {showcase.isLoading ? <Loading /> : showcase.error ? <ErrorBox error={showcase.error} onRetry={showcase.refetch} />
               : <TryAHand showcase={showcase.data} enter={enter} />}
@@ -141,7 +143,7 @@ function Landing() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: theme.space.md }}>
               <h2 id="open-title" style={h2}>Built and tested in the open</h2>
               <p style={{ ...lead, fontSize: 15 }}>
-                A personal project and a QA portfolio. The charts reach the app through versioned database migrations, the
+                A personal project and a QA portfolio. The ranges reach the app through versioned database migrations, the
                 API is designed contract-first, and every change is tested end to end: the API contract, the business rules in
                 Gherkin, the browser and accessibility.
               </p>
@@ -171,7 +173,7 @@ function Landing() {
 
 /** The catalog's size, counted from the data (never a hard-coded claim). */
 function Facts({ showcase }) {
-  const facts = [[showcase.situations.length, 'situations'], [Object.keys(showcase.ranges).length, 'reference ranges'], [169, 'hands each']];
+  const facts = [[showcase.situations.length, 'situations'], [Object.keys(showcase.ranges).length, 'example ranges'], [169, 'hands each']];
   return (
     <dl style={{ display: 'flex', gap: theme.space.xl, margin: 0, flexWrap: 'wrap' }} data-testid="landing-facts">
       {facts.map(([value, label]) => (
@@ -190,7 +192,7 @@ const newQuestion = (spot, previous) => {
   return { ...question, cards: dealCards(question.hand) };
 };
 
-/** One Quiz question against the chart, answered on the page: the Quiz's own table, buttons and grading. */
+/** One Quiz question against the example range, answered on the page: the Quiz's own table, buttons and grading. */
 function TryAHand({ showcase, enter }) {
   const situation = showcase.situations.find(s => s.key === TRY.situation);
   const spot = { situation: TRY.situation, stack: TRY.stack, actions: situation.actions, hands: showcase.ranges[`${TRY.situation}@${TRY.stack}`] };
@@ -221,7 +223,7 @@ function TryAHand({ showcase, enter }) {
         <div role="status" aria-live="polite" data-testid="landing-feedback" style={{ minHeight: 48 }}>
           {result && (
             <span style={{ color: result.correct ? theme.colors.success : theme.colors.danger, fontWeight: 600 }}>
-              {result.correct ? 'Correct' : 'Wrong'}: the chart {verb(result.expected)} {question.hand} here
+              {result.correct ? 'Correct' : 'Wrong'}: the range {verb(result.expected)} {question.hand} here
               {result.correct ? '.' : `; you chose ${ACTION_LABELS[result.given]}.`}
             </span>
           )}

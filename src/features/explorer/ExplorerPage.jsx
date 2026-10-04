@@ -13,6 +13,7 @@ import { theme } from '../../shared/theme/theme';
 import { useAuth } from '../../shared/auth/useAuth';
 import { markTourSeen, tourSeen } from '../../shared/ui/onboarding';
 import { Tour } from '../../shared/ui/Tour';
+import { InfoTip } from '../../shared/ui/Tooltip';
 import { explorerTour } from './explorerTour';
 
 const NO_HANDS = Object.freeze({});
@@ -55,14 +56,14 @@ export function ExplorerPage() {
 
 function RangeWorkbench({ situation, stack }) {
   const effective = useEffectiveRange(situation.key, stack);
-  // A free server waking up (ADR-0018): the PDF chart bundled with the web, read-only, until the API answers.
+  // A free server waking up (ADR-0018): the example range bundled with the web, read-only, until the API answers.
   if (effective.isLoading) {
     return effective.preview
       ? <RangeEditor situation={situation} stack={stack} saved={null} reference={effective.preview} waiting />
       : <Loading />;
   }
-  // Also when only the custom ranges fail: showing the PDF one instead would hide the user's range (and saving over
-  // it with version 0 would end in a conflict).
+  // Also when only the custom ranges fail: showing the example one instead would hide the user's range (and saving
+  // over it with version 0 would end in a conflict).
   if (effective.error) return <ErrorBox error={effective.error} onRetry={effective.refetch} />;
   return (
     <RangeEditor situation={situation} stack={stack} saved={effective.userRange} reference={effective.defaultRange}
@@ -71,11 +72,11 @@ function RangeWorkbench({ situation, stack }) {
 }
 
 /**
- * The effective range (ADR-0012): custom if it exists, otherwise the PDF one. Read-only until Edit: then the grid can be
- * painted, Save creates or replaces the custom range (PUT with the version editing started from; with nothing changed it
- * just goes back to reading), Cancel leaves without saving and Reset deletes the custom range. Saving or resetting
- * confirms it and goes back to reading. `waiting`: the API has not answered yet, so the PDF range is only shown, with
- * Edit off (whether there is a custom range, and its version, is not known yet).
+ * The effective range (ADR-0012): custom if it exists, otherwise the example one (ADR-0024). Read-only until Edit: then
+ * the grid can be painted, Save creates or replaces the custom range (PUT with the version editing started from; with
+ * nothing changed it just goes back to reading), Cancel leaves without saving and Reset deletes the custom range. Saving
+ * or resetting confirms it and goes back to reading. `waiting`: the API has not answered yet, so the example range is
+ * only shown, with Edit off (whether there is a custom range, and its version, is not known yet).
  */
 function RangeEditor({ situation, stack, saved, reference, onReload, waiting = false }) {
   const save = useSaveUserRange(situation.key, stack);
@@ -115,7 +116,7 @@ function RangeEditor({ situation, stack, saved, reference, onReload, waiting = f
   const cancel = () => (modified ? setConfirm('cancel') : stopEditing(null));
   const reset = () => {
     setConfirm(null);
-    remove.mutate(undefined, { onSuccess: () => stopEditing(hasReference ? 'Back to the PDF range' : 'Custom range deleted') });
+    remove.mutate(undefined, { onSuccess: () => stopEditing(hasReference ? 'Back to the example range' : 'Custom range deleted') });
   };
   const discardAndReload = () => { stopEditing(null); save.reset(); onReload(); };
   const copy = async () => {
@@ -156,7 +157,13 @@ function RangeEditor({ situation, stack, saved, reference, onReload, waiting = f
             {editing && badge('Editing', theme.colors.accent, 'badge-editing')}
             {modified && badge('Modified', theme.colors.accentStrong, 'badge-modified')}
             {saved && badge('Custom', theme.colors.success, 'badge-custom')}
-            {!saved && hasReference && badge('PDF', theme.colors.textMuted, 'badge-reference')}
+            {!saved && hasReference && badge('Example', theme.colors.textMuted, 'badge-reference')}
+            {!saved && hasReference && (
+              <InfoTip label="About the example ranges" testId="example-info">
+                An example to start from, not a strategy: the hands, ranked by their all-in equity against a random hand,
+                take each action in turn. Press Edit to make it your own.
+              </InfoTip>
+            )}
           </span>
           <small role="status" style={{ color: theme.colors.success, fontWeight: 600 }} data-testid="explorer-notice">
             {notice && `✓ ${notice}`}
@@ -165,13 +172,13 @@ function RangeEditor({ situation, stack, saved, reference, onReload, waiting = f
         </div>
         {waiting && (
           <small role="status" style={{ color: theme.colors.textMuted }} data-testid="explorer-waiting">
-            Showing the PDF chart while your ranges load…
+            Showing the example range while your ranges load…
           </small>
         )}
         {confirm === 'reset' && (
           <ConfirmBar testId="explorer-reset-confirm"
-            message={hasReference ? 'Delete your custom range and go back to the PDF one?' : 'Delete your custom range?'}
-            confirmLabel={hasReference ? 'Delete and go back to the PDF' : 'Delete'} onConfirm={reset} onCancel={() => setConfirm(null)} />
+            message={hasReference ? 'Delete your custom range and go back to the example one?' : 'Delete your custom range?'}
+            confirmLabel={hasReference ? 'Delete and go back to the example' : 'Delete'} onConfirm={reset} onCancel={() => setConfirm(null)} />
         )}
         {confirm === 'cancel' && (
           <ConfirmBar testId="explorer-cancel-confirm" message="Discard your changes?" confirmLabel="Discard changes"
@@ -185,7 +192,7 @@ function RangeEditor({ situation, stack, saved, reference, onReload, waiting = f
         )}
         {!saved && !hasReference && (
           <small style={{ color: theme.colors.textMuted }} data-testid="explorer-no-reference">
-            No PDF range for this spot yet: press Edit to paint and save your own.
+            No example range for this spot yet: press Edit to paint and save your own.
           </small>
         )}
         {editing

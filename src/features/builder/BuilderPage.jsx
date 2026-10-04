@@ -18,7 +18,7 @@ const pct = x => `${Math.round(x * 100)}%`;
 
 /**
  * Builder: self-assessment exercise. You build the range of a situation and stack from memory and check it against
- * the effective range (custom if it exists, otherwise the PDF one; ADR-0012). Nothing is persisted.
+ * the effective range (custom if it exists, otherwise the example one; ADR-0012). Nothing is persisted.
  * The question is the current selection or a random combination ("New question").
  */
 export function BuilderPage() {

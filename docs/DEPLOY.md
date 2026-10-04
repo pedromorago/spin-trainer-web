@@ -132,7 +132,7 @@ Google returns to the site itself (`/auth/google`), so its screens name the site
 ## 8. Keep the API awake (optional, free)
 
 Render's free instance sleeps after 15 minutes without requests and takes up to a minute to wake (ADR-0018); meanwhile
-the web shows the bundled catalog and the PDF chart, but the player's data waits. An uptime monitor that requests
+the web shows the bundled catalog and the example range, but the player's data waits. An uptime monitor that requests
 `https://spin-trainer-api.onrender.com/actuator/health` every 5 minutes keeps it awake. That endpoint also checks the
 database, so Supabase's free project is touched too. With [UptimeRobot](https://uptimerobot.com) (free): **New monitor →
 HTTP(s)**, that URL, interval 5 minutes, alert by email. One service awake all month uses about 730 of the 750 free

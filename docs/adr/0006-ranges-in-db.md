@@ -1,6 +1,6 @@
 # ADR-0006: Default ranges as versioned data in the database
 
-Status: Accepted · Date: 2026-09-26
+Status: Accepted · Date: 2026-09-26 · The reference ranges are examples since ADR-0024
 
 ## Context
 With the ranges hardcoded in the frontend, the API cannot grade the Quiz or evaluate the Builder without duplicating them.

@@ -1,6 +1,6 @@
 # ADR-0012: Effective range: the custom range prevails; the Builder does not persist
 
-Status: Accepted · Date: 2026-09-26
+Status: Accepted · Date: 2026-09-26 · The reference range is an example since ADR-0024
 
 ## Context
 The Explorer becomes editable (brush, Guardar, Reset). With two possible ranges per situation and stack

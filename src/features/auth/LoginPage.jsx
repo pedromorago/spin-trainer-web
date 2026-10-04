@@ -8,7 +8,7 @@ const gutter = `clamp(${theme.space.md}, 4vw, ${theme.space.xl})`;
 
 /**
  * The sign-in page, for whoever opens a page of the app signed out (the landing page signs in in a dialog instead):
- * the sign-in card beside a live reference chart, a way back home, and back to the requested route afterwards.
+ * the sign-in card beside a live example range, a way back home, and back to the requested route afterwards.
  */
 export function LoginPage() {
   const { user } = useAuth();
@@ -29,7 +29,7 @@ export function LoginPage() {
             ← Back to home
           </Link>
         </main>
-        <aside aria-label="A reference chart" style={{ minWidth: 0 }}>
+        <aside aria-label="An example range" style={{ minWidth: 0 }}>
           <ShowcaseChart caption="Your ranges, your answers, your progress" />
         </aside>
       </div>

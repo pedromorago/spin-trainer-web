@@ -6,7 +6,8 @@ export function explorerTour({ demo, onTryQuiz }) {
   return [
     {
       title: 'Welcome to Spin Trainer',
-      body: 'Preflop ranges for Spin & Go, 3-max and heads-up, from the reference charts. This short tour shows you around.'
+      body: 'Preflop ranges for Spin & Go, 3-max and heads-up: start from the example ranges and make them your own. '
+        + 'This short tour shows you around.'
         + (demo ? ' No account needed: your progress is saved in this browser.' : '')
     },
     {
@@ -18,7 +19,7 @@ export function explorerTour({ demo, onTryQuiz }) {
     {
       target: '[data-tour="situation"]',
       title: 'Pick a situation',
-      body: 'Each one is a spot from the charts: your seat, what the players before you did and the actions you can take.'
+      body: 'Each one is a spot: your seat, what the players before you did and the actions you can take.'
     },
     {
       target: '[data-tour="stacks"]',
@@ -35,12 +36,12 @@ export function explorerTour({ demo, onTryQuiz }) {
       target: '[data-tour="grid"]',
       title: 'The 13×13 grid',
       body: 'Pairs on the diagonal, suited hands above it, offsuit below. Press Edit to paint hands and make the range '
-        + 'your own, then Save; Reset brings back the reference one.'
+        + 'your own, then Save; Reset brings back the example one.'
     },
     {
       target: '[data-tour="panel"]',
       title: 'Range summary',
-      body: 'How many hands and combos the range plays, split by action, and the chart\'s tip for this spot.'
+      body: 'How many hands and combos the range plays, and how they split by action.'
     },
     {
       target: '[data-tour="score"]',

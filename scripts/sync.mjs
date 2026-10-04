@@ -1,6 +1,6 @@
 // Pinned copies of what spin-trainer-api publishes (sibling repo, ../spin-trainer-api):
 //   spec    openapi.yaml          → docs/openapi.yaml (contract; ADR-0004). The first line says where it comes from.
-//   ranges  reference-ranges.json → src/shared/api/mock/reference-ranges.json (reference ranges from seed V5)
+//   ranges  reference-ranges.json → src/shared/api/mock/reference-ranges.json (reference ranges: the examples seeded by V9, ADR-0024)
 //
 //   node scripts/sync.mjs check <spec|ranges>   → fails if the copy differs
 //   node scripts/sync.mjs sync  <spec|ranges>   → fetches the API's version

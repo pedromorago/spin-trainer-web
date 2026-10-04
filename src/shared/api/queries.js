@@ -42,11 +42,11 @@ export function useUserRanges() {
 const loadError = query => (query.data === undefined ? query.error : null) ?? null;
 
 /**
- * Range used for training (ADR-0012): the custom one if it exists; otherwise, the reference one (PDF).
+ * Range used for training (ADR-0012): the custom one if it exists; otherwise, the reference one (an example, ADR-0024).
  * Exposes both for whoever needs to tell them apart (badges and the Explorer's Reset).
  * It comes from the two lists, shared with the Quiz and "Any" mode: neither one request per combination nor a 404
  * when the combination has no range yet (the individual GETs of the contract remain in the adapters).
- * While they load, `preview` is the PDF range bundled with the web: something to read while a free server wakes up,
+ * While they load, `preview` is the example range bundled with the web: something to read while a free server wakes up,
  * though not what the player trains with until the API confirms whether there is a custom one.
  */
 export function useEffectiveRange(situation, stack) {

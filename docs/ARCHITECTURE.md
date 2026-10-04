@@ -47,9 +47,9 @@ These rules are not just documentation: `eslint.config.js` enforces them (`no-re
 The only implementation of "which action does this hand have" is `domain/range.js#actionFor`. Explorer, Quiz and Builder share it;
 the Builder evaluates by comparing the effective action hand by hand (`evaluateRange`), which removes the prototype's `tgtRaise`/`tgtCall` class of bug.
 
-Effective range (ADR-0012): the custom one if it exists, otherwise the PDF one, resolved in a single hook (`useEffectiveRange`),
-derived from the `GET /ranges/default` and `GET /ranges/user` lists already shared by the Quiz and "Any" mode (no
-request per combination and no 404 while there is no range yet).
+Effective range (ADR-0012): the custom one if it exists, otherwise the reference one (an example, ADR-0024), resolved
+in a single hook (`useEffectiveRange`), derived from the `GET /ranges/default` and `GET /ranges/user` lists already
+shared by the Quiz and "Any" mode (no request per combination and no 404 while there is no range yet).
 The Explorer is the only one that writes ranges. It opens read-only (Edit, Copy with `exportRange`, the palette as a
 legend); Edit brings a brush per action + eraser (`paintHand`: sets, does not toggle, so you can paint by dragging with a
 mouse or finger), Save (`PUT` with the starting version → 409 if someone else changed it; with nothing changed it just goes back to reading), Cancel
@@ -90,7 +90,7 @@ state (the landing's sign-in dialog goes on to where it pointed). "Sign out" nav
 `/logout`, which goes through the unsaved-changes guard and signs out this browser only (Supabase's local scope).
 
 Routing in *data mode* (`createBrowserRouter`): lazy routes per feature and `useBlocker` for unsaved changes.
-`/` is the public landing page (`features/landing`, ADR-0022): a live reference chart and one Quiz question, built from
+`/` is the public landing page (`features/landing`, ADR-0022): a live example range and one Quiz question, built from
 the reference ranges bundled with the web (`shared/api/showcase.js`), never from the API. `/login`, `/auth/google` and
 `/privacy` are public too; the tabs (`/explorer`, `/quiz`, `/builder`, `/stats`) are behind `RequireAuth`; unknown
 paths go to `/`.
@@ -119,8 +119,8 @@ assets, CSP and security headers) and the API on Render's free plan as a native 
 region. The E2E tests serve the build with the headers of `vercel.json`.
 While the free API wakes up (up to a minute after 15 minutes idle), the app does not wait for it to draw: the catalog
 bundled with the web stands in for `GET /situations` (TanStack Query's `placeholderData`), and the Explorer shows the
-bundled PDF chart read-only, with Edit off, until the ranges arrive (`useEffectiveRange().preview`). The bundled catalog
-is the API's, checked by spin-trainer-qa (`server-wake.spec.ts`); the reference ranges by `npm run ranges:check`.
+bundled example range read-only, with Edit off, until the ranges arrive (`useEffectiveRange().preview`). The bundled
+catalog is the API's, checked by spin-trainer-qa (`server-wake.spec.ts`); the reference ranges by `npm run ranges:check`.
 
 `features/shell/AppShell` is the frame for every tab: it loads the catalog, renders the header with the session scoreboard
 and a single situation/stack selector, and passes `{ situations, selection }` to the pages via `useOutletContext()`.
