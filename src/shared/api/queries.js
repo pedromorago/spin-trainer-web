@@ -4,6 +4,7 @@ import { keepPreviousData, useInfiniteQuery, useIsFetching, useMutation, useQuer
 import { mergeEffectiveRanges } from '../../domain/range';
 import { comboKey } from '../../domain/selection';
 import { api } from './index';
+import { SITUATIONS } from './mock/situations';
 import { loadShowcase } from './showcase';
 
 export const keys = {
@@ -19,8 +20,12 @@ export const keys = {
 /** Is it the range of this combination? (the stack may arrive as text from the URL). */
 const isSpot = (situation, stack) => range => comboKey(range) === comboKey({ situation, stack: Number(stack) });
 
+/**
+ * The catalog. While the API has not answered (a free server waking up, ADR-0018) the copy bundled with the web stands
+ * in: the same seed, checked against the API by spin-trainer-qa. The API's answer replaces it.
+ */
 export function useSituations() {
-  return useQuery({ queryKey: keys.situations, queryFn: api.listSituations, staleTime: Infinity });
+  return useQuery({ queryKey: keys.situations, queryFn: api.listSituations, staleTime: Infinity, placeholderData: SITUATIONS });
 }
 
 /** All the reference ranges (they only change with a seed migration). */
@@ -41,17 +46,23 @@ const loadError = query => (query.data === undefined ? query.error : null) ?? nu
  * Exposes both for whoever needs to tell them apart (badges and the Explorer's Reset).
  * It comes from the two lists, shared with the Quiz and "Any" mode: neither one request per combination nor a 404
  * when the combination has no range yet (the individual GETs of the contract remain in the adapters).
+ * While they load, `preview` is the PDF range bundled with the web: something to read while a free server wakes up,
+ * though not what the player trains with until the API confirms whether there is a custom one.
  */
 export function useEffectiveRange(situation, stack) {
   const defaults = useDefaultRanges();
   const users = useUserRanges();
+  const bundled = useShowcase();
   const defaultRange = defaults.data?.find(isSpot(situation, stack)) ?? null;
   const userRange = users.data?.find(isSpot(situation, stack)) ?? null;
+  const isLoading = defaults.isLoading || users.isLoading;
+  const bundledHands = bundled.data?.ranges[`${situation}@${Number(stack)}`];
   return {
     range: userRange ?? defaultRange,
     defaultRange,
     userRange,
-    isLoading: defaults.isLoading || users.isLoading,
+    isLoading,
+    preview: isLoading && bundledHands ? { situation, stack: Number(stack), hands: bundledHands } : null,
     error: loadError(defaults) ?? loadError(users),
     refetchUserRange: users.refetch,
     refetch: () => Promise.all([defaults.refetch(), users.refetch()])

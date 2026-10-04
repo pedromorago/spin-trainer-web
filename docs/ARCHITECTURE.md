@@ -117,6 +117,10 @@ rectangles (`shared/ui/placement.js`), unit-tested without a browser.
 Deployment (ADR-0016, `docs/DEPLOY.md`): the web on Vercel (`vercel.json`: SPA fallback except `/assets/`, immutable
 assets, CSP and security headers) and the API on Render's free plan as a native image (ADR-0018, `render.yaml`, the same image QA tests), with Supabase in the same
 region. The E2E tests serve the build with the headers of `vercel.json`.
+While the free API wakes up (up to a minute after 15 minutes idle), the app does not wait for it to draw: the catalog
+bundled with the web stands in for `GET /situations` (TanStack Query's `placeholderData`), and the Explorer shows the
+bundled PDF chart read-only, with Edit off, until the ranges arrive (`useEffectiveRange().preview`). The bundled catalog
+is the API's, checked by spin-trainer-qa (`server-wake.spec.ts`); the reference ranges by `npm run ranges:check`.
 
 `features/shell/AppShell` is the frame for every tab: it loads the catalog, renders the header with the session scoreboard
 and a single situation/stack selector, and passes `{ situations, selection }` to the pages via `useOutletContext()`.

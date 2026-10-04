@@ -55,7 +55,12 @@ export function ExplorerPage() {
 
 function RangeWorkbench({ situation, stack }) {
   const effective = useEffectiveRange(situation.key, stack);
-  if (effective.isLoading) return <Loading />;
+  // A free server waking up (ADR-0018): the PDF chart bundled with the web, read-only, until the API answers.
+  if (effective.isLoading) {
+    return effective.preview
+      ? <RangeEditor situation={situation} stack={stack} saved={null} reference={effective.preview} waiting />
+      : <Loading />;
+  }
   // Also when only the custom ranges fail: showing the PDF one instead would hide the user's range (and saving over
   // it with version 0 would end in a conflict).
   if (effective.error) return <ErrorBox error={effective.error} onRetry={effective.refetch} />;
@@ -69,9 +74,10 @@ function RangeWorkbench({ situation, stack }) {
  * The effective range (ADR-0012): custom if it exists, otherwise the PDF one. Read-only until Edit: then the grid can be
  * painted, Save creates or replaces the custom range (PUT with the version editing started from; with nothing changed it
  * just goes back to reading), Cancel leaves without saving and Reset deletes the custom range. Saving or resetting
- * confirms it and goes back to reading.
+ * confirms it and goes back to reading. `waiting`: the API has not answered yet, so the PDF range is only shown, with
+ * Edit off (whether there is a custom range, and its version, is not known yet).
  */
-function RangeEditor({ situation, stack, saved, reference, onReload }) {
+function RangeEditor({ situation, stack, saved, reference, onReload, waiting = false }) {
   const save = useSaveUserRange(situation.key, stack);
   const remove = useDeleteUserRange(situation.key, stack);
   const [editing, setEditing] = useState(false);
@@ -142,7 +148,7 @@ function RangeEditor({ situation, stack, saved, reference, onReload }) {
             </>
           ) : (
             <>
-              <button type="button" style={layout.primary} onClick={startEditing} data-testid="explorer-edit">Edit</button>
+              <button type="button" style={layout.primary} onClick={startEditing} disabled={waiting} data-testid="explorer-edit">Edit</button>
               <button type="button" style={layout.secondary} onClick={copy} data-testid="explorer-copy">Copy</button>
             </>
           )}
@@ -157,6 +163,11 @@ function RangeEditor({ situation, stack, saved, reference, onReload }) {
           </small>
           <small role="status" style={{ color: theme.colors.textMuted }} data-testid="explorer-copy-status">{copyStatus}</small>
         </div>
+        {waiting && (
+          <small role="status" style={{ color: theme.colors.textMuted }} data-testid="explorer-waiting">
+            Showing the PDF chart while your ranges load…
+          </small>
+        )}
         {confirm === 'reset' && (
           <ConfirmBar testId="explorer-reset-confirm"
             message={hasReference ? 'Delete your custom range and go back to the PDF one?' : 'Delete your custom range?'}
