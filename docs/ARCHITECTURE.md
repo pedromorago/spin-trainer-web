@@ -52,7 +52,7 @@ derived from the `GET /ranges/default` and `GET /ranges/user` lists already shar
 request per combination and no 404 while there is no range yet).
 The Explorer is the only one that writes ranges. It opens read-only (Edit, Copy with `exportRange`, the palette as a
 legend); Edit brings a brush per action + eraser (`paintHand`: sets, does not toggle, so you can paint by dragging with a
-mouse or finger), Save once something changed (`PUT` with the starting version → 409 if someone else changed it), Cancel
+mouse or finger), Save (`PUT` with the starting version → 409 if someone else changed it; with nothing changed it just goes back to reading), Cancel
 (asks first when there are changes) and Reset (`DELETE` of the custom range); saving or resetting confirms it ("✓ Saved")
 and goes back to reading. The Builder is a non-persistent exercise checked against the effective range:
 the question is the current selection or a random combination with a range ("New question"), and "Check" uses

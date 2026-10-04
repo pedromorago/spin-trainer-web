@@ -67,9 +67,9 @@ function RangeWorkbench({ situation, stack }) {
 
 /**
  * The effective range (ADR-0012): custom if it exists, otherwise the PDF one. Read-only until Edit: then the grid can be
- * painted, Save (once something changed) creates or replaces the custom range (PUT with the version editing started
- * from), Cancel leaves without saving and Reset deletes the custom range. Saving or resetting confirms it and goes back
- * to reading.
+ * painted, Save creates or replaces the custom range (PUT with the version editing started from; with nothing changed it
+ * just goes back to reading), Cancel leaves without saving and Reset deletes the custom range. Saving or resetting
+ * confirms it and goes back to reading.
  */
 function RangeEditor({ situation, stack, saved, reference, onReload }) {
   const save = useSaveUserRange(situation.key, stack);
@@ -103,10 +103,9 @@ function RangeEditor({ situation, stack, saved, reference, onReload }) {
   };
   const startEditing = () => { setEditing(true); setNotice(null); setCopyStatus(null); };
   const stopEditing = done => { setPending(null); setConfirm(null); setEditing(false); setNotice(done); };
-  const persist = () => save.mutate(
-    { hands: normalizeRange(hands, actions), version: pending.baseVersion },
-    { onSuccess: () => stopEditing('Saved') }
-  );
+  const persist = () => (modified
+    ? save.mutate({ hands: normalizeRange(hands, actions), version: pending.baseVersion }, { onSuccess: () => stopEditing('Saved') })
+    : stopEditing(null));
   const cancel = () => (modified ? setConfirm('cancel') : stopEditing(null));
   const reset = () => {
     setConfirm(null);
@@ -134,7 +133,7 @@ function RangeEditor({ situation, stack, saved, reference, onReload }) {
         <div style={{ ...layout.row, gap: theme.space.sm }}>
           {editing ? (
             <>
-              <button type="button" style={layout.primary} onClick={persist} disabled={!modified || busy} data-testid="explorer-save">
+              <button type="button" style={layout.primary} onClick={persist} disabled={busy} data-testid="explorer-save">
                 {save.isPending ? 'Saving…' : 'Save'}
               </button>
               <button type="button" style={layout.secondary} onClick={cancel} disabled={busy} data-testid="explorer-cancel">Cancel</button>
